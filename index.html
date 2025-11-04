@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kairo Studio OS | AI-Powered Business Operating System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/os-style.css">
+</head>
+<body class="os-body">
+
+    <!-- AI/ROBOTICS BACKGROUND -->
+    <div class="neural-network"></div>
+    <div class="circuit-lines"></div>
+    <div class="ai-particles" id="particles"></div>
+
+    <!-- LANDING SCREEN: 3D Computer -->
+    <div id="landing-screen" class="screen active">
+        <div class="computer-container">
+            <div class="computer-3d" id="computer3d">
+                <div class="screen-glow"></div>
+                <div class="holographic-layer"></div>
+                <div class="computer-screen">
+                    <div class="screen-content">
+                        <div class="kairo-logo-screen">
+                            <span class="glitch-text">KAIRO</span>
+                            <span class="glitch-text">STUDIO</span>
+                        </div>
+                        <div class="screen-subtitle">AI-POWERED BUSINESS OS</div>
+                        <div class="screen-text">
+                            CLICK TO ENTER <span class="cursor-blink">_</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="computer-base"></div>
+            </div>
+        </div>
+        <div class="landing-footer">
+            <p>KAIRO STUDIO OS v3.0 | Strategy that scales. Systems that deliver.</p>
+        </div>
+    </div>
+
+    <!-- BOOT SEQUENCE -->
+    <div id="boot-screen" class="screen">
+        <div class="boot-container">
+            <div class="boot-logo">
+                <span class="glitch-text">KAIRO</span>
+                <span class="glitch-text">STUDIO</span>
+            </div>
+            <div class="boot-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="bootProgress"></div>
+                </div>
+                <div class="boot-text" id="bootText">INITIALIZING AI SYSTEMS...</div>
+            </div>
+            <div class="boot-logs" id="bootLogs"></div>
+        </div>
+    </div>
+
+    <!-- DESKTOP OS -->
+    <div id="desktop-screen" class="screen">
+        <!-- Desktop -->
+        <div class="desktop" id="desktop">
+            <!-- INFO SIDEBAR -->
+            <div class="info-sidebar">
+                <div class="info-panel">
+                    <div class="panel-title">SYSTEM INFO</div>
+                    <div class="system-stat">
+                        <span class="stat-label">Status</span>
+                        <span class="stat-value">ONLINE</span>
+                    </div>
+                    <div class="system-stat">
+                        <span class="stat-label">Uptime</span>
+                        <span class="stat-value">99.9%</span>
+                    </div>
+                    <div class="system-stat">
+                        <span class="stat-label">Projects</span>
+                        <span class="stat-value">100+</span>
+                    </div>
+                    <div class="system-stat">
+                        <span class="stat-label">Clients</span>
+                        <span class="stat-value">50+</span>
+                    </div>
+                </div>
+
+                <div class="info-panel">
+                    <div class="panel-title">QUICK LINKS</div>
+                    <a href="#" class="quick-link" data-app="about">→ About Us</a>
+                    <a href="#" class="quick-link" data-app="services">→ Our Services</a>
+                    <a href="#" class="quick-link" data-app="projects">→ Portfolio</a>
+                    <a href="#" class="quick-link" data-app="contact">→ Get in Touch</a>
+                </div>
+
+                <div class="info-panel">
+                    <div class="panel-title">CAPABILITIES</div>
+                    <div class="system-stat">
+                        <span class="stat-label">Brand Strategy</span>
+                        <span class="stat-value">✓</span>
+                    </div>
+                    <div class="system-stat">
+                        <span class="stat-label">Product Marketing</span>
+                        <span class="stat-value">✓</span>
+                    </div>
+                    <div class="system-stat">
+                        <span class="stat-label">Web Development</span>
+                        <span class="stat-value">✓</span>
+                    </div>
+                    <div class="system-stat">
+                        <span class="stat-label">Growth Advisory</span>
+                        <span class="stat-value">✓</span>
+                    </div>
+                    <div class="system-stat">
+                        <span class="stat-label">SaaS Integration</span>
+                        <span class="stat-value">✓</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MAIN DESKTOP AREA -->
+            <div class="desktop-main">
+                <div class="desktop-grid">
+                    <!-- About Us -->
+                    <div class="app-icon" data-app="about">
+                        <div class="app-icon-image">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div class="app-icon-label">About_Us.app</div>
+                    </div>
+
+                    <!-- Services -->
+                    <div class="app-icon" data-app="services">
+                        <div class="app-icon-image">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                        </div>
+                        <div class="app-icon-label">Services.app</div>
+                    </div>
+
+                    <!-- Portfolio/Projects -->
+                    <div class="app-icon" data-app="projects">
+                        <div class="app-icon-image">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                        <div class="app-icon-label">Portfolio.app</div>
+                    </div>
+
+                    <!-- Demo/Process -->
+                    <div class="app-icon" data-app="demo">
+                        <div class="app-icon-image">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div class="app-icon-label">Demo.app</div>
+                    </div>
+
+                    <!-- Contact -->
+                    <div class="app-icon" data-app="contact">
+                        <div class="app-icon-image">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                        <div class="app-icon-label">Contact.app</div>
+                    </div>
+
+                    <!-- Requirements/Process -->
+                    <div class="app-icon" data-app="requirements">
+                        <div class="app-icon-image">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                            </svg>
+                        </div>
+                        <div class="app-icon-label">Process.app</div>
+                    </div>
+
+                    <!-- Brand Strategy -->
+                    <div class="app-icon" data-app="brand-strategy">
+                        <div class="app-icon-image">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+                            </svg>
+                        </div>
+                        <div class="app-icon-label">Branding.tool</div>
+                    </div>
+
+                    <!-- Terminal -->
+                    <div class="app-icon" data-app="terminal">
+                        <div class="app-icon-image">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                        <div class="app-icon-label">Terminal.cmd</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Window Container -->
+        <div class="windows-container" id="windowsContainer"></div>
+
+        <!-- Taskbar -->
+        <div class="taskbar">
+            <div class="taskbar-start">
+                <div class="start-button" id="startBtn">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                    </svg>
+                    <span>KAIRO STUDIO</span>
+                </div>
+                <div class="taskbar-apps" id="taskbarApps"></div>
+            </div>
+            <div class="system-tray">
+                <span id="clock">00:00</span>
+                <div class="status-indicator"></div>
+            </div>
+        </div>
+
+        <!-- Start Menu -->
+        <div class="start-menu" id="startMenu">
+            <div class="start-menu-header">
+                <h3>KAIRO STUDIO OS</h3>
+                <p>AI-Powered Business Operating System v3.0</p>
+            </div>
+            <div class="start-menu-apps">
+                <div class="start-menu-item" data-app="about">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>About Us</span>
+                </div>
+                <div class="start-menu-item" data-app="services">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <span>Our Services</span>
+                </div>
+                <div class="start-menu-item" data-app="projects">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <span>Portfolio</span>
+                </div>
+                <div class="start-menu-item" data-app="demo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Demo & Process</span>
+                </div>
+                <div class="start-menu-item" data-app="contact">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    <span>Contact Us</span>
+                </div>
+                <div class="start-menu-item" data-app="terminal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <span>Terminal</span>
+                </div>
+            </div>
+            <div class="start-menu-footer">
+                <button class="power-btn" id="powerBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    Exit System
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/main.js"></script>
+</body>
+</html>

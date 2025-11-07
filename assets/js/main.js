@@ -1781,55 +1781,81 @@
         }
 
         // Arrow keys for sequential section navigation through all 6 walls
-        if (!document.querySelector('.content-panel.active')) {
-            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-                // Navigate to next wall (clockwise)
-                e.preventDefault();
-                navigateToNextWall(1);
-            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-                // Navigate to previous wall (counter-clockwise)
-                e.preventDefault();
-                navigateToNextWall(-1);
-            }
+        // Works even when panels are open - provides seamless navigation
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+            // Navigate to next wall (clockwise)
+            e.preventDefault();
+            navigateToNextWall(1);
+            return;
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            // Navigate to previous wall (counter-clockwise)
+            e.preventDefault();
+            navigateToNextWall(-1);
+            return;
         }
 
         // Number keys 1-6 for direct wall navigation
         if (e.key >= '1' && e.key <= '6') {
+            e.preventDefault();
             const wallIndex = parseInt(e.key) - 1;
             if (state.walls[wallIndex]) {
                 navigateToSection(state.walls[wallIndex].userData.section);
             }
+            return;
         }
 
-        // Letter keys for workflow steps
-        if (e.key === 'r' || e.key === 'R') {
-            activateWorkflowStep('research');
-        } else if (e.key === 't' || e.key === 'T') {
-            activateWorkflowStep('strategy');
-        } else if (e.key === 'd' || e.key === 'D') {
-            activateWorkflowStep('design');
-        } else if (e.key === 'v' || e.key === 'V') {
-            activateWorkflowStep('development');
+        // Letter keys for workflow steps (only when no panel is open)
+        if (!document.querySelector('.content-panel.active')) {
+            if (e.key === 'r' || e.key === 'R') {
+                activateWorkflowStep('research');
+            } else if (e.key === 't' || e.key === 'T') {
+                activateWorkflowStep('strategy');
+            } else if (e.key === 'd' || e.key === 'D') {
+                activateWorkflowStep('design');
+            } else if (e.key === 'v' || e.key === 'V') {
+                activateWorkflowStep('development');
+            }
         }
     }
 
     // Helper function to navigate to next/previous wall sequentially
     function navigateToNextWall(direction) {
-        // Find current wall index
+        // Close any open panels first for clean navigation
+        const activePanels = document.querySelectorAll('.content-panel.active');
+        const hadActivePanel = activePanels.length > 0;
+
+        // Find current wall index based on current section
         let currentIndex = state.walls.findIndex(wall => wall.userData.section === state.currentSection);
+
+        console.log('Current section:', state.currentSection, 'Current index:', currentIndex, 'Direction:', direction);
 
         // If no current section or not found, start from entry (index 0)
         if (currentIndex === -1) {
             currentIndex = 0;
+            console.log('No current section found, starting from entry (index 0)');
         } else {
             // Move to next/previous wall (with wrapping)
             currentIndex = (currentIndex + direction + state.walls.length) % state.walls.length;
+            console.log('Moving to new index:', currentIndex);
         }
 
         // Navigate to the wall at the new index
         const targetWall = state.walls[currentIndex];
         if (targetWall) {
-            navigateToSection(targetWall.userData.section);
+            console.log('Navigating to wall:', targetWall.userData.section);
+
+            // If a panel was open, close it briefly before opening the new one
+            if (hadActivePanel) {
+                activePanels.forEach(panel => panel.classList.remove('active'));
+                // Small delay for smooth transition
+                setTimeout(() => {
+                    navigateToSection(targetWall.userData.section);
+                }, 100);
+            } else {
+                navigateToSection(targetWall.userData.section);
+            }
+        } else {
+            console.error('Target wall not found at index:', currentIndex);
         }
     }
 

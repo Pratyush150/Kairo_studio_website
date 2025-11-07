@@ -3,269 +3,617 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kairo Studio OS | AI-Powered Business Operating System</title>
+    <meta name="theme-color" content="#000000">
+    <meta name="description" content="Kairo Studio - Award-winning digital agency specializing in web design, development, and strategic digital solutions. We transform ambitious ideas into exceptional digital experiences.">
+    <meta name="keywords" content="web design, web development, digital agency, UI/UX design, custom websites, e-commerce, mobile apps">
+    <meta property="og:title" content="Kairo Studio | Premium Digital Solutions">
+    <meta property="og:description" content="Transform your digital presence with strategic design and development that drives results.">
+    <meta property="og:type" content="website">
+    <title>Kairo Studio | Premium Digital Design & Development Agency</title>
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/os-style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Three.js (Updated version with glTF support) -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/examples/js/loaders/DRACOLoader.js"></script>
+
+    <!-- GSAP for animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="assets/css/style.css">
 </head>
-<body class="os-body">
+<body>
 
-    <!-- AI/ROBOTICS BACKGROUND -->
-    <div class="neural-network"></div>
-    <div class="circuit-lines"></div>
-    <div class="ai-particles" id="particles"></div>
-
-    <!-- LANDING SCREEN: 3D Computer -->
-    <div id="landing-screen" class="screen active">
-        <div class="computer-container">
-            <div class="computer-3d" id="computer3d">
-                <div class="screen-glow"></div>
-                <div class="holographic-layer"></div>
-                <div class="computer-screen">
-                    <div class="screen-content">
-                        <div class="kairo-logo-screen">
-                            <span class="glitch-text">KAIRO</span>
-                            <span class="glitch-text">STUDIO</span>
-                        </div>
-                        <div class="screen-subtitle">AI-POWERED BUSINESS OS</div>
-                        <div class="screen-text">
-                            CLICK TO ENTER <span class="cursor-blink">_</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="computer-base"></div>
+    <!-- LOADING SCREEN -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-logo">KAIRO STUDIO</div>
+            <div class="loading-bar">
+                <div class="loading-progress" id="loadingProgress"></div>
             </div>
-        </div>
-        <div class="landing-footer">
-            <p>KAIRO STUDIO OS v3.0 | Strategy that scales. Systems that deliver.</p>
+            <div class="loading-text" id="loadingText">Loading Experience...</div>
         </div>
     </div>
 
-    <!-- BOOT SEQUENCE -->
-    <div id="boot-screen" class="screen">
-        <div class="boot-container">
-            <div class="boot-logo">
-                <span class="glitch-text">KAIRO</span>
-                <span class="glitch-text">STUDIO</span>
+    <!-- HEADER / NAV -->
+    <header class="header-3d">
+        <div class="header-container">
+            <div class="logo">
+                <span class="logo-main">KAIRO</span>
+                <span class="logo-sub">STUDIO</span>
             </div>
-            <div class="boot-progress">
-                <div class="progress-bar">
-                    <div class="progress-fill" id="bootProgress"></div>
-                </div>
-                <div class="boot-text" id="bootText">INITIALIZING AI SYSTEMS...</div>
+            <nav class="nav-3d" id="mainNav">
+                <button class="nav-btn" data-section="entry" aria-label="Navigate to Entry">Entry</button>
+                <button class="nav-btn" data-section="about" aria-label="Navigate to About">About</button>
+                <button class="nav-btn" data-section="work" aria-label="Navigate to Work">Work</button>
+                <button class="nav-btn" data-section="services" aria-label="Navigate to Services">Services</button>
+                <button class="nav-btn" data-section="demos" aria-label="Navigate to Demo Projects">Demos</button>
+                <button class="nav-btn" data-section="contact" aria-label="Navigate to Contact">Contact</button>
+            </nav>
+            <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- 3D CANVAS -->
+    <canvas id="scene-canvas" class="scene-canvas"></canvas>
+
+    <!-- UI OVERLAY -->
+    <div class="ui-overlay">
+        <!-- Current Section Indicator -->
+        <div class="section-indicator" id="sectionIndicator">
+            <span class="indicator-text">ENTRY</span>
+        </div>
+
+        <!-- Navigation Hints -->
+        <div class="nav-hints" id="navHints">
+            <div class="hint">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+                <span>Arrow keys: Navigate through walls</span>
             </div>
-            <div class="boot-logs" id="bootLogs"></div>
+            <div class="hint">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 8v8M8 12h8"/>
+                </svg>
+                <span>Click or hover: Interact with walls</span>
+            </div>
+            <div class="hint">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"/>
+                    <rect x="14" y="3" width="7" height="7"/>
+                    <rect x="14" y="14" width="7" height="7"/>
+                    <rect x="3" y="14" width="7" height="7"/>
+                </svg>
+                <span>1-6 keys: Jump to specific wall</span>
+            </div>
+        </div>
+
+        <!-- Workflow Timeline -->
+        <div class="workflow-timeline" id="workflowTimeline">
+            <div class="timeline-step active" data-step="research" tabindex="0" role="button" aria-label="Research workflow step">
+                <div class="step-dot"></div>
+                <span>Research</span>
+            </div>
+            <div class="timeline-step" data-step="strategy" tabindex="0" role="button" aria-label="Strategy workflow step">
+                <div class="step-dot"></div>
+                <span>Strategy</span>
+            </div>
+            <div class="timeline-step" data-step="design" tabindex="0" role="button" aria-label="Design workflow step">
+                <div class="step-dot"></div>
+                <span>Design</span>
+            </div>
+            <div class="timeline-step" data-step="development" tabindex="0" role="button" aria-label="Development workflow step">
+                <div class="step-dot"></div>
+                <span>Development</span>
+            </div>
+        </div>
+
+        <!-- Performance Monitor -->
+        <div class="performance-monitor" id="perfMonitor">
+            <div class="perf-fps">60 FPS</div>
+        </div>
+
+        <!-- Accessibility Controls -->
+        <div class="accessibility-controls" id="a11yControls">
+            <button class="a11y-toggle" id="motionToggle" aria-label="Toggle motion" title="Toggle animations">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2v20M2 12h20"/>
+                </svg>
+            </button>
         </div>
     </div>
 
-    <!-- DESKTOP OS -->
-    <div id="desktop-screen" class="screen">
-        <!-- Desktop -->
-        <div class="desktop" id="desktop">
-            <!-- INFO SIDEBAR -->
-            <div class="info-sidebar">
-                <div class="info-panel">
-                    <div class="panel-title">SYSTEM INFO</div>
-                    <div class="system-stat">
-                        <span class="stat-label">Status</span>
-                        <span class="stat-value">ONLINE</span>
+    <!-- CONTENT PANELS (Overlay for detailed views) -->
+    <div class="content-panel" id="entryPanel">
+        <button class="panel-close" aria-label="Close panel">×</button>
+        <div class="panel-content">
+            <h2 class="panel-title">Welcome to Kairo Studio</h2>
+            <div class="panel-body">
+                <p class="lead">Where Strategic Thinking Meets Exceptional Digital Craft</p>
+
+                <p>Step into our immersive 3D experience and discover how we transform ambitious ideas into exceptional digital products. Navigate through our hexagonal studio to explore our work, services, and approach.</p>
+
+                <h3>Navigation Guide</h3>
+                <div style="background: rgba(0,102,255,0.1); padding: 1.5rem; border-radius: 0.5rem; margin: 1.5rem 0;">
+                    <ul style="list-style: none; padding: 0; margin: 0;">
+                        <li style="margin-bottom: 1rem; padding-left: 1.5rem; position: relative;">
+                            <span style="position: absolute; left: 0; color: var(--color-primary); font-weight: 700;">→</span>
+                            <strong style="color: var(--color-white);">Arrow Keys:</strong> Navigate clockwise/counter-clockwise through all 6 walls
+                        </li>
+                        <li style="margin-bottom: 1rem; padding-left: 1.5rem; position: relative;">
+                            <span style="position: absolute; left: 0; color: var(--color-primary); font-weight: 700;">→</span>
+                            <strong style="color: var(--color-white);">Number Keys (1-6):</strong> Jump directly to any wall
+                        </li>
+                        <li style="margin-bottom: 1rem; padding-left: 1.5rem; position: relative;">
+                            <span style="position: absolute; left: 0; color: var(--color-primary); font-weight: 700;">→</span>
+                            <strong style="color: var(--color-white);">Mouse:</strong> Click or hover over hexagonal walls
+                        </li>
+                        <li style="margin-bottom: 1rem; padding-left: 1.5rem; position: relative;">
+                            <span style="position: absolute; left: 0; color: var(--color-primary); font-weight: 700;">→</span>
+                            <strong style="color: var(--color-white);">ESC Key:</strong> Close panels and return to center
+                        </li>
+                    </ul>
+                </div>
+
+                <h3>Explore Our Studio</h3>
+                <div class="stats-grid">
+                    <div class="stat" style="cursor: pointer;" onclick="document.querySelector('[data-section=\\'about\\']').click()">
+                        <div class="stat-number" style="color: #0066ff;">About</div>
+                        <div class="stat-label">Our Story</div>
                     </div>
-                    <div class="system-stat">
-                        <span class="stat-label">Uptime</span>
-                        <span class="stat-value">99.9%</span>
+                    <div class="stat" style="cursor: pointer;" onclick="document.querySelector('[data-section=\\'work\\']').click()">
+                        <div class="stat-number" style="color: #00ccff;">Work</div>
+                        <div class="stat-label">Case Studies</div>
                     </div>
-                    <div class="system-stat">
-                        <span class="stat-label">Projects</span>
-                        <span class="stat-value">100+</span>
-                    </div>
-                    <div class="system-stat">
-                        <span class="stat-label">Clients</span>
-                        <span class="stat-value">50+</span>
+                    <div class="stat" style="cursor: pointer;" onclick="document.querySelector('[data-section=\\'services\\']').click()">
+                        <div class="stat-number" style="color: #ff6b00;">Services</div>
+                        <div class="stat-label">What We Do</div>
                     </div>
                 </div>
 
-                <div class="info-panel">
-                    <div class="panel-title">QUICK LINKS</div>
-                    <a href="#" class="quick-link" data-app="about">→ About Us</a>
-                    <a href="#" class="quick-link" data-app="services">→ Our Services</a>
-                    <a href="#" class="quick-link" data-app="projects">→ Portfolio</a>
-                    <a href="#" class="quick-link" data-app="contact">→ Get in Touch</a>
+                <div style="margin-top: 2rem; text-align: center; padding: 2rem; background: linear-gradient(135deg, rgba(0,102,255,0.1), rgba(255,107,0,0.1)); border-radius: 1rem;">
+                    <p style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--color-white);">Ready to start your journey?</p>
+                    <button class="project-btn" style="margin: 0 auto; display: inline-block;" onclick="document.querySelector('[data-section=\\'contact\\']').click()">Get In Touch →</button>
                 </div>
-
-                <div class="info-panel">
-                    <div class="panel-title">CAPABILITIES</div>
-                    <div class="system-stat">
-                        <span class="stat-label">Brand Strategy</span>
-                        <span class="stat-value">✓</span>
-                    </div>
-                    <div class="system-stat">
-                        <span class="stat-label">Product Marketing</span>
-                        <span class="stat-value">✓</span>
-                    </div>
-                    <div class="system-stat">
-                        <span class="stat-label">Web Development</span>
-                        <span class="stat-value">✓</span>
-                    </div>
-                    <div class="system-stat">
-                        <span class="stat-label">Growth Advisory</span>
-                        <span class="stat-value">✓</span>
-                    </div>
-                    <div class="system-stat">
-                        <span class="stat-label">SaaS Integration</span>
-                        <span class="stat-value">✓</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- MAIN DESKTOP AREA -->
-            <div class="desktop-main">
-                <div class="desktop-grid">
-                    <!-- About Us -->
-                    <div class="app-icon" data-app="about">
-                        <div class="app-icon-image">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
-                        <div class="app-icon-label">About_Us.app</div>
-                    </div>
-
-                    <!-- Services -->
-                    <div class="app-icon" data-app="services">
-                        <div class="app-icon-image">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                            </svg>
-                        </div>
-                        <div class="app-icon-label">Services.app</div>
-                    </div>
-
-                    <!-- Portfolio/Projects -->
-                    <div class="app-icon" data-app="projects">
-                        <div class="app-icon-image">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                            </svg>
-                        </div>
-                        <div class="app-icon-label">Portfolio.app</div>
-                    </div>
-
-                    <!-- Demo/Process -->
-                    <div class="app-icon" data-app="demo">
-                        <div class="app-icon-image">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
-                        <div class="app-icon-label">Demo.app</div>
-                    </div>
-
-                    <!-- Contact -->
-                    <div class="app-icon" data-app="contact">
-                        <div class="app-icon-image">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                            </svg>
-                        </div>
-                        <div class="app-icon-label">Contact.app</div>
-                    </div>
-
-                    <!-- Requirements/Process -->
-                    <div class="app-icon" data-app="requirements">
-                        <div class="app-icon-image">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                            </svg>
-                        </div>
-                        <div class="app-icon-label">Process.app</div>
-                    </div>
-
-                    <!-- Brand Strategy -->
-                    <div class="app-icon" data-app="brand-strategy">
-                        <div class="app-icon-image">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
-                            </svg>
-                        </div>
-                        <div class="app-icon-label">Branding.tool</div>
-                    </div>
-
-                    <!-- Terminal -->
-                    <div class="app-icon" data-app="terminal">
-                        <div class="app-icon-image">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                            </svg>
-                        </div>
-                        <div class="app-icon-label">Terminal.cmd</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Window Container -->
-        <div class="windows-container" id="windowsContainer"></div>
-
-        <!-- Taskbar -->
-        <div class="taskbar">
-            <div class="taskbar-start">
-                <div class="start-button" id="startBtn">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
-                    </svg>
-                    <span>KAIRO STUDIO</span>
-                </div>
-                <div class="taskbar-apps" id="taskbarApps"></div>
-            </div>
-            <div class="system-tray">
-                <span id="clock">00:00</span>
-                <div class="status-indicator"></div>
-            </div>
-        </div>
-
-        <!-- Start Menu -->
-        <div class="start-menu" id="startMenu">
-            <div class="start-menu-header">
-                <h3>KAIRO STUDIO OS</h3>
-                <p>AI-Powered Business Operating System v3.0</p>
-            </div>
-            <div class="start-menu-apps">
-                <div class="start-menu-item" data-app="about">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <span>About Us</span>
-                </div>
-                <div class="start-menu-item" data-app="services">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                    <span>Our Services</span>
-                </div>
-                <div class="start-menu-item" data-app="projects">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    <span>Portfolio</span>
-                </div>
-                <div class="start-menu-item" data-app="demo">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <span>Demo & Process</span>
-                </div>
-                <div class="start-menu-item" data-app="contact">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                    <span>Contact Us</span>
-                </div>
-                <div class="start-menu-item" data-app="terminal">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    <span>Terminal</span>
-                </div>
-            </div>
-            <div class="start-menu-footer">
-                <button class="power-btn" id="powerBtn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                    Exit System
-                </button>
             </div>
         </div>
     </div>
 
+    <div class="content-panel" id="aboutPanel">
+        <button class="panel-close" aria-label="Close panel">×</button>
+        <div class="panel-content">
+            <h2 class="panel-title">Building Digital Experiences That Matter</h2>
+            <div class="panel-body">
+                <p class="lead">We're a full-service digital studio where strategic thinking meets exceptional craft.</p>
+
+                <p>At Kairo Studio, we don't just build websites—we create digital experiences that drive real business results. Our approach combines deep research, strategic planning, beautiful design, and rock-solid development to deliver solutions that exceed expectations.</p>
+
+                <h3>What Sets Us Apart</h3>
+                <p>Every project starts with understanding your goals, your audience, and your market. We then translate those insights into digital experiences that not only look stunning but perform exceptionally.</p>
+
+                <div class="stats-grid">
+                    <div class="stat">
+                        <div class="stat-number">50+</div>
+                        <div class="stat-label">Projects Delivered</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">98%</div>
+                        <div class="stat-label">Client Retention</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">5+</div>
+                        <div class="stat-label">Years Experience</div>
+                    </div>
+                </div>
+
+                <h3>Trusted by Leading Brands</h3>
+                <p>From enterprise giants like <strong>Canon</strong> and <strong>Amul</strong> to innovative startups and local businesses, we partner with organizations that value quality, strategy, and measurable results.</p>
+
+                <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(0, 102, 255, 0.1); border-left: 3px solid var(--color-primary); border-radius: 0.5rem;">
+                    <p style="margin: 0; font-style: italic; color: var(--color-gray-200);">"Kairo Studio transformed our digital presence. Their strategic approach and attention to detail resulted in a 150% increase in conversions. They're not just vendors—they're partners."</p>
+                    <p style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--color-gray-400);">— Marketing Director, Fortune 500 Company</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-panel" id="workPanel">
+        <button class="panel-close" aria-label="Close panel">×</button>
+        <div class="panel-content">
+            <h2 class="panel-title">Case Studies & Success Stories</h2>
+            <div class="panel-body">
+                <p class="lead">Real projects. Real results. Real impact.</p>
+
+                <div class="projects-grid">
+                    <!-- Canon Project -->
+                    <div class="project-card" data-project="canon">
+                        <div class="project-image">
+                            <div class="project-placeholder">CANON</div>
+                        </div>
+                        <h3 class="project-title">Canon Digital Experience</h3>
+                        <p class="project-description">Reimagining Canon's flagship product showcase with immersive 3D visualizations and seamless e-commerce integration.</p>
+                        <div class="project-tags">
+                            <span class="tag">3D WebGL</span>
+                            <span class="tag">E-commerce</span>
+                            <span class="tag">UI/UX</span>
+                            <span class="tag">Performance</span>
+                        </div>
+                        <div style="margin: 1rem 1.5rem; padding: 1rem; background: rgba(0,102,255,0.1); border-radius: 0.5rem;">
+                            <p style="font-size: 0.875rem; color: var(--color-gray-300); margin: 0;"><strong style="color: var(--color-primary);">+180%</strong> engagement, <strong style="color: var(--color-primary);">+65%</strong> conversion rate</p>
+                        </div>
+                        <button class="project-btn">View Case Study</button>
+                    </div>
+
+                    <!-- Amul Project -->
+                    <div class="project-card" data-project="amul">
+                        <div class="project-image">
+                            <div class="project-placeholder">AMUL</div>
+                        </div>
+                        <h3 class="project-title">Amul Digital Ecosystem</h3>
+                        <p class="project-description">Transforming India's beloved dairy brand with a modern design system, mobile-first approach, and regional localization.</p>
+                        <div class="project-tags">
+                            <span class="tag">Design System</span>
+                            <span class="tag">Mobile-First</span>
+                            <span class="tag">Localization</span>
+                            <span class="tag">CMS</span>
+                        </div>
+                        <div style="margin: 1rem 1.5rem; padding: 1rem; background: rgba(0,102,255,0.1); border-radius: 0.5rem;">
+                            <p style="font-size: 0.875rem; color: var(--color-gray-300); margin: 0;"><strong style="color: var(--color-primary);">3M+</strong> users reached, <strong style="color: var(--color-primary);">50%</strong> faster load times</p>
+                        </div>
+                        <button class="project-btn">View Case Study</button>
+                    </div>
+
+                    <!-- FinTech Project -->
+                    <div class="project-card" data-project="fintech">
+                        <div class="project-image">
+                            <div class="project-placeholder">FINTECH</div>
+                        </div>
+                        <h3 class="project-title">FinTech Dashboard Platform</h3>
+                        <p class="project-description">Building a secure, scalable financial analytics platform with real-time data visualization and compliance features.</p>
+                        <div class="project-tags">
+                            <span class="tag">SaaS</span>
+                            <span class="tag">Security</span>
+                            <span class="tag">Analytics</span>
+                            <span class="tag">API Integration</span>
+                        </div>
+                        <div style="margin: 1rem 1.5rem; padding: 1rem; background: rgba(0,102,255,0.1); border-radius: 0.5rem;">
+                            <p style="font-size: 0.875rem; color: var(--color-gray-300); margin: 0;"><strong style="color: var(--color-primary);">$2M+</strong> processed daily, <strong style="color: var(--color-primary);">99.9%</strong> uptime</p>
+                        </div>
+                        <button class="project-btn">View Case Study</button>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem; text-align: center;">
+                    <p style="color: var(--color-gray-400);">Want to see the full portfolio?</p>
+                    <button class="project-btn" style="margin: 1rem auto; display: inline-block;" onclick="document.querySelector('[data-section=\\'contact\\']').click()">Let's Talk About Your Project</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-panel" id="servicesPanel">
+        <button class="panel-close" aria-label="Close panel">×</button>
+        <div class="panel-content">
+            <h2 class="panel-title">How We Transform Ideas Into Reality</h2>
+            <div class="panel-body">
+                <p class="lead">A proven 4-phase process that turns ambitious visions into exceptional digital products.</p>
+
+                <div class="services-workflow">
+                    <div class="service-module">
+                        <div class="module-number">01</div>
+                        <h3 class="module-title">Discovery & Research</h3>
+                        <p class="module-description">We start by understanding your business inside-out. Through comprehensive research and stakeholder interviews, we identify opportunities and validate assumptions before writing a single line of code.</p>
+                        <ul class="module-list">
+                            <li>Business & market analysis</li>
+                            <li>User research & personas</li>
+                            <li>Competitive landscape audit</li>
+                            <li>Technical feasibility assessment</li>
+                            <li>Success metrics definition</li>
+                        </ul>
+                    </div>
+
+                    <div class="service-module">
+                        <div class="module-number">02</div>
+                        <h3 class="module-title">Strategy & Planning</h3>
+                        <p class="module-description">Insights become action. We craft a strategic roadmap that aligns technology, design, and business goals—giving you a clear path from concept to launch.</p>
+                        <ul class="module-list">
+                            <li>Brand positioning & messaging</li>
+                            <li>Information architecture</li>
+                            <li>Technical stack & infrastructure</li>
+                            <li>Content strategy & SEO planning</li>
+                            <li>Project roadmap & timeline</li>
+                        </ul>
+                    </div>
+
+                    <div class="service-module">
+                        <div class="module-number">03</div>
+                        <h3 class="module-title">Design & Prototyping</h3>
+                        <p class="module-description">Where strategy meets creativity. We design pixel-perfect interfaces and interactive prototypes that are not just beautiful, but convert visitors into customers.</p>
+                        <ul class="module-list">
+                            <li>Visual design & branding</li>
+                            <li>UI/UX design & user flows</li>
+                            <li>Design system development</li>
+                            <li>Interactive prototypes</li>
+                            <li>Usability testing & iteration</li>
+                        </ul>
+                    </div>
+
+                    <div class="service-module">
+                        <div class="module-number">04</div>
+                        <h3 class="module-title">Development & Launch</h3>
+                        <p class="module-description">Clean code. Blazing performance. Zero compromises. We build with modern technologies and best practices, ensuring your product is fast, secure, and scalable from day one.</p>
+                        <ul class="module-list">
+                            <li>Front-end & back-end development</li>
+                            <li>Mobile-responsive implementation</li>
+                            <li>CMS & API integration</li>
+                            <li>Performance optimization</li>
+                            <li>QA testing & deployment</li>
+                            <li>Post-launch support & monitoring</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div style="margin-top: 3rem; padding: 2rem; background: linear-gradient(135deg, rgba(0,102,255,0.1), rgba(255,107,0,0.1)); border-radius: 1rem; text-align: center;">
+                    <h3 style="margin-bottom: 1rem;">Ready to Start Your Project?</h3>
+                    <p style="color: var(--color-gray-300); margin-bottom: 1.5rem;">Let's discuss how we can help you achieve your digital goals.</p>
+                    <button class="project-btn" style="margin: 0 auto; display: inline-block;" onclick="document.querySelector('[data-section=\\'contact\\']').click()">Schedule a Free Consultation</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-panel" id="demosPanel">
+        <button class="panel-close" aria-label="Close panel">×</button>
+        <div class="panel-content">
+            <h2 class="panel-title">Interactive Demos & Showcases</h2>
+            <div class="panel-body">
+                <p class="lead">Experience our technical capabilities firsthand through these live, interactive demonstrations.</p>
+
+                <div class="projects-grid">
+                    <!-- E-commerce Demo -->
+                    <div class="project-card" data-demo="ecommerce">
+                        <div class="project-image" style="background: linear-gradient(135deg, rgba(0,102,255,0.2), rgba(255,107,0,0.1));">
+                            <div class="project-placeholder">SHOP</div>
+                        </div>
+                        <h3 class="project-title">E-commerce Excellence</h3>
+                        <p class="project-description">Full-featured online store with real-time inventory, advanced filtering, cart persistence, and payment gateway integration.</p>
+                        <div class="project-tags">
+                            <span class="tag">React 18</span>
+                            <span class="tag">Next.js 14</span>
+                            <span class="tag">Stripe API</span>
+                            <span class="tag">Headless CMS</span>
+                        </div>
+                        <button class="project-btn" onclick="window.open('#', '_blank')">Launch Demo →</button>
+                    </div>
+
+                    <!-- Portfolio Demo -->
+                    <div class="project-card" data-demo="portfolio">
+                        <div class="project-image" style="background: linear-gradient(135deg, rgba(255,107,0,0.2), rgba(0,204,255,0.1));">
+                            <div class="project-placeholder">FOLIO</div>
+                        </div>
+                        <h3 class="project-title">3D Portfolio Experience</h3>
+                        <p class="project-description">Award-worthy portfolio with WebGL animations, smooth transitions, and immersive 3D interactions that engage visitors.</p>
+                        <div class="project-tags">
+                            <span class="tag">Three.js</span>
+                            <span class="tag">GSAP 3</span>
+                            <span class="tag">WebGL</span>
+                            <span class="tag">Smooth Scroll</span>
+                        </div>
+                        <button class="project-btn" onclick="window.open('#', '_blank')">Launch Demo →</button>
+                    </div>
+
+                    <!-- SaaS Demo -->
+                    <div class="project-card" data-demo="saas">
+                        <div class="project-image" style="background: linear-gradient(135deg, rgba(0,204,255,0.2), rgba(0,102,255,0.1));">
+                            <div class="project-placeholder">SAAS</div>
+                        </div>
+                        <h3 class="project-title">Enterprise Dashboard</h3>
+                        <p class="project-description">Production-grade SaaS platform with real-time analytics, role-based access, and beautiful data visualizations.</p>
+                        <div class="project-tags">
+                            <span class="tag">TypeScript</span>
+                            <span class="tag">React Query</span>
+                            <span class="tag">Chart.js</span>
+                            <span class="tag">REST API</span>
+                        </div>
+                        <button class="project-btn" onclick="window.open('#', '_blank')">Launch Demo →</button>
+                    </div>
+
+                    <!-- Landing Page Demo -->
+                    <div class="project-card" data-demo="landing">
+                        <div class="project-image" style="background: linear-gradient(135deg, rgba(255,51,102,0.2), rgba(255,107,0,0.1));">
+                            <div class="project-placeholder">LAND</div>
+                        </div>
+                        <h3 class="project-title">High-Converting Landing</h3>
+                        <p class="project-description">Performance-optimized landing page with scroll-triggered animations, A/B testing ready, and conversion-focused design.</p>
+                        <div class="project-tags">
+                            <span class="tag">Vanilla JS</span>
+                            <span class="tag">CSS Animations</span>
+                            <span class="tag">100 Lighthouse</span>
+                            <span class="tag">SEO Ready</span>
+                        </div>
+                        <button class="project-btn" onclick="window.open('#', '_blank')">Launch Demo →</button>
+                    </div>
+
+                    <!-- Blog Demo -->
+                    <div class="project-card" data-demo="blog">
+                        <div class="project-image" style="background: linear-gradient(135deg, rgba(0,102,255,0.15), rgba(0,204,255,0.15));">
+                            <div class="project-placeholder">BLOG</div>
+                        </div>
+                        <h3 class="project-title">Content Publishing Platform</h3>
+                        <p class="project-description">Modern CMS-powered blog with rich media support, advanced search, social integration, and newsletter functionality.</p>
+                        <div class="project-tags">
+                            <span class="tag">Headless CMS</span>
+                            <span class="tag">MDX</span>
+                            <span class="tag">Full-Text Search</span>
+                            <span class="tag">RSS Feed</span>
+                        </div>
+                        <button class="project-btn" onclick="window.open('#', '_blank')">Launch Demo →</button>
+                    </div>
+
+                    <!-- Mobile App Demo -->
+                    <div class="project-card" data-demo="mobile">
+                        <div class="project-image" style="background: linear-gradient(135deg, rgba(255,107,0,0.15), rgba(255,51,102,0.15));">
+                            <div class="project-placeholder">APP</div>
+                        </div>
+                        <h3 class="project-title">Progressive Web App</h3>
+                        <p class="project-description">Native-quality mobile experience that works offline, sends push notifications, and installs like a real app.</p>
+                        <div class="project-tags">
+                            <span class="tag">PWA</span>
+                            <span class="tag">Service Workers</span>
+                            <span class="tag">Offline-First</span>
+                            <span class="tag">Push Notify</span>
+                        </div>
+                        <button class="project-btn" onclick="window.open('#', '_blank')">Launch Demo →</button>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(0,102,255,0.05); border-radius: 0.5rem; border: 1px solid rgba(0,102,255,0.2);">
+                    <p style="margin: 0; color: var(--color-gray-300); text-align: center;">
+                        <strong style="color: var(--color-white);">Need something custom?</strong> These demos showcase our technical range. Your project will be uniquely tailored to your specific needs and goals.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-panel" id="contactPanel">
+        <button class="panel-close" aria-label="Close panel">×</button>
+        <div class="panel-content">
+            <h2 class="panel-title">Let's Build Something Amazing</h2>
+            <div class="panel-body">
+                <p class="lead">Ready to transform your digital presence? Tell us about your project and let's create something exceptional together.</p>
+
+                <div style="margin: 2rem 0; padding: 1.5rem; background: rgba(0,102,255,0.05); border-radius: 0.5rem; border-left: 3px solid var(--color-primary);">
+                    <h3 style="margin-top: 0; font-size: 1.25rem;">What to Expect:</h3>
+                    <ul style="margin: 0; padding-left: 1.5rem; color: var(--color-gray-300); line-height: 1.8;">
+                        <li><strong style="color: var(--color-white);">Response within 24 hours</strong> from our team</li>
+                        <li><strong style="color: var(--color-white);">Free consultation call</strong> to discuss your needs</li>
+                        <li><strong style="color: var(--color-white);">Custom proposal</strong> tailored to your goals</li>
+                        <li><strong style="color: var(--color-white);">No obligation</strong> – just honest advice</li>
+                    </ul>
+                </div>
+
+                <form class="contact-form-3d" id="contactForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="name">Name *</label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="company">Company</label>
+                            <input type="text" id="company" name="company">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="email">Email *</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone</label>
+                            <input type="tel" id="phone" name="phone">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="service">What Can We Help You With? *</label>
+                        <select id="service" name="service" required>
+                            <option value="">Select an option</option>
+                            <option value="full-project">🚀 Complete Digital Product (Design + Development)</option>
+                            <option value="website">🌐 Website Design & Development</option>
+                            <option value="webapp">💻 Web Application Development</option>
+                            <option value="mobile">📱 Mobile App Development</option>
+                            <option value="ecommerce">🛒 E-commerce Platform</option>
+                            <option value="redesign">✨ Redesign & Modernization</option>
+                            <option value="consulting">💡 Strategy & Consulting</option>
+                            <option value="other">🤔 Not Sure Yet / Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="message">Tell Us About Your Project *</label>
+                        <textarea id="message" name="message" rows="5" required placeholder="What are your goals? What challenges are you facing? Any specific requirements or timeline?"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="budget">Estimated Budget</label>
+                            <select id="budget" name="budget">
+                                <option value="">Select range (optional)</option>
+                                <option value="under-10k">Under $10,000</option>
+                                <option value="10-25k">$10,000 - $25,000</option>
+                                <option value="25-50k">$25,000 - $50,000</option>
+                                <option value="50-100k">$50,000 - $100,000</option>
+                                <option value="100k+">$100,000+</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="timeline">Timeline</label>
+                            <select id="timeline" name="timeline">
+                                <option value="">Select timeline (optional)</option>
+                                <option value="urgent">ASAP (1-2 months)</option>
+                                <option value="soon">Soon (3-4 months)</option>
+                                <option value="flexible">Flexible (5+ months)</option>
+                                <option value="planning">Just Planning</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn">Send Your Inquiry →</button>
+                    <p style="text-align: center; margin-top: 1rem; font-size: 0.875rem; color: var(--color-gray-500);">We respect your privacy. Your information will never be shared.</p>
+                </form>
+
+                <div class="contact-info">
+                    <h3>Other Ways to Reach Us</h3>
+                    <p><strong>Email:</strong> <a href="mailto:hello@kairostudio.com" style="color: var(--color-primary); text-decoration: none;">hello@kairostudio.com</a></p>
+                    <p><strong>Phone:</strong> <a href="tel:+15551234567" style="color: var(--color-primary); text-decoration: none;">+1 (555) 123-4567</a></p>
+                    <p><strong>Office Hours:</strong> Mon-Fri, 9am-6pm EST</p>
+
+                    <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                        <p style="font-size: 0.875rem; color: var(--color-gray-400); margin-bottom: 1rem;">Follow our work and insights:</p>
+                        <div style="display: flex; gap: 1rem;">
+                            <a href="#" style="color: var(--color-gray-400); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='var(--color-primary)'" onmouseout="this.style.color='var(--color-gray-400)'">LinkedIn</a>
+                            <a href="#" style="color: var(--color-gray-400); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='var(--color-primary)'" onmouseout="this.style.color='var(--color-gray-400)'">Twitter</a>
+                            <a href="#" style="color: var(--color-gray-400); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='var(--color-primary)'" onmouseout="this.style.color='var(--color-gray-400)'">Dribbble</a>
+                            <a href="#" style="color: var(--color-gray-400); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='var(--color-primary)'" onmouseout="this.style.color='var(--color-gray-400)'">GitHub</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Detail Modal -->
+    <div class="project-modal" id="projectModal">
+        <button class="modal-close" aria-label="Close modal">×</button>
+        <div class="modal-content" id="projectModalContent">
+            <!-- Content loaded dynamically -->
+        </div>
+    </div>
+
+    <!-- Mobile Fallback Message -->
+    <div class="mobile-fallback" id="mobileFallback">
+        <div class="fallback-content">
+            <h1>KAIRO STUDIO</h1>
+            <p>For the best experience, please view this site on a desktop browser or rotate your device to landscape mode.</p>
+            <button class="fallback-btn" id="continueMobile">Continue Anyway</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
     <script src="assets/js/main.js"></script>
 </body>
 </html>

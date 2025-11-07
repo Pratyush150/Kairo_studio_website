@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kairo Studio - Diagnostic Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: monospace;
+            background: #000;
+            color: #0f0;
+        }
+        #status {
+            white-space: pre-wrap;
+        }
+        .error { color: #f00; }
+        .success { color: #0f0; }
+        .warning { color: #ff0; }
+    </style>
+</head>
+<body>
+    <h1>Kairo Studio - Diagnostic Test</h1>
+    <div id="status"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        const status = document.getElementById('status');
+
+        function log(message, type = 'info') {
+            const span = document.createElement('div');
+            span.className = type;
+            span.textContent = `[${new Date().toISOString()}] ${message}`;
+            status.appendChild(span);
+            console.log(message);
+        }
+
+        // Check Three.js
+        if (typeof THREE !== 'undefined') {
+            log('✓ Three.js loaded successfully (version: ' + THREE.REVISION + ')', 'success');
+        } else {
+            log('✗ Three.js failed to load', 'error');
+        }
+
+        // Check WebGL
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        if (gl) {
+            log('✓ WebGL is supported', 'success');
+            log('  Renderer: ' + gl.getParameter(gl.RENDERER), 'info');
+            log('  Vendor: ' + gl.getParameter(gl.VENDOR), 'info');
+        } else {
+            log('✗ WebGL is NOT supported', 'error');
+        }
+
+        // Check browser
+        log('Browser: ' + navigator.userAgent, 'info');
+        log('Screen size: ' + window.innerWidth + 'x' + window.innerHeight, 'info');
+
+        // Try to create a simple Three.js scene
+        if (typeof THREE !== 'undefined' && gl) {
+            try {
+                log('Attempting to create a simple Three.js scene...', 'info');
+                const scene = new THREE.Scene();
+                const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                const renderer = new THREE.WebGLRenderer();
+                log('✓ Basic Three.js scene created successfully', 'success');
+
+                log('\n=== READY TO TEST MAIN APPLICATION ===', 'success');
+                log('Open index.html and check the browser console for errors', 'warning');
+            } catch (error) {
+                log('✗ Failed to create Three.js scene: ' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

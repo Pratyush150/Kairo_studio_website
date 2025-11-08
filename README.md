@@ -1,365 +1,289 @@
-# Kairo Studio Website
+# Kairo Studio - PERN Stack Application
 
-**Tagline**: Strategy that scales. Systems that deliver.
+A modern full-stack web application with an immersive 3D experience built using PostgreSQL, Express, React, and Node.js (PERN stack).
 
-A modern, glassmorphic website for Kairo Studio - a SaaS + marketing agency offering digital brand strategy, product-focused marketing, website development support, growth advisory, and SaaS implementation consulting.
+## Architecture
 
----
+### Backend (Server)
+- **Node.js** with **Express** - RESTful API server
+- **PostgreSQL** - Relational database
+- **Environment**: ES6 modules, CORS, Rate limiting, Security headers
 
-## 🏗️ Architecture Overview
+### Frontend (Client)
+- **React 18** with **Vite** - Modern build tool and development server
+- **Three.js** - 3D graphics and WebGL
+- **GSAP** - Smooth animations
+- **CSS3** - Modern styling with CSS variables
 
-### **Technology Stack**
+## Features
 
-- **Frontend**: Vanilla HTML5, CSS3, JavaScript (ES6+)
-- **CSS Framework**: Tailwind CSS (via CDN)
-- **Fonts**: Google Fonts (Space Grotesk + Inter)
-- **Server**: Python HTTP Server (for local development)
+- ✨ Immersive 3D hexagonal studio experience
+- 🎨 Interactive project showcases
+- 📊 Real-time performance monitoring
+- ♿ Accessibility features (motion toggle, keyboard navigation)
+- 📱 Responsive design with mobile fallback
+- 🔒 Secure API with rate limiting
+- 📧 Contact form with validation
+- 🗄️ PostgreSQL database with migrations
 
-### **Why This Stack?**
+## Prerequisites
 
-- ✅ **Zero Build Process**: No complex build tools or dependencies
-- ✅ **Fast Development**: Instant changes, no compilation needed
-- ✅ **Maximum Compatibility**: Works on any system with a browser
-- ✅ **Easy Deployment**: Can be hosted on any static hosting service
-- ✅ **Lightweight**: Fast loading times, minimal dependencies
+- **Node.js** (v14 or higher)
+- **PostgreSQL** (v12 or higher)
+- **npm** or **yarn**
 
----
+## Installation & Setup
 
-## 📁 Project Structure
+### 1. Clone the repository
+
+```bash
+git clone <repository-url>
+cd kairo_studio
+```
+
+### 2. Database Setup
+
+**Create PostgreSQL database:**
+
+```bash
+# Login to PostgreSQL
+psql -U postgres
+
+# Create database
+CREATE DATABASE kairo_studio;
+
+# Exit psql
+\q
+```
+
+**Configure database credentials:**
+
+Edit `server/.env` and update the database settings:
+```
+DB_USER=postgres
+DB_HOST=localhost
+DB_NAME=kairo_studio
+DB_PASSWORD=your_password_here
+DB_PORT=5432
+```
+
+### 3. Server Setup
+
+```bash
+# Navigate to server directory
+cd server
+
+# Install dependencies
+npm install
+
+# Run database migrations
+npm run db:migrate
+
+# (Optional) Seed database with sample data
+node seeds/seedData.js
+
+# Start development server
+npm run dev
+```
+
+The server will start on `http://localhost:5000`
+
+### 4. Client Setup
+
+Open a new terminal:
+
+```bash
+# Navigate to client directory
+cd client
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+The client will start on `http://localhost:5173`
+
+## Project Structure
 
 ```
 kairo_studio/
-├── index.html              # Main homepage
-├── assets/
-│   ├── css/
-│   │   └── style.css      # Custom styles, animations, glassmorphism
-│   ├── js/
-│   │   └── main.js        # Interactive features, scroll animations
-│   └── images/            # Image assets (to be added)
-├── package.json           # Project metadata (optional)
-└── README.md             # This file
+├── server/                  # Backend Express API
+│   ├── config/
+│   │   └── database.js     # PostgreSQL connection
+│   ├── routes/
+│   │   ├── projects.js     # Project endpoints
+│   │   ├── contact.js      # Contact form endpoints
+│   │   └── content.js      # Content endpoints
+│   ├── migrations/
+│   │   ├── 001_initial_schema.sql
+│   │   └── runMigrations.js
+│   ├── seeds/
+│   │   └── seedData.js     # Sample data seeding
+│   ├── server.js           # Express app entry point
+│   ├── package.json
+│   └── .env                # Environment variables
+│
+├── client/                  # Frontend React app
+│   ├── public/
+│   │   └── assets/
+│   │       └── js/
+│   │           └── main.js # Three.js logic
+│   ├── src/
+│   │   ├── App.jsx         # Main React component
+│   │   ├── main.jsx        # React entry point
+│   │   └── index.css       # Styles
+│   ├── index.html
+│   ├── vite.config.js
+│   ├── package.json
+│   └── .env                # Environment variables
+│
+└── README.md
 ```
 
----
+## API Endpoints
 
-## 🎨 Design System
+### Projects
+- `GET /api/projects` - Get all projects
+- `GET /api/projects/:slug` - Get project by slug
 
-### **Color Palette**
+### Content
+- `GET /api/content/services` - Get all services
+- `GET /api/content/stats` - Get statistics
 
-| Variable | Hex | Usage |
-|----------|-----|-------|
-| `kairo-navy` | `#0A0E27` | Primary background |
-| `kairo-dark-blue` | `#141B34` | Section backgrounds |
-| `kairo-midnight` | `#1A2037` | Accent backgrounds |
-| `kairo-electric` | `#3B82F6` | Primary accent, CTAs |
-| `kairo-bright-blue` | `#60A5FA` | Hover states |
-| `kairo-sky` | `#93C5FD` | Highlights |
+### Contact
+- `POST /api/contact` - Submit contact form
+- `GET /api/contact/messages` - Get all messages (admin)
 
-### **Typography**
+## Environment Variables
 
-- **Headings**: Space Grotesk (700, 600)
-  - Modern geometric sans-serif
-  - Used for: h1, h2, h3, h4, logo
+### Server (.env)
+```env
+PORT=5000
+NODE_ENV=development
+DB_USER=postgres
+DB_HOST=localhost
+DB_NAME=kairo_studio
+DB_PASSWORD=your_password_here
+DB_PORT=5432
+CORS_ORIGIN=http://localhost:5173
+```
 
-- **Body**: Inter (400, 500, 600)
-  - Clean, highly legible
-  - Used for: paragraphs, buttons, navigation
+### Client (.env)
+```env
+VITE_API_URL=http://localhost:5000/api
+VITE_NODE_ENV=development
+```
 
-### **Type Scale**
+## Development Commands
 
-- Hero Title: `clamp(2.5rem, 5vw, 4.5rem)` - 40-72px
-- Section Title: `clamp(2rem, 4vw, 3rem)` - 32-48px
-- Body Large: `clamp(1rem, 2vw, 1.25rem)` - 16-20px
-- Body Regular: `16-18px`
-
-### **Spacing System**
-
-- Base unit: `8px`
-- Section padding: `160px` (desktop) / `64px` (mobile)
-- Container max-width: `1120px` (standard) / `1280px` (wide)
-
----
-
-## 🎭 Visual Features
-
-### **Glassmorphism**
-
-Glass cards with:
-- Background: `rgba(255, 255, 255, 0.03)`
-- Backdrop blur: `20px`
-- Border: `1px solid rgba(255, 255, 255, 0.1)`
-- Hover: Gradient border effect
-
-### **Floating Gradients**
-
-- Radial gradients with blur effect
-- Animated float movement (12s infinite)
-- Used in hero and CTA sections
-- Creates depth and visual interest
-
-### **Animations**
-
-1. **Fade Up**: Elements fade in and slide up on scroll
-2. **Float**: Gradient orbs move smoothly
-3. **Parallax**: Background elements move at different speeds
-4. **Hover Effects**: Cards lift, glow, and transform
-5. **Ripple**: Button click feedback
-
----
-
-## 📱 Responsive Breakpoints
-
-| Breakpoint | Width | Layout Changes |
-|------------|-------|----------------|
-| Mobile | `< 768px` | Single column, stacked navigation |
-| Tablet | `768px - 1024px` | 2-column grids, adjusted spacing |
-| Desktop | `> 1024px` | Full multi-column layouts |
-
----
-
-## 🔧 Features & Functionality
-
-### **Navigation**
-
-- Fixed position with scroll effect
-- Backdrop blur on scroll
-- Mobile hamburger menu
-- Smooth scroll to sections
-
-### **Hero Section**
-
-- Animated floating gradient orb
-- Staggered text animations
-- Dual CTA buttons
-- Scroll indicator
-
-### **Service Cards**
-
-- Glassmorphic design
-- Gradient border on hover
-- Icon glow effects
-- Smooth transitions
-
-### **Project Portfolio**
-
-- Grid layout (2 columns)
-- Hover image zoom
-- Service tags
-- Placeholder for real projects
-
-### **Interactive Elements**
-
-- Scroll-triggered animations (Intersection Observer)
-- Parallax gradients
-- Button ripple effects
-- Mobile menu toggle
-- Platform logo hover effects
-
----
-
-## 🚀 Running Locally
-
-### **Option 1: Python HTTP Server** (Recommended)
-
+### Server
 ```bash
-# Navigate to project directory
-cd kairo_studio
-
-# Start server on port 8000
-python3 -m http.server 8000
-
-# Open in browser
-# http://localhost:8000
+npm run dev          # Start development server with nodemon
+npm start            # Start production server
+npm run db:migrate   # Run database migrations
 ```
 
-### **Option 2: Any Static Server**
-
-- VS Code Live Server extension
-- Browsersync
-- serve (npm package)
-- Any web server of your choice
-
----
-
-## 🌐 Deployment Options
-
-This static website can be deployed to:
-
-- **Netlify**: Drag & drop deployment
-- **Vercel**: Git-based deployment
-- **GitHub Pages**: Free hosting
-- **AWS S3 + CloudFront**: Scalable hosting
-- **Any static host**: It's just HTML/CSS/JS!
-
----
-
-## 📄 Page Sections
-
-### Homepage Flow
-
-1. **Navigation Bar**
-   - Logo, menu links, CTA button
-   - Sticky with scroll effect
-
-2. **Hero Section**
-   - Main headline and tagline
-   - Dual CTAs
-   - Floating gradient background
-
-3. **About / Who We Are**
-   - Two-column layout
-   - Mission statement
-   - Stats cards (glass effect)
-
-4. **Services (What We Do)**
-   - 5 service cards in grid
-   - Icons with glow
-   - Hover effects
-
-5. **SaaS Partnership**
-   - Platform logos
-   - Social proof stat
-   - Gradient background
-
-6. **Work / Portfolio**
-   - 4 project cards
-   - Placeholder visuals
-   - Service tags and results
-
-7. **Testimonials**
-   - Featured testimonial card
-   - Client photo and info
-   - Glass card design
-
-8. **Final CTA**
-   - Clear call to action
-   - Email link
-   - Floating gradient
-
-9. **Footer**
-   - 4-column layout
-   - Navigation, services, contact
-   - Social links
-
----
-
-## 🎯 Brand Message
-
-**Core Message**: "We turn complexity into clarity, and strategy into momentum."
-
-**Value Proposition**:
-- Bridge between brand vision and technical reality
-- Strategy + execution in one studio
-- Focus on SaaS companies and product teams
-
-**Tone**:
-- Direct, confident, insightful
-- Outcome-focused, jargon-free
-- Professional without formality
-
----
-
-## 🛠️ Customization Guide
-
-### **Change Colors**
-
-Edit CSS variables in `style.css`:
-```css
-:root {
-    --color-electric: #YOUR_COLOR;
-}
+### Client
+```bash
+npm run dev          # Start Vite dev server
+npm run build        # Build for production
+npm run preview      # Preview production build
 ```
 
-Or update Tailwind config in `index.html`:
-```javascript
-tailwind.config = {
-    theme: {
-        extend: {
-            colors: {
-                'kairo-electric': '#YOUR_COLOR',
-            }
-        }
-    }
-}
-```
+## Production Deployment
 
-### **Add Real Images**
+### Server
+1. Set environment variables in production
+2. Run migrations: `npm run db:migrate`
+3. Start server: `npm start`
 
-1. Add images to `assets/images/`
-2. Update project cards in `index.html`
-3. Replace gradient placeholders
+### Client
+1. Build the app: `npm run build`
+2. Serve the `dist` folder with a static file server (Nginx, Apache, etc.)
 
-### **Modify Content**
+## Database Schema
 
-All content is in `index.html`:
-- Update headlines, copy, and CTAs directly
-- Change service descriptions
-- Add/remove sections as needed
+### Tables
+- **projects** - Portfolio projects with images, descriptions, and metadata
+- **services** - Service offerings with descriptions
+- **contact_messages** - Contact form submissions
+- **stats** - Site statistics and metrics
 
-### **Adjust Animations**
+See `server/migrations/001_initial_schema.sql` for full schema.
 
-Edit animation timings in `style.css`:
-```css
-.fade-up {
-    transition: all 0.8s var(--ease-out-expo);
-}
-```
+## Technologies Used
 
----
+### Backend
+- Express.js
+- PostgreSQL (pg library)
+- Helmet (security headers)
+- CORS
+- express-rate-limit
+- Joi (validation)
+- dotenv
 
-## 📊 Performance
+### Frontend
+- React 18
+- Vite
+- Three.js (3D graphics)
+- GSAP (animations)
+- Modern CSS3
 
-- **Lighthouse Score Target**: 95+ across all metrics
-- **Load Time**: < 2 seconds on 3G
-- **First Contentful Paint**: < 1.5s
-- **Time to Interactive**: < 3s
+## Key Features & Navigation
 
-### Optimization Tips
+### 3D Navigation
+- **Arrow Keys**: Navigate through hexagonal walls
+- **Number Keys (1-6)**: Jump to specific sections
+- **Mouse**: Click or hover over walls
+- **ESC**: Close panels and return to center
 
-- Images: Use WebP format, lazy loading
-- CSS: Already minified for production
-- JS: Minimal, no heavy frameworks
-- Fonts: Preloaded, subset if needed
+### Sections
+1. **Entry** - Welcome and navigation guide
+2. **About** - Company information and stats
+3. **Work** - Case studies and projects
+4. **Services** - Service workflow and offerings
+5. **Demos** - Interactive demonstrations
+6. **Contact** - Contact form and information
 
----
+### Performance
+- FPS monitor in top-right corner
+- Automatic performance throttling
+- Motion toggle for accessibility
+- WebGL detection and fallbacks
 
-## ✅ Browser Support
+## Browser Support
 
-- Chrome/Edge: Latest 2 versions
-- Firefox: Latest 2 versions
-- Safari: Latest 2 versions
-- Mobile: iOS Safari, Chrome Android
+- Chrome 90+
+- Firefox 88+
+- Safari 14+
+- Edge 90+
 
----
+Requires WebGL support for 3D features.
 
-## 📝 Future Enhancements
+## Troubleshooting
 
-- [ ] Add contact form functionality
-- [ ] Integrate real project images
-- [ ] Add client logo assets
-- [ ] Create additional service pages
-- [ ] Add blog/insights section
-- [ ] Implement analytics
-- [ ] Add more micro-interactions
-- [ ] Create case study detail pages
+### Database Connection Issues
+- Verify PostgreSQL is running: `psql -U postgres -c "SELECT version();"`
+- Check credentials in `server/.env`
+- Ensure database `kairo_studio` exists
 
----
+### Port Already in Use
+- Server: Change `PORT` in `server/.env`
+- Client: Vite will automatically try next available port
 
-## 🤝 Contributing
+### Three.js Not Loading
+- Check browser console for errors
+- Ensure CDN links are accessible
+- Try clearing browser cache
 
-This is a client project. For updates:
-1. Test thoroughly across browsers
-2. Maintain brand consistency
-3. Keep accessibility in mind
-4. Document any changes
+## License
 
----
+MIT License - see LICENSE file for details
 
-## 📞 Contact
+## Support
 
-**Email**: hello@kairostudio.com
-**Website**: [To be deployed]
-
----
-
-**Built with ❤️ using modern web standards**
+For issues and questions:
+- Email: hello@kairostudio.com
+- GitHub Issues: [repository-url]/issues

@@ -11,6 +11,9 @@
     <meta property="og:type" content="website">
     <title>Kairo Studio | Premium Digital Design & Development Agency</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,6 +23,13 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/examples/js/loaders/DRACOLoader.js"></script>
+
+    <!-- Three.js Post-Processing -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/examples/js/postprocessing/ShaderPass.js"></script>
 
     <!-- GSAP for animations -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -64,6 +74,40 @@
         </div>
     </header>
 
+    <!-- MOBILE NAVIGATION OVERLAY -->
+    <div class="mobile-nav-overlay" id="mobileNavOverlay">
+        <div class="mobile-nav-content">
+            <h2>Navigate</h2>
+            <nav class="mobile-nav-menu">
+                <button class="mobile-nav-btn" data-section="entry">
+                    <span class="mobile-nav-icon">🏠</span>
+                    <span>Home</span>
+                </button>
+                <button class="mobile-nav-btn" data-section="about">
+                    <span class="mobile-nav-icon">👤</span>
+                    <span>About</span>
+                </button>
+                <button class="mobile-nav-btn" data-section="work">
+                    <span class="mobile-nav-icon">💼</span>
+                    <span>Work</span>
+                </button>
+                <button class="mobile-nav-btn" data-section="services">
+                    <span class="mobile-nav-icon">⚙️</span>
+                    <span>Services</span>
+                </button>
+                <button class="mobile-nav-btn" data-section="demos">
+                    <span class="mobile-nav-icon">🎮</span>
+                    <span>Demos</span>
+                </button>
+                <button class="mobile-nav-btn" data-section="contact">
+                    <span class="mobile-nav-icon">📧</span>
+                    <span>Contact</span>
+                </button>
+            </nav>
+            <p class="mobile-nav-hint">Tap a section to explore</p>
+        </div>
+    </div>
+
     <!-- 3D CANVAS -->
     <canvas id="scene-canvas" class="scene-canvas"></canvas>
 
@@ -75,7 +119,7 @@
         </div>
 
         <!-- Navigation Hints -->
-        <div class="nav-hints" id="navHints">
+        <div class="nav-hints desktop-only" id="navHints">
             <div class="hint">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -97,6 +141,16 @@
                     <rect x="3" y="14" width="7" height="7"/>
                 </svg>
                 <span>1-6 keys: Jump to specific wall</span>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Hints -->
+        <div class="mobile-nav-hints mobile-only" id="mobileNavHints">
+            <div class="mobile-hint">
+                👆 <span>Tap menu to navigate</span>
+            </div>
+            <div class="mobile-hint">
+                👈👉 <span>Swipe left/right to explore</span>
             </div>
         </div>
 
@@ -578,9 +632,9 @@
 
                 <div class="contact-info">
                     <h3>Other Ways to Reach Us</h3>
-                    <p><strong>Email:</strong> <a href="mailto:hello@kairostudio.com" style="color: var(--color-primary); text-decoration: none;">hello@kairostudio.com</a></p>
-                    <p><strong>Phone:</strong> <a href="tel:+15551234567" style="color: var(--color-primary); text-decoration: none;">+1 (555) 123-4567</a></p>
-                    <p><strong>Office Hours:</strong> Mon-Fri, 9am-6pm EST</p>
+                    <p><strong>📧 Email:</strong> <a href="mailto:support@kairostudio.in" style="color: var(--color-primary); text-decoration: none;">support@kairostudio.in</a></p>
+                    <p><strong>📞 Phone:</strong> <a href="tel:+918668844178" style="color: var(--color-primary); text-decoration: none;">+91 866-884-4178</a></p>
+                    <p><strong>⏰ Office Hours:</strong> Mon–Fri | 9 AM–6 PM IST</p>
 
                     <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
                         <p style="font-size: 0.875rem; color: var(--color-gray-400); margin-bottom: 1rem;">Follow our work and insights:</p>

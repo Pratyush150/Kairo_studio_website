@@ -58,11 +58,9 @@
         // Camera settings
         CAMERA: {
             FOV: 45,
-            FOV_MOBILE: 60, // Wider FOV for mobile to see more
             NEAR: 0.1,
             FAR: 1000,
             DEFAULT_Z: 8,
-            DEFAULT_Z_MOBILE: 12, // Further back on mobile to see all walls
             DEFAULT_Y: 0,
             DEFAULT_X: 0,
             PARALLAX_MAX_OFFSET: 20,
@@ -98,7 +96,6 @@
         scene: null,
         camera: null,
         renderer: null,
-        composer: null,
         clock: null,
 
         // Scene objects
@@ -131,32 +128,13 @@
         raycaster: null,
         mouse: new THREE.Vector2(),
         hoveredObject: null,
-        lastHoverSoundTime: 0, // Track last time hover sound played
-        cameraTarget: { x: 0, y: 0, z: 8 }, // Set correctly during init based on device
+        cameraTarget: { x: 0, y: 0, z: CONFIG.CAMERA.DEFAULT_Z },
         cameraVelocity: { x: 0, y: 0, z: 0 },
         cameraLookAtTarget: null, // Target point for camera to look at
 
         // LOD
         currentLOD: 'low',
-        lodLevels: ['low', 'medium', 'high'],
-
-        // Audio system
-        musicPlaying: false,
-        audioContext: null,
-        backgroundMusic: null,
-        backgroundMusicGain: null,
-        audioAnalyser: null,
-
-        // Idle mode
-        lastInteractionTime: Date.now(),
-        isIdleMode: false,
-        idleRotationAngle: 0,
-
-        // Logo system
-        logoCore: null,
-        logoOrbitParticles: [],
-        currentLogoColor: 0x0066ff,
-        logoHovered: false
+        lodLevels: ['low', 'medium', 'high']
     };
 
     // ===================================
@@ -366,26 +344,22 @@
         },
 
         async loadAssets() {
-            // Faster loading on mobile
-            const stages = state.isMobile ? [
-                { progress: 25, text: 'Loading...', delay: 100 },
-                { progress: 50, text: 'Almost ready...', delay: 100 },
-                { progress: 75, text: 'Finalizing...', delay: 100 },
-                { progress: 100, text: 'Ready!', delay: 50 }
-            ] : [
+            // Simulate asset loading with progress updates
+            const stages = [
                 { progress: 10, text: 'Initializing 3D environment...', delay: 200 },
                 { progress: 25, text: 'Loading hero model...', delay: 300 },
                 { progress: 40, text: 'Loading textures...', delay: 250 },
                 { progress: 55, text: 'Building scene...', delay: 300 },
                 { progress: 70, text: 'Setting up interactions...', delay: 200 },
                 { progress: 85, text: 'Optimizing performance...', delay: 200 },
-                { progress: 95, text: 'Finalizing...', delay: 150 },
-                { progress: 100, text: 'Ready!', delay: 100 }
+                { progress: 95, text: 'Finalizing...', delay: 150 }
             ];
 
             for (const stage of stages) {
                 await this.updateProgress(stage.progress, stage.text, stage.delay);
             }
+
+            await this.updateProgress(100, 'Ready!', 100);
         },
 
         updateProgress(progress, text, delay) {
@@ -411,17 +385,6 @@
         async heroReveal() {
             // 1200-2200ms: silhouette fades in, camera dollies forward
             return new Promise(resolve => {
-                // Quick resolve on mobile or if scene failed
-                if (state.isMobile || !state.camera) {
-                    console.log('Skipping hero reveal (mobile or no camera)');
-                    const canvas = document.getElementById('scene-canvas');
-                    if (canvas) {
-                        canvas.style.opacity = '1';
-                    }
-                    setTimeout(resolve, 100);
-                    return;
-                }
-
                 const tl = gsap.timeline({
                     onComplete: resolve
                 });
@@ -558,15 +521,24 @@
         console.log('WebGL2 supported:', state.supportsWebGL2);
         console.log('Low power mode:', state.isLowPowerMode);
 
-        // Log device type but allow all devices through
+        // Show mobile warning on small screens
         if (state.isMobile && window.innerWidth < 768) {
-            console.log('📱 Mobile device detected - using optimized settings');
-        } else {
-            console.log('💻 Desktop/tablet mode detected');
+            console.log('Mobile device detected');
+            if (mobileFallback) {
+                mobileFallback.classList.add('active');
+            }
+
+            if (continueBtn) {
+                continueBtn.addEventListener('click', () => {
+                    mobileFallback.classList.remove('active');
+                    initApp();
+                });
+            }
+
+            return false;
         }
 
-        // Always return true - let mobile users access the site
-        // Mobile optimizations are already in place
+        console.log('Desktop/tablet mode detected');
         return true;
     }
 
@@ -604,12 +576,9 @@
             // Clock for delta time
             state.clock = new THREE.Clock();
 
-            // Camera (mobile-optimized FOV and position)
-            const fov = state.isMobile ? CONFIG.CAMERA.FOV_MOBILE : CONFIG.CAMERA.FOV;
-            const defaultZ = state.isMobile ? CONFIG.CAMERA.DEFAULT_Z_MOBILE : CONFIG.CAMERA.DEFAULT_Z;
-
+            // Camera
             state.camera = new THREE.PerspectiveCamera(
-                fov,
+                CONFIG.CAMERA.FOV,
                 window.innerWidth / window.innerHeight,
                 CONFIG.CAMERA.NEAR,
                 CONFIG.CAMERA.FAR
@@ -617,11 +586,8 @@
             state.camera.position.set(
                 CONFIG.CAMERA.DEFAULT_X,
                 CONFIG.CAMERA.DEFAULT_Y,
-                defaultZ + (state.isMobile ? 0 : 2) // Skip dolly animation on mobile
+                CONFIG.CAMERA.DEFAULT_Z + 2 // Start further back for dolly
             );
-
-            // Update camera target for mobile
-            state.cameraTarget.z = defaultZ;
 
             // Renderer
             state.renderer = new THREE.WebGLRenderer({
@@ -635,39 +601,8 @@
             state.renderer.shadowMap.enabled = !state.isMobile;
             state.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-            // Post-processing composer (optional - graceful fallback)
-            // Disable on mobile for performance (saves 10-20 FPS)
-            try {
-                if (typeof THREE.EffectComposer !== 'undefined' && !state.isMobile) {
-                    state.composer = new THREE.EffectComposer(state.renderer);
-
-                    // Render pass - renders the scene
-                    const renderPass = new THREE.RenderPass(state.scene, state.camera);
-                    state.composer.addPass(renderPass);
-
-                    // Bloom pass - adds glow to bright objects
-                    const bloomPass = new THREE.UnrealBloomPass(
-                        new THREE.Vector2(window.innerWidth, window.innerHeight),
-                        0.8,    // strength - how much bloom
-                        0.4,    // radius - spread of bloom
-                        0.3     // threshold - brightness level to trigger bloom
-                    );
-                    state.composer.addPass(bloomPass);
-
-                    console.log('✨ Post-processing enabled: Bloom effects active');
-                } else {
-                    console.log('ℹ️ Post-processing scripts not loaded, using direct rendering');
-                }
-            } catch (e) {
-                console.log('ℹ️ Post-processing not available, using direct rendering');
-                state.composer = null;
-            }
-
             // Raycaster for interactions
             state.raycaster = new THREE.Raycaster();
-
-            // Starfield background
-            createStarfield();
 
             // Lighting
             createLighting();
@@ -695,70 +630,6 @@
             console.error('Error initializing 3D scene:', error);
             alert('Failed to initialize 3D scene: ' + error.message);
         }
-    }
-
-    // ===================================
-    // STARFIELD BACKGROUND
-    // ===================================
-
-    function createStarfield() {
-        const starGeometry = new THREE.BufferGeometry();
-        const starCount = state.isMobile ? 5000 : 10000; // Adaptive quality
-        const positions = new Float32Array(starCount * 3);
-        const colors = new Float32Array(starCount * 3);
-        const sizes = new Float32Array(starCount);
-
-        for (let i = 0; i < starCount * 3; i += 3) {
-            // Random positions in a large sphere
-            const radius = 100 + Math.random() * 100;
-            const theta = Math.random() * Math.PI * 2;
-            const phi = Math.acos((Math.random() * 2) - 1);
-
-            positions[i] = radius * Math.sin(phi) * Math.cos(theta);
-            positions[i + 1] = radius * Math.sin(phi) * Math.sin(theta);
-            positions[i + 2] = radius * Math.cos(phi);
-
-            // Color variation (blue-violet-magenta nebula theme)
-            const colorChoice = Math.random();
-            if (colorChoice < 0.33) {
-                // Blue
-                colors[i] = 0.3;
-                colors[i + 1] = 0.5;
-                colors[i + 2] = 1.0;
-            } else if (colorChoice < 0.66) {
-                // Violet
-                colors[i] = 0.5;
-                colors[i + 1] = 0.3;
-                colors[i + 2] = 1.0;
-            } else {
-                // Magenta/Pink
-                colors[i] = 1.0;
-                colors[i + 1] = 0.3;
-                colors[i + 2] = 0.8;
-            }
-
-            // Random sizes
-            sizes[i / 3] = Math.random() * 0.5 + 0.1;
-        }
-
-        starGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        starGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-        starGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-
-        const starMaterial = new THREE.PointsMaterial({
-            size: 0.15,
-            vertexColors: true,
-            transparent: true,
-            opacity: 0.8,
-            sizeAttenuation: true,
-            blending: THREE.AdditiveBlending
-        });
-
-        const stars = new THREE.Points(starGeometry, starMaterial);
-        state.scene.add(stars);
-        state.starfield = stars;
-
-        console.log(`✨ Starfield created with ${starCount} stars`);
     }
 
     // ===================================
@@ -831,14 +702,12 @@
         floor.receiveShadow = !state.isMobile;
         state.scene.add(floor);
 
-        // Grid helper (subtle) - hidden on mobile for performance
-        if (!state.isMobile) {
-            const gridHelper = new THREE.GridHelper(50, 50, 0x0066ff, 0x1a1a1a);
-            gridHelper.position.y = -2.99;
-            gridHelper.material.opacity = 0.3;
-            gridHelper.material.transparent = true;
-            state.scene.add(gridHelper);
-        }
+        // Grid helper (subtle)
+        const gridHelper = new THREE.GridHelper(50, 50, 0x0066ff, 0x1a1a1a);
+        gridHelper.position.y = -2.99;
+        gridHelper.material.opacity = 0.3;
+        gridHelper.material.transparent = true;
+        state.scene.add(gridHelper);
 
         // Create walls (navigation sections)
         createWalls();
@@ -852,14 +721,14 @@
 
     function createWalls() {
         // Create 6 hexagonal walls arranged in a hexagonal pattern around the center
-        // Updated with neon colors per spec and increased spacing for better visibility
+        // Updated with neon colors per spec
         const wallConfigs = [
-            { label: 'Entry', position: [0, 0, -14], rotation: Math.PI, color: 0xB388FF, glowColor: '#B388FF', index: 0 }, // Violet Neon
-            { label: 'About', position: [-12.12, 0, -7], rotation: 2 * Math.PI / 3, color: 0x2979FF, glowColor: '#2979FF', index: 1 }, // Blue Neon
-            { label: 'Work', position: [-12.12, 0, 7], rotation: Math.PI / 3, color: 0x00E5FF, glowColor: '#00E5FF', index: 2 }, // Cyan Neon
-            { label: 'Services', position: [0, 0, 14], rotation: 0, color: 0xFFA726, glowColor: '#FFA726', index: 3 }, // Orange Neon
-            { label: 'Demos', position: [12.12, 0, 7], rotation: -Math.PI / 3, color: 0x00E676, glowColor: '#00E676', index: 4 }, // Green Neon
-            { label: 'Contact', position: [12.12, 0, -7], rotation: -2 * Math.PI / 3, color: 0xF06292, glowColor: '#F06292', index: 5 } // Pink Neon
+            { label: 'Entry', position: [0, 0, -10], rotation: Math.PI, color: 0xB388FF, glowColor: '#B388FF', index: 0 }, // Violet Neon
+            { label: 'About', position: [-8.66, 0, -5], rotation: 2 * Math.PI / 3, color: 0x2979FF, glowColor: '#2979FF', index: 1 }, // Blue Neon
+            { label: 'Work', position: [-8.66, 0, 5], rotation: Math.PI / 3, color: 0x00E5FF, glowColor: '#00E5FF', index: 2 }, // Cyan Neon
+            { label: 'Services', position: [0, 0, 10], rotation: 0, color: 0xFFA726, glowColor: '#FFA726', index: 3 }, // Orange Neon
+            { label: 'Demos', position: [8.66, 0, 5], rotation: -Math.PI / 3, color: 0x00E676, glowColor: '#00E676', index: 4 }, // Green Neon
+            { label: 'Contact', position: [8.66, 0, -5], rotation: -2 * Math.PI / 3, color: 0xF06292, glowColor: '#F06292', index: 5 } // Pink Neon
         ];
 
         wallConfigs.forEach(config => {
@@ -1012,209 +881,85 @@
     }
 
     function createFloatingParticles() {
-        const particleCount = state.isMobile ? 500 : 1200;
+        const particleCount = state.isMobile ? 300 : 800;
         const positions = new Float32Array(particleCount * 3);
-        const velocities = new Float32Array(particleCount * 3);
 
         for (let i = 0; i < particleCount * 3; i += 3) {
-            positions[i] = Utils.randomRange(-30, 30);      // x - wider spread
-            positions[i + 1] = Utils.randomRange(-12, 12);  // y - taller volume
-            positions[i + 2] = Utils.randomRange(-30, 30);  // z - deeper space
-
-            // Initialize random velocities
-            velocities[i] = Utils.randomRange(-0.015, 0.015);      // x velocity
-            velocities[i + 1] = Utils.randomRange(-0.01, 0.01);    // y velocity (slower vertical)
-            velocities[i + 2] = Utils.randomRange(-0.015, 0.015);  // z velocity
+            positions[i] = Utils.randomRange(-25, 25);     // x
+            positions[i + 1] = Utils.randomRange(-10, 10);  // y
+            positions[i + 2] = Utils.randomRange(-25, 25);  // z
         }
 
         const geometry = new THREE.BufferGeometry();
         geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
         const material = new THREE.PointsMaterial({
-            size: 0.05,
-            color: 0x4a90e2,
+            size: 0.03,
+            color: 0x0066ff,
             transparent: true,
-            opacity: 0.6,
+            opacity: 0.4,
             blending: THREE.AdditiveBlending,
-            depthWrite: false,
-            sizeAttenuation: true
+            depthWrite: false
         });
 
         state.particles = new THREE.Points(geometry, material);
         state.scene.add(state.particles);
 
-        // Store data for animation
-        state.particles.userData.velocities = velocities;
+        // Store original positions for animation
         state.particles.userData.originalPositions = positions.slice();
+        state.particles.userData.velocities = new Float32Array(particleCount * 3);
+
+        // Initialize random velocities
+        for (let i = 0; i < particleCount * 3; i++) {
+            state.particles.userData.velocities[i] = Utils.randomRange(-0.02, 0.02);
+        }
     }
 
     function createHeroObject() {
-        // Advanced Logo Core System with 8-feature integration
+        // Central hero object (abstract geometric shape)
         const group = new THREE.Group();
 
-        // Try to load actual logo, fallback to canvas placeholder
-        const textureLoader = new THREE.TextureLoader();
-        textureLoader.load(
-            '/assets/images/kairo-logo.jpg',
-            // Success: Logo found
-            (texture) => {
-                console.log('✅ Logo loaded from /assets/images/kairo-logo.jpg');
-                createLogoWithTexture(texture, group);
-            },
-            // Progress
-            undefined,
-            // Error: Logo not found, use placeholder
-            (error) => {
-                console.log('ℹ️ Logo not found, using placeholder');
-                createLogoPlaceholder(group);
-            }
-        );
+        // Main shape - icosahedron
+        const geometry = new THREE.IcosahedronGeometry(1.5, 1);
+        const material = new THREE.MeshStandardMaterial({
+            color: 0x0066ff,
+            emissive: 0x0033aa,
+            emissiveIntensity: 0.3,
+            roughness: 0.3,
+            metalness: 0.7,
+            wireframe: false
+        });
 
-        function createLogoWithTexture(texture, group) {
-            // Create plane with logo texture
-            const geometry = new THREE.PlaneGeometry(2.5, 2.5);
-            const material = new THREE.MeshStandardMaterial({
-                map: texture,
-                transparent: true,
-                opacity: 0,
-                side: THREE.DoubleSide,
-                emissive: 0x0066ff,
-                emissiveIntensity: 0.6,
-                metalness: 0.5,
-                roughness: 0.3
-            });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.castShadow = !state.isMobile;
+        mesh.receiveShadow = !state.isMobile;
+        group.add(mesh);
 
-            const logoMesh = new THREE.Mesh(geometry, material);
-            group.add(logoMesh);
+        // Wireframe overlay
+        const wireframeGeometry = new THREE.IcosahedronGeometry(1.52, 1);
+        const wireframeMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00ccff,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.3
+        });
+        const wireframe = new THREE.Mesh(wireframeGeometry, wireframeMaterial);
+        group.add(wireframe);
 
-            state.logoCore = logoMesh;
-            state.logoSphere = logoMesh; // For compatibility
+        group.position.set(0, 0, 0);
 
-            // Entry animation (Feature #3)
-            animateLogoEntry(logoMesh);
-
-            console.log('🎨 Logo core created with your uploaded logo');
-        }
-
-        function createLogoPlaceholder(group) {
-            // Canvas-based placeholder with "KAIRO STUDIO" text
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            canvas.width = 512;
-            canvas.height = 512;
-
-            // Background glow
-            const gradient = context.createRadialGradient(256, 256, 100, 256, 256, 256);
-            gradient.addColorStop(0, 'rgba(0, 102, 255, 0.3)');
-            gradient.addColorStop(1, 'rgba(0, 102, 255, 0)');
-            context.fillStyle = gradient;
-            context.fillRect(0, 0, 512, 512);
-
-            // Main text
-            context.font = 'Bold 60px Space Grotesk, Arial, sans-serif';
-            context.fillStyle = '#ffffff';
-            context.textAlign = 'center';
-            context.textBaseline = 'middle';
-            context.shadowColor = '#00ccff';
-            context.shadowBlur = 30;
-            context.fillText('KAIRØ', 256, 220);
-            context.fillText('STUDIO', 256, 290);
-
-            // Subtitle
-            context.font = '20px Space Grotesk, Arial, sans-serif';
-            context.fillStyle = '#00ccff';
-            context.shadowBlur = 15;
-            context.fillText('Upload logo to /assets/images/kairo-logo.jpg', 256, 360);
-
-            const texture = new THREE.CanvasTexture(canvas);
-            const geometry = new THREE.PlaneGeometry(2.5, 2.5);
-            const material = new THREE.MeshStandardMaterial({
-                map: texture,
-                transparent: true,
-                opacity: 0,
-                side: THREE.DoubleSide,
-                emissive: 0x0066ff,
-                emissiveIntensity: 0.6,
-                metalness: 0.5,
-                roughness: 0.3
-            });
-
-            const logoMesh = new THREE.Mesh(geometry, material);
-            group.add(logoMesh);
-
-            state.logoCore = logoMesh;
-            state.logoSphere = logoMesh; // For compatibility
-
-            // Entry animation (Feature #3)
-            animateLogoEntry(logoMesh);
-
-            console.log('📝 Logo placeholder created (awaiting upload)');
-        }
-
-        function animateLogoEntry(logoMesh) {
-            // Feature #3: Entry Animation
-            // Particle burst → Fade in → Scale up → Light burst
-            const entryTimeline = gsap.timeline();
-
-            // Create particle burst at logo position
-            setTimeout(() => {
-                createParticleBurst(logoMesh.position, 0xffffff);
-            }, 100);
-
-            entryTimeline
-                // Fade in
-                .to(logoMesh.material, {
-                    opacity: 1,
-                    duration: 0.8,
-                    ease: 'power2.out'
-                }, 0.3)
-                // Scale up with bounce
-                .fromTo(logoMesh.scale,
-                    { x: 0.5, y: 0.5, z: 0.5 },
-                    {
-                        x: 1,
-                        y: 1,
-                        z: 1,
-                        duration: 0.8,
-                        ease: 'back.out(1.7)'
-                    }, 0.3
-                )
-                // Emissive pulse
-                .to(logoMesh.material, {
-                    emissiveIntensity: 1.2,
-                    duration: 0.3,
-                    yoyo: true,
-                    repeat: 1
-                }, 0.8);
-
-            // Continuous pulse animation
-            if (state.motionEnabled && !state.prefersReducedMotion) {
-                gsap.to(logoMesh.material, {
-                    emissiveIntensity: 0.9,
-                    duration: 2,
-                    ease: 'sine.inOut',
-                    yoyo: true,
-                    repeat: -1
-                });
-
-                gsap.to(logoMesh.scale, {
-                    x: 1.03,
-                    y: 1.03,
-                    z: 1.03,
-                    duration: 2,
-                    ease: 'sine.inOut',
-                    yoyo: true,
-                    repeat: -1
-                });
-            }
-        }
-
-        group.position.set(0, 0.5, 0);
         state.heroObject = group;
         state.scene.add(group);
 
-        // Store orbiting letters state for compatibility
-        state.orbitingLetters = [];
+        // Ambient rotation animation
+        if (state.motionEnabled && !state.prefersReducedMotion) {
+            gsap.to(group.rotation, {
+                y: Math.PI * 2,
+                duration: 120,
+                ease: 'none',
+                repeat: -1
+            });
+        }
     }
 
     // ===================================
@@ -1580,12 +1325,11 @@
             ease: CONFIG.EASING.PRIMARY
         }, 0);
 
-        // Restore camera (use mobile-appropriate Z position)
-        const defaultZ = state.isMobile ? CONFIG.CAMERA.DEFAULT_Z_MOBILE : CONFIG.CAMERA.DEFAULT_Z;
+        // Restore camera
         tl.to(state.camera.position, {
             x: CONFIG.CAMERA.DEFAULT_X,
             y: CONFIG.CAMERA.DEFAULT_Y,
-            z: defaultZ,
+            z: CONFIG.CAMERA.DEFAULT_Z,
             duration: 0.42,
             ease: CONFIG.EASING.PRIMARY
         }, 0);
@@ -1672,39 +1416,6 @@
         state.currentSection = section;
         console.log('Navigating to:', section);
 
-        // Feature #2: Lighting Sync - Logo glow cycles through wall colors
-        const wallColorMap = {
-            'entry': 0xB388FF,    // Violet
-            'about': 0x2979FF,    // Blue
-            'work': 0x00E5FF,     // Cyan
-            'services': 0xFFA726, // Orange
-            'demos': 0x00E676,    // Green
-            'contact': 0xF06292   // Pink
-        };
-
-        if (state.logoCore && wallColorMap[section]) {
-            const targetColor = wallColorMap[section];
-            state.currentLogoColor = targetColor;
-
-            // Smooth color transition with emissive intensity pulse
-            gsap.to(state.logoCore.material, {
-                emissive: new THREE.Color(targetColor),
-                emissiveIntensity: 0.8,
-                duration: 1,
-                ease: 'power2.inOut'
-            });
-
-            // Return to normal intensity after pulse
-            gsap.to(state.logoCore.material, {
-                emissiveIntensity: 0.6,
-                duration: 0.5,
-                delay: 1,
-                ease: 'power2.out'
-            });
-
-            console.log(`🎨 Logo synced to ${section} color: #${targetColor.toString(16)}`);
-        }
-
         // Update section indicator
         const sectionIndicator = document.querySelector('.indicator-text');
         if (sectionIndicator) {
@@ -1719,8 +1430,7 @@
 
         // Improved camera positioning: Stay centered, face the wall directly
         // The camera should be INSIDE the hexagon, looking OUT at the wall
-        // Mobile needs more distance to see the whole wall with narrower viewport
-        const viewDistance = state.isMobile ? 8 : 5.5; // Distance from center to camera position
+        const viewDistance = 5.5; // Distance from center to camera position
 
         // Calculate camera position: opposite direction from wall
         // Get angle pointing FROM wall TO center, then position camera there
@@ -1838,16 +1548,12 @@
     }
 
     function onMouseMove(event) {
-        // Reset idle timer on interaction
-        resetIdleTimer();
-
         // Update mouse normalized coordinates
         state.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         state.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
         // Parallax camera effect (spring interpolation)
-        // Disabled on mobile for performance and better UX
-        if (state.motionEnabled && !state.prefersReducedMotion && state.camera && !state.isMobile) {
+        if (state.motionEnabled && !state.prefersReducedMotion && state.camera) {
             const maxOffset = CONFIG.CAMERA.PARALLAX_MAX_OFFSET;
             const targetX = state.mouse.x * maxOffset;
             const targetY = -state.mouse.y * maxOffset * 0.5;
@@ -1863,17 +1569,6 @@
     function updateRaycasting() {
         if (!state.raycaster || !state.camera) return;
 
-        // Skip raycasting if a content panel is open
-        const panelOpen = document.querySelector('.content-panel.active');
-        if (panelOpen) {
-            document.body.style.cursor = 'default';
-            // Reset any hovered object
-            if (state.hoveredObject) {
-                state.hoveredObject = null;
-            }
-            return;
-        }
-
         state.raycaster.setFromCamera(state.mouse, state.camera);
 
         // Check walls - recursively check all children including hitbox
@@ -1888,18 +1583,6 @@
                 // Hover effect: increase opacity and scale
                 const wallMesh = wall.children[0];
                 const border = wall.children[1];
-
-                // Play hover sound only when starting to hover a NEW wall (with cooldown)
-                const now = Date.now();
-                const cooldownPeriod = 500; // 500ms cooldown between sounds
-                const isNewWall = state.hoveredObject !== wall;
-                const cooldownExpired = (now - state.lastHoverSoundTime) > cooldownPeriod;
-
-                if (isNewWall && cooldownExpired) {
-                    playHoverSound();
-                    state.lastHoverSoundTime = now;
-                    console.log('🔊 Hover sound played for:', wall.userData.section);
-                }
 
                 gsap.to(wallMesh.material, {
                     opacity: 0.25,
@@ -1986,197 +1669,12 @@
             }
         });
 
-        // Feature #5: Hover Interaction - Logo hover detection
-        if (state.logoCore && state.heroObject) {
-            const logoIntersects = state.raycaster.intersectObject(state.logoCore, false);
-
-            if (logoIntersects.length > 0) {
-                // Only trigger effects on initial hover (not every frame)
-                if (!state.logoHovered) {
-                    state.logoHovered = true;
-                    onLogoHoverEnter();
-                }
-                intersected = true;
-            } else {
-                // Logo no longer hovered
-                if (state.logoHovered) {
-                    state.logoHovered = false;
-                    onLogoHoverExit();
-                }
-            }
-        }
-
         if (!intersected) {
             document.body.style.cursor = 'default';
-            // Reset hovered object when nothing is hovered
-            state.hoveredObject = null;
-        }
-    }
-
-    // Feature #5: Logo Hover Effects
-    function onLogoHoverEnter() {
-        if (!state.logoCore || !state.camera) return;
-
-        console.log('🎯 Logo hovered');
-
-        // Camera zoom (FOV: 45° → 40°)
-        gsap.to(state.camera, {
-            fov: 40,
-            duration: 0.5,
-            ease: 'power2.out',
-            onUpdate: () => {
-                state.camera.updateProjectionMatrix();
-            }
-        });
-
-        // Logo rotation (10° = 0.174 radians)
-        gsap.to(state.logoCore.rotation, {
-            y: state.logoCore.rotation.y + 0.174,
-            duration: 0.5,
-            ease: 'power2.out'
-        });
-
-        // Emissive intensity boost
-        gsap.to(state.logoCore.material, {
-            emissiveIntensity: 1.0,
-            duration: 0.3,
-            ease: 'power2.out'
-        });
-
-        // Grid pulse effect
-        if (state.gridFloor) {
-            createGridPulse(state.logoCore.position);
-        }
-
-        // Play hover sound (800Hz ping)
-        playLogoHoverSound();
-    }
-
-    function onLogoHoverExit() {
-        if (!state.logoCore || !state.camera) return;
-
-        // Reset camera FOV
-        gsap.to(state.camera, {
-            fov: 45,
-            duration: 0.5,
-            ease: 'power2.in',
-            onUpdate: () => {
-                state.camera.updateProjectionMatrix();
-            }
-        });
-
-        // Reset emissive intensity
-        gsap.to(state.logoCore.material, {
-            emissiveIntensity: 0.6,
-            duration: 0.3,
-            ease: 'power2.in'
-        });
-    }
-
-    function createGridPulse(position) {
-        // Create expanding ring pulse on the grid
-        if (!state.gridFloor) return;
-
-        const pulseGeometry = new THREE.RingGeometry(0.1, 0.3, 32);
-        const pulseMaterial = new THREE.MeshBasicMaterial({
-            color: state.currentLogoColor || 0x0066ff,
-            transparent: true,
-            opacity: 0.8,
-            side: THREE.DoubleSide
-        });
-
-        const pulse = new THREE.Mesh(pulseGeometry, pulseMaterial);
-        pulse.position.set(position.x, 0.01, position.z);
-        pulse.rotation.x = -Math.PI / 2;
-        state.scene.add(pulse);
-
-        // Animate pulse expansion and fade
-        gsap.to(pulse.scale, {
-            x: 10,
-            y: 10,
-            duration: 1.5,
-            ease: 'power2.out'
-        });
-
-        gsap.to(pulseMaterial, {
-            opacity: 0,
-            duration: 1.5,
-            ease: 'power2.out',
-            onComplete: () => {
-                state.scene.remove(pulse);
-                pulse.geometry.dispose();
-                pulseMaterial.dispose();
-            }
-        });
-    }
-
-    // Feature #7: Grid ripple during idle mode
-    function createIdleGridRipple() {
-        if (!state.gridFloor || !state.logoCore) return;
-
-        const rippleGeometry = new THREE.RingGeometry(0.2, 0.5, 32);
-        const rippleMaterial = new THREE.MeshBasicMaterial({
-            color: state.currentLogoColor || 0x0066ff,
-            transparent: true,
-            opacity: 0.4,
-            side: THREE.DoubleSide
-        });
-
-        const ripple = new THREE.Mesh(rippleGeometry, rippleMaterial);
-        ripple.position.set(state.logoCore.position.x, 0.01, state.logoCore.position.z);
-        ripple.rotation.x = -Math.PI / 2;
-        state.scene.add(ripple);
-
-        // Animate ripple with sine wave
-        gsap.to(ripple.scale, {
-            x: 15,
-            y: 15,
-            duration: 3,
-            ease: 'sine.out'
-        });
-
-        gsap.to(rippleMaterial, {
-            opacity: 0,
-            duration: 3,
-            ease: 'sine.out',
-            onComplete: () => {
-                state.scene.remove(ripple);
-                ripple.geometry.dispose();
-                rippleMaterial.dispose();
-            }
-        });
-    }
-
-    function playLogoHoverSound() {
-        // Play 800Hz ping sound (0.15s duration)
-        if (!ensureAudioContext()) return;
-
-        try {
-            const oscillator = state.audioContext.createOscillator();
-            const gainNode = state.audioContext.createGain();
-
-            oscillator.connect(gainNode);
-            gainNode.connect(state.audioContext.destination);
-
-            oscillator.frequency.value = 800; // 800Hz
-            oscillator.type = 'sine';
-
-            // Envelope: fade in and out
-            gainNode.gain.setValueAtTime(0, state.audioContext.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0.15, state.audioContext.currentTime + 0.02);
-            gainNode.gain.linearRampToValueAtTime(0, state.audioContext.currentTime + 0.15);
-
-            oscillator.start(state.audioContext.currentTime);
-            oscillator.stop(state.audioContext.currentTime + 0.15);
-        } catch (e) {
-            console.warn('Could not play logo hover sound:', e);
         }
     }
 
     function onClick(event) {
-        // Reset idle timer on interaction
-        resetIdleTimer();
-
         // Update mouse position
         state.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         state.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -2189,12 +1687,6 @@
         state.walls.forEach(wall => {
             const intersects = state.raycaster.intersectObjects(wall.children, true);
             if (intersects.length > 0) {
-                // Play click sound
-                playClickSound();
-
-                // Create particle burst at wall position
-                createParticleBurst(wall.position, wall.userData.color);
-
                 navigateToSection(wall.userData.section);
 
                 // Button click animation
@@ -2237,9 +1729,8 @@
         clearTimeout(state.scrollTimeout);
         state.scrollTimeout = setTimeout(() => {
             if (!document.querySelector('.content-panel.active')) {
-                const defaultZ = state.isMobile ? CONFIG.CAMERA.DEFAULT_Z_MOBILE : CONFIG.CAMERA.DEFAULT_Z;
                 gsap.to(state.camera.position, {
-                    z: defaultZ,
+                    z: CONFIG.CAMERA.DEFAULT_Z,
                     duration: 1,
                     ease: CONFIG.EASING.PRIMARY
                 });
@@ -2282,17 +1773,9 @@
         state.camera.aspect = window.innerWidth / window.innerHeight;
         state.camera.updateProjectionMatrix();
         state.renderer.setSize(window.innerWidth, window.innerHeight);
-
-        // Update composer size for post-processing
-        if (state.composer) {
-            state.composer.setSize(window.innerWidth, window.innerHeight);
-        }
     }
 
     function onKeyDown(e) {
-        // Reset idle timer on interaction
-        resetIdleTimer();
-
         // Escape key
         if (e.key === 'Escape') {
             closeAllPanels();
@@ -2330,16 +1813,6 @@
             activateWorkflowStep('design');
         } else if (e.key === 'v' || e.key === 'V') {
             activateWorkflowStep('development');
-        }
-
-        // Easter egg keys
-        if (e.key === 'k' || e.key === 'K') {
-            activateChaosMode();
-        } else if (e.key === 'm' || e.key === 'M') {
-            toggleMusic();
-        } else if (e.key === ' ') {
-            e.preventDefault();
-            resetCameraToHome();
         }
     }
 
@@ -2508,420 +1981,6 @@
     }
 
     // ===================================
-    // EASTER EGGS & SPECIAL FUNCTIONS
-    // ===================================
-
-    function activateChaosMode() {
-        console.log('🔥 CHAOS MODE ACTIVATED');
-
-        // Flash notification
-        const notification = document.createElement('div');
-        notification.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, #ff0066, #ff6600);
-            padding: 2rem 3rem;
-            border-radius: 1rem;
-            font-size: 2rem;
-            font-weight: bold;
-            z-index: 10000;
-            animation: pulse 0.3s ease-in-out infinite alternate;
-        `;
-        notification.textContent = '🔥 CHAOS MODE 🔥';
-        document.body.appendChild(notification);
-
-        // Spin walls faster
-        state.walls.forEach((wall, i) => {
-            gsap.to(wall.rotation, {
-                y: `+=${Math.PI * 2 * (i % 2 === 0 ? 1 : -1)}`,
-                duration: 1,
-                ease: 'power2.inOut',
-                repeat: 2
-            });
-
-            gsap.to(wall.scale, {
-                x: 1.2,
-                y: 1.2,
-                z: 1.2,
-                duration: 0.5,
-                ease: 'elastic.out(1, 0.5)',
-                yoyo: true,
-                repeat: 5
-            });
-        });
-
-        // Camera shake
-        const originalCameraPos = { ...state.camera.position };
-        for (let i = 0; i < 30; i++) {
-            setTimeout(() => {
-                state.camera.position.x += (Math.random() - 0.5) * 0.2;
-                state.camera.position.y += (Math.random() - 0.5) * 0.2;
-            }, i * 100);
-        }
-
-        // Reset after 3 seconds
-        setTimeout(() => {
-            notification.remove();
-            gsap.to(state.camera.position, {
-                x: originalCameraPos.x,
-                y: originalCameraPos.y,
-                z: originalCameraPos.z,
-                duration: 0.5,
-                ease: 'power2.out'
-            });
-            console.log('✅ Chaos mode ended');
-        }, 3000);
-    }
-
-    function toggleMusic() {
-        if (!state.audioContext) {
-            // Initialize audio on first toggle (browser requires user interaction)
-            initAudio();
-            return;
-        }
-
-        if (state.musicPlaying) {
-            // Mute audio
-            state.musicPlaying = false;
-            if (state.backgroundMusicGain) {
-                gsap.to(state.backgroundMusicGain.gain, {
-                    value: 0,
-                    duration: 0.5
-                });
-            }
-            console.log('🔇 Music disabled');
-
-            // Visual feedback
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                bottom: 2rem;
-                right: 2rem;
-                background: rgba(255, 107, 0, 0.9);
-                padding: 1rem 1.5rem;
-                border-radius: 0.5rem;
-                z-index: 9999;
-                color: white;
-                font-weight: bold;
-            `;
-            notification.textContent = '🔇 Music OFF';
-            document.body.appendChild(notification);
-            setTimeout(() => notification.remove(), 2000);
-        } else {
-            // Unmute audio
-            state.musicPlaying = true;
-            if (state.backgroundMusicGain) {
-                gsap.to(state.backgroundMusicGain.gain, {
-                    value: 0.03,
-                    duration: 0.5
-                });
-            }
-            console.log('🔊 Music enabled');
-
-            // Visual feedback
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                bottom: 2rem;
-                right: 2rem;
-                background: rgba(0, 102, 255, 0.9);
-                padding: 1rem 1.5rem;
-                border-radius: 0.5rem;
-                z-index: 9999;
-                color: white;
-                font-weight: bold;
-            `;
-            notification.textContent = '🔊 Music ON';
-            document.body.appendChild(notification);
-            setTimeout(() => notification.remove(), 2000);
-        }
-    }
-
-    function resetCameraToHome() {
-        console.log('🏠 Resetting camera to home position');
-        closeAllPanels();
-
-        gsap.to(state.camera.position, {
-            x: CONFIG.CAMERA.DEFAULT_X,
-            y: CONFIG.CAMERA.DEFAULT_Y,
-            z: CONFIG.CAMERA.DEFAULT_Z,
-            duration: 1,
-            ease: CONFIG.EASING.PRIMARY
-        });
-
-        state.cameraLookAtTarget = null;
-    }
-
-    // ===================================
-    // IDLE MODE AUTO-PAN
-    // ===================================
-
-    function resetIdleTimer() {
-        state.lastInteractionTime = Date.now();
-        if (state.isIdleMode) {
-            state.isIdleMode = false;
-            console.log('👋 User active - idle mode disabled');
-
-            // Feature #7: Clean up orbital particles when exiting idle mode
-            state.logoOrbitParticles.forEach(particle => {
-                state.scene.remove(particle);
-                particle.geometry.dispose();
-                particle.material.dispose();
-            });
-            state.logoOrbitParticles = [];
-        }
-    }
-
-    function checkIdleMode() {
-        const idleThreshold = 15000; // 15 seconds
-        const timeSinceInteraction = Date.now() - state.lastInteractionTime;
-
-        if (!state.isIdleMode && timeSinceInteraction > idleThreshold) {
-            state.isIdleMode = true;
-            console.log('😴 Idle mode activated - auto-pan camera');
-
-            // Feature #7: Create orbital particles around logo when idle mode starts
-            // Skip on mobile to save performance
-            if (!state.isMobile) {
-                createLogoOrbitParticles();
-            }
-        }
-    }
-
-    // Feature #7: Create orbital particles around logo
-    function createLogoOrbitParticles() {
-        if (!state.logoCore) return;
-
-        // Clear existing particles if any
-        state.logoOrbitParticles.forEach(particle => {
-            state.scene.remove(particle);
-            particle.geometry.dispose();
-            particle.material.dispose();
-        });
-        state.logoOrbitParticles = [];
-
-        // Reduce particle count on mobile for performance
-        const particleCount = state.isMobile ? 30 : 100;
-        for (let i = 0; i < particleCount; i++) {
-            const geometry = new THREE.SphereGeometry(0.02, 8, 8);
-            const material = new THREE.MeshBasicMaterial({
-                color: state.currentLogoColor || 0x0066ff,
-                transparent: true,
-                opacity: 0.6
-            });
-
-            const particle = new THREE.Mesh(geometry, material);
-
-            // Store orbital parameters
-            particle.userData.angle = (i / particleCount) * Math.PI * 2;
-            particle.userData.radius = 1.5 + Math.random() * 0.3;
-            particle.userData.speed = 0.0005 + Math.random() * 0.0003;
-            particle.userData.verticalOffset = Math.random() * Math.PI * 2;
-
-            state.scene.add(particle);
-            state.logoOrbitParticles.push(particle);
-        }
-
-        console.log('✨ Created 100 orbital particles around logo');
-    }
-
-    function updateIdleCamera() {
-        if (!state.isIdleMode || !state.camera) return;
-
-        // Smooth circular pan around the scene
-        state.idleRotationAngle += 0.001;
-        const radius = 8;
-        const height = 0.5;
-
-        state.camera.position.x = Math.sin(state.idleRotationAngle) * radius;
-        state.camera.position.y = height + Math.sin(state.idleRotationAngle * 0.5) * 0.5;
-        state.camera.position.z = Math.cos(state.idleRotationAngle) * radius;
-
-        // Look at center
-        state.camera.lookAt(0, 0, 0);
-    }
-
-    // ===================================
-    // PARTICLE BURST EFFECTS
-    // ===================================
-
-    function createParticleBurst(position, color) {
-        const particleCount = 100;
-        const geometry = new THREE.BufferGeometry();
-        const positions = new Float32Array(particleCount * 3);
-        const velocities = [];
-
-        // Create particles at burst position
-        for (let i = 0; i < particleCount * 3; i += 3) {
-            positions[i] = position.x;
-            positions[i + 1] = position.y;
-            positions[i + 2] = position.z;
-
-            // Random velocity for explosion effect
-            const speed = Utils.randomRange(0.05, 0.15);
-            const theta = Math.random() * Math.PI * 2;
-            const phi = Math.acos((Math.random() * 2) - 1);
-
-            velocities.push({
-                x: speed * Math.sin(phi) * Math.cos(theta),
-                y: speed * Math.sin(phi) * Math.sin(theta),
-                z: speed * Math.cos(phi)
-            });
-        }
-
-        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-        const material = new THREE.PointsMaterial({
-            size: 0.08,
-            color: color,
-            transparent: true,
-            opacity: 1.0,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false
-        });
-
-        const burst = new THREE.Points(geometry, material);
-        burst.userData.velocities = velocities;
-        burst.userData.life = 1.0;
-        burst.userData.maxLife = 1.0;
-        state.scene.add(burst);
-
-        // Animate burst
-        const animateBurst = () => {
-            const positions = burst.geometry.attributes.position.array;
-            burst.userData.life -= 0.02;
-
-            if (burst.userData.life <= 0) {
-                state.scene.remove(burst);
-                burst.geometry.dispose();
-                burst.material.dispose();
-                return;
-            }
-
-            // Update positions and fade out
-            for (let i = 0; i < positions.length; i += 3) {
-                positions[i] += velocities[i / 3].x;
-                positions[i + 1] += velocities[i / 3].y;
-                positions[i + 2] += velocities[i / 3].z;
-
-                // Gravity
-                velocities[i / 3].y -= 0.002;
-
-                // Damping
-                velocities[i / 3].x *= 0.98;
-                velocities[i / 3].y *= 0.98;
-                velocities[i / 3].z *= 0.98;
-            }
-
-            burst.geometry.attributes.position.needsUpdate = true;
-            burst.material.opacity = burst.userData.life;
-
-            requestAnimationFrame(animateBurst);
-        };
-
-        animateBurst();
-    }
-
-    // ===================================
-    // WEB AUDIO API SYSTEM
-    // ===================================
-
-    function initAudio() {
-        try {
-            state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
-            // Feature #6: Create AnalyserNode for audio-reactive visuals
-            state.audioAnalyser = state.audioContext.createAnalyser();
-            state.audioAnalyser.fftSize = 256;
-            state.audioAnalyser.connect(state.audioContext.destination);
-
-            // Ambient base layer - deep bass drone
-            const oscillator = state.audioContext.createOscillator();
-            const gainNode = state.audioContext.createGain();
-            oscillator.connect(gainNode);
-
-            // Connect to analyser for beat detection
-            gainNode.connect(state.audioAnalyser);
-
-            oscillator.type = 'sine';
-            oscillator.frequency.value = 40; // Deep bass
-            gainNode.gain.value = 0.03; // Very subtle
-
-            oscillator.start();
-            state.backgroundMusic = oscillator;
-            state.backgroundMusicGain = gainNode;
-            state.musicPlaying = true;
-
-            console.log('🔊 Audio system initialized with analyser');
-        } catch (e) {
-            console.warn('⚠️ Audio not supported:', e);
-        }
-    }
-
-    function ensureAudioContext() {
-        // Initialize audio context on first user interaction (browser autoplay policy)
-        if (!state.audioContext) {
-            try {
-                state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                console.log('🔊 Audio context created on user interaction');
-            } catch (e) {
-                console.warn('⚠️ Could not create audio context:', e);
-                return false;
-            }
-        }
-
-        // Resume if suspended (browser autoplay policy)
-        if (state.audioContext.state === 'suspended') {
-            state.audioContext.resume();
-        }
-
-        return true;
-    }
-
-    function playHoverSound() {
-        if (!ensureAudioContext()) return;
-
-        try {
-            const osc = state.audioContext.createOscillator();
-            const gain = state.audioContext.createGain();
-            osc.connect(gain);
-            gain.connect(state.audioContext.destination);
-
-            osc.type = 'sine';
-            osc.frequency.value = 800; // High ping
-            gain.gain.value = 0.08;
-
-            osc.start();
-            osc.stop(state.audioContext.currentTime + 0.1);
-        } catch (e) {
-            console.warn('Could not play hover sound:', e);
-        }
-    }
-
-    function playClickSound() {
-        if (!ensureAudioContext()) return;
-
-        try {
-            const osc = state.audioContext.createOscillator();
-            const gain = state.audioContext.createGain();
-            osc.connect(gain);
-            gain.connect(state.audioContext.destination);
-
-            osc.type = 'sine';
-            osc.frequency.value = 400; // Mid whoosh
-            gain.gain.setValueAtTime(0.15, state.audioContext.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, state.audioContext.currentTime + 0.3);
-
-            osc.start();
-            osc.stop(state.audioContext.currentTime + 0.3);
-        } catch (e) {
-            console.warn('Could not play click sound:', e);
-        }
-    }
-
-    // ===================================
     // WORKFLOW STEP ACTIVATION
     // ===================================
 
@@ -3060,112 +2119,19 @@
             state.cameraVelocity.y = resultY.velocity;
         }
 
-        // Animate particles with camera interaction
+        // Animate particles (ambient motion)
         if (state.particles && state.motionEnabled && !state.prefersReducedMotion) {
             const positions = state.particles.geometry.attributes.position.array;
             const velocities = state.particles.userData.velocities;
-            const cameraPos = state.camera.position;
-            const interactionRadius = 3.0; // Distance at which particles react to camera
-            const pushStrength = 0.05;
+            const time = Date.now() * 0.0001;
 
             for (let i = 0; i < positions.length; i += 3) {
-                // Apply velocity
-                positions[i] += velocities[i];
-                positions[i + 1] += velocities[i + 1];
-                positions[i + 2] += velocities[i + 2];
-
-                // Camera interaction - push particles away from camera
-                const dx = positions[i] - cameraPos.x;
-                const dy = positions[i + 1] - cameraPos.y;
-                const dz = positions[i + 2] - cameraPos.z;
-                const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
-
-                if (distance < interactionRadius && distance > 0) {
-                    const force = (interactionRadius - distance) / interactionRadius * pushStrength;
-                    velocities[i] += (dx / distance) * force;
-                    velocities[i + 1] += (dy / distance) * force;
-                    velocities[i + 2] += (dz / distance) * force;
-                }
-
-                // Damping - gradually slow down
-                velocities[i] *= 0.98;
-                velocities[i + 1] *= 0.98;
-                velocities[i + 2] *= 0.98;
-
-                // Boundary wrapping - keep particles in volume
-                if (Math.abs(positions[i]) > 30) positions[i] *= -1;
-                if (Math.abs(positions[i + 1]) > 12) positions[i + 1] *= -1;
-                if (Math.abs(positions[i + 2]) > 30) positions[i + 2] *= -1;
-
-                // Add some random drift to prevent settling
-                velocities[i] += Utils.randomRange(-0.001, 0.001);
-                velocities[i + 1] += Utils.randomRange(-0.001, 0.001);
-                velocities[i + 2] += Utils.randomRange(-0.001, 0.001);
+                // Slow sine wave motion
+                positions[i + 1] += Math.sin(time + i) * 0.002;
             }
 
             state.particles.geometry.attributes.position.needsUpdate = true;
-        }
-
-        // Animate starfield (slow rotation for parallax)
-        // Disabled on mobile for performance
-        if (state.starfield && state.motionEnabled && !state.prefersReducedMotion && !state.isMobile) {
-            state.starfield.rotation.y += 0.0001;
-            state.starfield.rotation.x += 0.00005;
-        }
-
-        // Logo core animations (Feature #6: Audio-reactive scaling)
-        if (state.logoCore && state.motionEnabled && !state.prefersReducedMotion) {
-            // Feature #6: Audio-reactive scaling with beat detection
-            // Disable on mobile for performance
-            if (state.audioAnalyser && state.musicPlaying && !state.isMobile) {
-                const dataArray = new Uint8Array(state.audioAnalyser.frequencyBinCount);
-                state.audioAnalyser.getByteFrequencyData(dataArray);
-
-                // Extract bass frequencies (0-10 bins = ~40-100Hz)
-                const bassArray = dataArray.slice(0, 10);
-                const bassLevel = bassArray.reduce((a, b) => a + b, 0) / bassArray.length / 255;
-
-                // Scale logo on beat (1.0 → 1.05)
-                const targetScale = 1.0 + (bassLevel * 0.05);
-                state.logoCore.scale.set(targetScale, targetScale, targetScale);
-
-                // Sync emissive intensity with audio amplitude (0.6 → 0.8)
-                if (state.logoCore.material.emissive) {
-                    const baseIntensity = 0.6;
-                    const boostIntensity = bassLevel * 0.2;
-                    state.logoCore.material.emissiveIntensity = baseIntensity + boostIntensity;
-                }
-            }
-
-            // Feature #7: Rotate logo in idle mode
-            if (state.isIdleMode) {
-                state.logoCore.rotation.y += 0.002;
-
-                // Update orbital particles
-                const time = Date.now() * 0.001;
-                state.logoOrbitParticles.forEach((particle, i) => {
-                    particle.userData.angle += particle.userData.speed;
-                    const angle = particle.userData.angle;
-                    const radius = particle.userData.radius;
-
-                    // Calculate orbital position around logo
-                    particle.position.x = state.logoCore.position.x + Math.cos(angle) * radius;
-                    particle.position.z = state.logoCore.position.z + Math.sin(angle) * radius;
-                    particle.position.y = state.logoCore.position.y + Math.sin(time * 3 + particle.userData.verticalOffset) * 0.1;
-
-                    // Subtle scale pulsing
-                    const scale = 1 + Math.sin(time * 2 + i) * 0.2;
-                    particle.scale.set(scale, scale, scale);
-                });
-
-                // Grid ripple effect (every 3 seconds in idle)
-                if (Math.floor(time) % 3 === 0 && Math.floor(time * 10) % 10 === 0) {
-                    createIdleGridRipple();
-                }
-            }
-
-            // Face camera for best visibility
-            state.logoCore.lookAt(state.camera.position);
+            state.particles.rotation.y += 0.0001;
         }
 
         // Float project cards (ambient motion)
@@ -3199,12 +2165,8 @@
             });
         }
 
-        // Idle mode check and update
-        checkIdleMode();
-        updateIdleCamera();
-
-        // Camera look at - use target if set, otherwise look at center (unless in idle mode)
-        if (state.camera && !state.isIdleMode) {
+        // Camera look at - use target if set, otherwise look at center
+        if (state.camera) {
             if (state.cameraLookAtTarget) {
                 state.camera.lookAt(state.cameraLookAtTarget);
             } else {
@@ -3212,10 +2174,8 @@
             }
         }
 
-        // Render with post-processing
-        if (state.composer) {
-            state.composer.render();
-        } else if (state.renderer && state.scene && state.camera) {
+        // Render
+        if (state.renderer && state.scene && state.camera) {
             state.renderer.render(state.scene, state.camera);
         }
     }
@@ -3338,129 +2298,16 @@
         // Initialize performance monitor
         PerformanceMonitor.init();
 
-        // Initialize 3D scene with error handling
-        let sceneInitialized = false;
-        try {
-            init3DScene();
-            sceneInitialized = true;
-            console.log('✓ 3D scene initialized');
-        } catch (error) {
-            console.error('Failed to initialize 3D scene:', error);
-            // Show error to user
-            alert('Your device may not support 3D graphics. Please try on a different browser or device.');
-        }
+        // Initialize 3D scene
+        init3DScene();
 
         // Setup contact form
         setupContactForm();
 
-        // Start loading sequence with timeout
-        try {
-            const loadingPromise = LoadingSequence.init();
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Loading timeout')), 10000)
-            );
+        // Start loading sequence
+        await LoadingSequence.init();
 
-            await Promise.race([loadingPromise, timeoutPromise]);
-            console.log('✓ Kairo Studio experience ready');
-        } catch (error) {
-            console.error('Loading failed:', error);
-            // Force hide loading screen
-            LoadingSequence.hideLoadingScreen();
-        }
-    }
-
-    // ===================================
-    // MOBILE NAVIGATION
-    // ===================================
-
-    function setupMobileNavigation() {
-        const menuToggle = document.getElementById('menuToggle');
-        const mobileNavOverlay = document.getElementById('mobileNavOverlay');
-        const mobileNavBtns = document.querySelectorAll('.mobile-nav-btn');
-
-        if (!menuToggle || !mobileNavOverlay) return;
-
-        // Toggle mobile menu
-        menuToggle.addEventListener('click', () => {
-            const isActive = mobileNavOverlay.classList.contains('active');
-
-            if (isActive) {
-                mobileNavOverlay.classList.remove('active');
-                menuToggle.classList.remove('active');
-            } else {
-                mobileNavOverlay.classList.add('active');
-                menuToggle.classList.add('active');
-            }
-        });
-
-        // Close mobile menu when clicking outside
-        mobileNavOverlay.addEventListener('click', (e) => {
-            if (e.target === mobileNavOverlay) {
-                mobileNavOverlay.classList.remove('active');
-                menuToggle.classList.remove('active');
-            }
-        });
-
-        // Handle mobile navigation buttons
-        mobileNavBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const section = btn.getAttribute('data-section');
-
-                // Close mobile menu
-                mobileNavOverlay.classList.remove('active');
-                menuToggle.classList.remove('active');
-
-                // Navigate to section
-                navigateToSection(section);
-
-                console.log(`📱 Mobile navigation: ${section}`);
-            });
-        });
-
-        // Add swipe gestures for mobile
-        if (state.isMobile) {
-            let touchStartX = 0;
-            let touchStartY = 0;
-            let touchEndX = 0;
-            let touchEndY = 0;
-
-            const canvas = document.getElementById('scene-canvas');
-            if (canvas) {
-                canvas.addEventListener('touchstart', (e) => {
-                    touchStartX = e.changedTouches[0].screenX;
-                    touchStartY = e.changedTouches[0].screenY;
-                }, { passive: true });
-
-                canvas.addEventListener('touchend', (e) => {
-                    touchEndX = e.changedTouches[0].screenX;
-                    touchEndY = e.changedTouches[0].screenY;
-                    handleSwipe();
-                }, { passive: true });
-            }
-
-            function handleSwipe() {
-                const swipeThreshold = 50;
-                const xDiff = touchStartX - touchEndX;
-                const yDiff = touchStartY - touchEndY;
-
-                // Horizontal swipe (left/right) is stronger than vertical
-                if (Math.abs(xDiff) > Math.abs(yDiff) && Math.abs(xDiff) > swipeThreshold) {
-                    if (xDiff > 0) {
-                        // Swipe left - next section
-                        navigateNext();
-                        console.log('👈 Swipe left: Next section');
-                    } else {
-                        // Swipe right - previous section
-                        navigatePrevious();
-                        console.log('👉 Swipe right: Previous section');
-                    }
-                }
-            }
-
-            console.log('✓ Touch gestures enabled');
-        }
-
-        console.log('✓ Mobile navigation initialized');
+        console.log('✓ Kairo Studio experience ready');
     }
 
     // ===================================
@@ -3472,7 +2319,6 @@
             setTimeout(() => {
                 if (checkMobileAndWebGL()) {
                     initApp();
-                    setupMobileNavigation();
                 }
             }, 100);
         });
@@ -3480,7 +2326,6 @@
         setTimeout(() => {
             if (checkMobileAndWebGL()) {
                 initApp();
-                setupMobileNavigation();
             }
         }, 100);
     }

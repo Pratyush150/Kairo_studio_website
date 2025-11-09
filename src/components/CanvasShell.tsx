@@ -12,7 +12,6 @@ import { ParticleTrail } from './ParticleTrail';
 import { Entity } from './Entity';
 import { CameraController } from './CameraController';
 import { EnhancedCameraController } from './EnhancedCameraController';
-import { DepthOfFieldController } from './DepthOfFieldController';
 import { PostProcessingEnhanced } from './PostProcessingEnhanced';
 import { PerformanceMonitor } from './PerformanceMonitor';
 import { useSceneStore } from '../lib/sceneAPI';
@@ -98,12 +97,7 @@ export function CanvasShell() {
 
         {/* Enhanced Post-processing with dynamic chromatic aberration */}
         {performanceMode !== 'low' && (
-          <>
-            <PostProcessingEnhanced enabled={true} />
-            {performanceMode === 'high' && (
-              <DepthOfFieldController enabled={true} />
-            )}
-          </>
+          <PostProcessingEnhanced enabled={true} />
         )}
       </Suspense>
     </Canvas>

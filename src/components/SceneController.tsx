@@ -17,6 +17,8 @@ export function SceneController({ onLoadComplete, children }: SceneControllerPro
     if (hasInitialized.current) return;
     hasInitialized.current = true;
 
+    console.log('[SceneController] Starting loading sequence...');
+
     let progress = 0;
     const interval = setInterval(() => {
       progress += Math.random() * 15;
@@ -24,22 +26,31 @@ export function SceneController({ onLoadComplete, children }: SceneControllerPro
         progress = 100;
         clearInterval(interval);
         setLoadingProgress(100);
+        console.log('[SceneController] Loading complete, triggering entry sequence');
 
         // Trigger entry sequence after brief pause
         setTimeout(() => {
           playEntrySequence();
         }, 300);
       } else {
-        setLoadingProgress(Math.min(progress, 95));
+        const currentProgress = Math.min(progress, 95);
+        setLoadingProgress(currentProgress);
+        console.log(`[SceneController] Loading progress: ${Math.round(currentProgress)}%`);
       }
     }, 100);
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      console.log('[SceneController] Cleanup: clearing interval');
+      clearInterval(interval);
+    };
+  }, [setLoadingProgress]);
 
   const playEntrySequence = () => {
+    console.log('[SceneController] Playing entry sequence (singularity → boom → idle)');
+
     const tl = gsap.timeline({
       onComplete: () => {
+        console.log('[SceneController] Entry sequence complete, setting state to idle');
         setSceneState('idle');
         if (onLoadComplete) {
           onLoadComplete();
@@ -55,6 +66,7 @@ export function SceneController({ onLoadComplete, children }: SceneControllerPro
       {
         duration: 0.3,
         onStart: () => {
+          console.log('[SceneController] Phase 1: Singularity compression');
           setSceneState('singularity');
           // Trigger logo pulse
           if (typeof window !== 'undefined') {

@@ -3,6 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useSceneStore } from '../lib/sceneAPI';
 import gsap from 'gsap';
+import logoImageUrl from '../assets/logo/kairo_logo.jpg';
 
 interface KairoLogoProps {
   position?: [number, number, number];
@@ -20,11 +21,11 @@ export function KairoLogoEnhanced({ position = [0, 0, 0] }: KairoLogoProps) {
   const breathPhase = useRef(0);
   const [logoTexture, setLogoTexture] = useState<THREE.Texture | null>(null);
 
-  // Load logo texture with error handling
+  // Load logo texture with error handling using imported URL
   useEffect(() => {
     const loader = new THREE.TextureLoader();
     loader.load(
-      '/assets/logo/kairo_logo.jpg',
+      logoImageUrl,
       (texture) => {
         console.log('[KairoLogoEnhanced] Logo texture loaded successfully');
         setLogoTexture(texture);

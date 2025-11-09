@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 import { useFrame, ThreeEvent } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
@@ -23,14 +23,83 @@ export function Entity({ data }: EntityProps) {
   const groupRef = useRef<THREE.Group>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [intensity, setIntensity] = useState(1.0);
-  const { hoverEntity, selectEntity, goTo, sceneState, hoveredEntity } =
+  const [isSignatureMoment, setIsSignatureMoment] = useState(false);
+  const originalPositionRef = useRef(new THREE.Vector3());
+  const { hoverEntity, selectEntity, goTo, sceneState, hoveredEntity, entities } =
     useSceneStore();
 
   const isThisHovered = hoveredEntity === data.id;
 
+  // Listen for signature moment event
+  useEffect(() => {
+    const handleSignatureMoment = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { active } = customEvent.detail;
+
+      if (active) {
+        // Save current position
+        if (groupRef.current) {
+          originalPositionRef.current.copy(groupRef.current.position);
+        }
+
+        // Calculate position in circular formation
+        const entityIndex = entities.findIndex((e) => e.id === data.id);
+        const totalEntities = entities.length;
+        const angle = (entityIndex / totalEntities) * Math.PI * 2;
+        const radius = 80; // Tighter circle for logo formation
+
+        const targetX = Math.cos(angle) * radius;
+        const targetY = Math.sin(angle) * radius * 0.3; // Flatter circle
+        const targetZ = Math.sin(angle) * radius;
+
+        // Animate to formation
+        if (groupRef.current) {
+          gsap.to(groupRef.current.position, {
+            x: targetX,
+            y: targetY,
+            z: targetZ,
+            duration: 2.0,
+            ease: 'power3.inOut',
+          });
+
+          // Pulsing glow effect
+          const pulseTimeline = gsap.timeline({ repeat: -1, yoyo: true });
+          pulseTimeline.to({ value: intensity }, {
+            value: 2.5,
+            duration: 1.0,
+            ease: 'sine.inOut',
+            onUpdate: function () {
+              setIntensity(this.targets()[0].value);
+            },
+          });
+        }
+
+        setIsSignatureMoment(true);
+      } else {
+        // Return to normal orbit
+        setIsSignatureMoment(false);
+        setIntensity(1.0);
+
+        // Kill all animations
+        gsap.killTweensOf(groupRef.current?.position);
+        gsap.killTweensOf({ value: intensity });
+      }
+    };
+
+    window.addEventListener('kairo:signature-moment', handleSignatureMoment);
+    return () => window.removeEventListener('kairo:signature-moment', handleSignatureMoment);
+  }, [data.id, entities, intensity]);
+
   // Orbital animation
   useFrame((state) => {
     if (!groupRef.current || sceneState === 'loading' || sceneState === 'singularity') return;
+
+    // Skip orbital animation during signature moment
+    if (isSignatureMoment) {
+      // Face camera during signature moment
+      groupRef.current.lookAt(state.camera.position);
+      return;
+    }
 
     const time = state.clock.elapsedTime;
 

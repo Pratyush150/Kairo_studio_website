@@ -6,8 +6,10 @@ import { BlendFunction } from 'postprocessing';
 import * as THREE from 'three';
 import { KairoLogo } from './KairoLogo';
 import { ParticleField } from './ParticleField';
+import { ParticleTrail } from './ParticleTrail';
 import { Entity } from './Entity';
 import { CameraController } from './CameraController';
+import { DepthOfFieldController } from './DepthOfFieldController';
 import { useSceneStore } from '../lib/sceneAPI';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 
@@ -61,6 +63,7 @@ export function CanvasShell() {
         {/* Main scene elements */}
         <KairoLogo />
         <ParticleField count={performanceMode === 'low' ? 3000 : 8000} />
+        <ParticleTrail />
 
         {/* Entities */}
         {entities.map((entity) => (
@@ -92,12 +95,15 @@ export function CanvasShell() {
               mipmapBlur
             />
             {performanceMode === 'high' && (
-              <ChromaticAberration
-                blendFunction={BlendFunction.NORMAL}
-                offset={new THREE.Vector2(0.001, 0.002)}
-                radialModulation={false}
-                modulationOffset={0}
-              />
+              <>
+                <ChromaticAberration
+                  blendFunction={BlendFunction.NORMAL}
+                  offset={new THREE.Vector2(0.001, 0.002)}
+                  radialModulation={false}
+                  modulationOffset={0}
+                />
+                <DepthOfFieldController enabled={true} />
+              </>
             )}
           </EffectComposer>
         )}

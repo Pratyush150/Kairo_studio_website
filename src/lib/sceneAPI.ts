@@ -20,6 +20,7 @@ interface SceneStore {
   selectedEntity: string | null;
   hoveredEntity: string | null;
   audioEnabled: boolean;
+  audioVolume: number; // 0.0 to 1.0
   performanceMode: 'high' | 'medium' | 'low';
   reducedMotion: boolean;
 
@@ -32,6 +33,7 @@ interface SceneStore {
   selectEntity: (id: string | null) => void;
   hoverEntity: (id: string | null) => void;
   toggleAudio: () => void;
+  setAudioVolume: (volume: number) => void;
   setPerformanceMode: (mode: 'high' | 'medium' | 'low') => void;
   setReducedMotion: (enabled: boolean) => void;
 
@@ -49,6 +51,7 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
   selectedEntity: null,
   hoveredEntity: null,
   audioEnabled: localStorage.getItem('audioMuted') !== 'true',
+  audioVolume: parseFloat(localStorage.getItem('audioVolume') || '0.5'),
   performanceMode: 'high',
   reducedMotion: false,
 
@@ -141,7 +144,17 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
   setLoadingProgress: (progress) => set({ loadingProgress: progress }),
   selectEntity: (id) => set({ selectedEntity: id }),
   hoverEntity: (id) => set({ hoveredEntity: id }),
-  toggleAudio: () => set((state) => ({ audioEnabled: !state.audioEnabled })),
+  toggleAudio: () => set((state) => {
+    const newState = !state.audioEnabled;
+    localStorage.setItem('audioMuted', String(!newState));
+    return { audioEnabled: newState };
+  }),
+  setAudioVolume: (volume) => {
+    const clampedVolume = Math.max(0, Math.min(1, volume));
+    localStorage.setItem('audioVolume', String(clampedVolume));
+    set({ audioVolume: clampedVolume });
+    // Howler will be updated by the AudioManager listening to this change
+  },
   setPerformanceMode: (mode) => set({ performanceMode: mode }),
   setReducedMotion: (enabled) => set({ reducedMotion: enabled }),
 

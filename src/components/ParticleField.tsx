@@ -11,8 +11,10 @@ interface ParticleFieldProps {
 
 export function ParticleField({ count = 8000 }: ParticleFieldProps) {
   const pointsRef = useRef<THREE.Points>(null);
-  const { camera } = useThree();
+  const { camera, size, raycaster } = useThree();
   const { sceneState, performanceMode } = useSceneStore();
+  const mouseRef = useRef(new THREE.Vector2(999, 999)); // Start offscreen
+  const mouse3DRef = useRef(new THREE.Vector3());
 
   // Adjust particle count based on performance
   const particleCount = useMemo(() => {
@@ -20,6 +22,25 @@ export function ParticleField({ count = 8000 }: ParticleFieldProps) {
     if (performanceMode === 'medium') return Math.min(count, 5000);
     return count;
   }, [count, performanceMode]);
+
+  // Track mouse position
+  useEffect(() => {
+    const handlePointerMove = (event: PointerEvent) => {
+      // Convert to normalized device coordinates (-1 to +1)
+      mouseRef.current.x = (event.clientX / size.width) * 2 - 1;
+      mouseRef.current.y = -(event.clientY / size.height) * 2 + 1;
+
+      // Project mouse position to 3D space at camera's distance
+      const vector = new THREE.Vector3(mouseRef.current.x, mouseRef.current.y, 0.5);
+      vector.unproject(camera);
+      const dir = vector.sub(camera.position).normalize();
+      const distance = -camera.position.z / dir.z;
+      mouse3DRef.current.copy(camera.position).add(dir.multiplyScalar(distance));
+    };
+
+    window.addEventListener('pointermove', handlePointerMove);
+    return () => window.removeEventListener('pointermove', handlePointerMove);
+  }, [camera, size]);
 
   // Generate particle positions
   const { positions, normals } = useMemo(() => {
@@ -58,6 +79,9 @@ export function ParticleField({ count = 8000 }: ParticleFieldProps) {
           u_color: { value: new THREE.Color(0xb5c3ff) },
           u_opacity: { value: 1.0 },
           u_cameraPosition: { value: camera.position },
+          u_mousePosition: { value: new THREE.Vector3() },
+          u_attractionRadius: { value: 80.0 },
+          u_attractionStrength: { value: 0.15 },
         },
         vertexShader: particleVertexShader,
         fragmentShader: particleFragmentShader,
@@ -75,6 +99,7 @@ export function ParticleField({ count = 8000 }: ParticleFieldProps) {
     const material = pointsRef.current.material as THREE.ShaderMaterial;
     material.uniforms.u_time.value = state.clock.elapsedTime;
     material.uniforms.u_cameraPosition.value.copy(camera.position);
+    material.uniforms.u_mousePosition.value.copy(mouse3DRef.current);
 
     // Adjust opacity based on scene state
     if (sceneState === 'boom') {

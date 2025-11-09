@@ -1,0 +1,142 @@
+.signature-moment {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 100;
+  animation: signatureFadeIn 1.5s ease-out forwards;
+}
+
+.signature-content {
+  text-align: center;
+  animation: signatureSlideUp 2s ease-out forwards;
+}
+
+.signature-title {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 6rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #A854FF 0%, #00FFFF 50%, #A854FF 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+  padding: 0;
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 40px rgba(168, 84, 255, 0.5);
+  animation: signatureGlow 3s ease-in-out infinite, gradientShift 4s ease infinite;
+}
+
+.signature-tagline {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 1rem 0 0;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0;
+  animation: signatureTaglineFade 2s ease-out 1s forwards;
+}
+
+/* Animations */
+
+@keyframes signatureFadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(8px);
+  }
+}
+
+@keyframes signatureSlideUp {
+  from {
+    transform: translateY(60px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes signatureGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 20px rgba(168, 84, 255, 0.6));
+  }
+  50% {
+    filter: drop-shadow(0 0 40px rgba(0, 255, 255, 0.8));
+  }
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes signatureTaglineFade {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .signature-title {
+    font-size: 3rem;
+  }
+
+  .signature-tagline {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .signature-title {
+    font-size: 2rem;
+  }
+
+  .signature-tagline {
+    font-size: 0.875rem;
+  }
+}
+
+/* Reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  .signature-moment,
+  .signature-content,
+  .signature-title,
+  .signature-tagline {
+    animation: none;
+  }
+
+  .signature-title {
+    background: #A854FF;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}

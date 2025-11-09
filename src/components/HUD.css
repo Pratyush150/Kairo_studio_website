@@ -90,6 +90,101 @@
   letter-spacing: 0.05em;
 }
 
+/* Audio controls */
+.hud-audio-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hud-volume-slider {
+  position: absolute;
+  left: 50px;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 10px 16px;
+  background: rgba(2, 3, 18, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(168, 84, 255, 0.3);
+  border-radius: 50px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 20px rgba(168, 84, 255, 0.3);
+  pointer-events: all;
+  animation: slideInVolume 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideInVolume {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.volume-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100px;
+  height: 4px;
+  background: linear-gradient(
+    to right,
+    var(--color-violet) 0%,
+    var(--color-violet) var(--volume-fill, 50%),
+    rgba(181, 195, 255, 0.2) var(--volume-fill, 50%),
+    rgba(181, 195, 255, 0.2) 100%
+  );
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.volume-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--color-cyan);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+  transition: all 0.2s ease;
+}
+
+.volume-range::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.8);
+}
+
+.volume-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: var(--color-cyan);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+  transition: all 0.2s ease;
+}
+
+.volume-range::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.8);
+}
+
+.volume-percentage {
+  font-family: var(--font-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-cyan);
+  min-width: 40px;
+  text-align: center;
+}
+
 /* Accessibility */
 @media (prefers-reduced-motion: reduce) {
   .hud {

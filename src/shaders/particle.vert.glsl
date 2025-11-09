@@ -1,6 +1,9 @@
 uniform float u_time;
 uniform float u_size;
 uniform vec3 u_cameraPosition;
+uniform vec3 u_mousePosition;
+uniform float u_attractionRadius;
+uniform float u_attractionStrength;
 varying float v_distance;
 
 // Simplex noise function for particle movement
@@ -74,6 +77,18 @@ void main() {
   vec3 pos = position;
   float noise = snoise(pos * 0.01 + u_time * 0.1);
   pos += normal * noise * 5.0;
+
+  // Cursor attraction effect
+  vec3 toMouse = u_mousePosition - pos;
+  float distToMouse = length(toMouse);
+
+  // Apply attraction within radius (subtle effect)
+  if (distToMouse < u_attractionRadius && distToMouse > 0.1) {
+    float attractionFactor = 1.0 - (distToMouse / u_attractionRadius);
+    attractionFactor = pow(attractionFactor, 2.0); // Ease out the attraction
+    vec3 attraction = normalize(toMouse) * attractionFactor * u_attractionStrength;
+    pos += attraction;
+  }
 
   // Calculate distance from camera
   v_distance = length(u_cameraPosition - pos);

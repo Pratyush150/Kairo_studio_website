@@ -18,7 +18,7 @@ interface SoundLibrary {
 }
 
 export function AudioManager() {
-  const { audioEnabled, sceneState } = useSceneStore();
+  const { audioEnabled, audioVolume, sceneState } = useSceneStore();
   const soundsRef = useRef<SoundLibrary>({
     ambient: { howl: null, loaded: false },
     hover: { howl: null, loaded: false },
@@ -269,6 +269,12 @@ export function AudioManager() {
   useEffect(() => {
     Howler.mute(!audioEnabled);
   }, [audioEnabled]);
+
+  // Handle global volume changes
+  useEffect(() => {
+    Howler.volume(audioVolume);
+    console.log(`[AudioManager] Volume set to ${Math.round(audioVolume * 100)}%`);
+  }, [audioVolume]);
 
   // This component doesn't render anything
   return null;

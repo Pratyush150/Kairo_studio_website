@@ -5,6 +5,7 @@ import { SceneController } from './components/SceneController';
 import { HUD } from './components/HUD';
 import { PanelView } from './components/PanelView';
 import { AudioManager } from './components/AudioManager';
+import { SignatureMoment } from './components/SignatureMoment';
 import { useSceneStore } from './lib/sceneAPI';
 import { useReducedMotion } from './hooks/useReducedMotion';
 import { useFPSMonitor } from './hooks/useFPSMonitor';
@@ -70,6 +71,9 @@ function App() {
 
         {/* Audio System */}
         <AudioManager />
+
+        {/* Signature Moment */}
+        <SignatureMoment />
       </SceneController>
 
       {/* Accessibility announcement region */}

@@ -12,34 +12,63 @@ interface ParticleFieldProps {
 export function ParticleField({ count = 8000 }: ParticleFieldProps) {
   const pointsRef = useRef<THREE.Points>(null);
   const { camera, size, raycaster } = useThree();
-  const { sceneState, performanceMode } = useSceneStore();
+
+  // Use individual selectors to minimize re-renders
+  const sceneState = useSceneStore((state) => state.sceneState);
+  const performanceMode = useSceneStore((state) => state.performanceMode);
+
   const mouseRef = useRef(new THREE.Vector2(999, 999)); // Start offscreen
   const mouse3DRef = useRef(new THREE.Vector3());
 
-  // Adjust particle count based on performance
+  // Keep refs in sync for useFrame
+  const sceneStateRef = useRef(sceneState);
+  sceneStateRef.current = sceneState;
+
+  // Adjust particle count based on performance - Further reduced
   const particleCount = useMemo(() => {
-    if (performanceMode === 'low') return Math.min(count, 3000);
-    if (performanceMode === 'medium') return Math.min(count, 5000);
+    if (performanceMode === 'low') return Math.min(count, 1500);
+    if (performanceMode === 'medium') return Math.min(count, 3000);
     return count;
   }, [count, performanceMode]);
 
-  // Track mouse position
+  // Track mouse position - Throttled for performance
   useEffect(() => {
-    const handlePointerMove = (event: PointerEvent) => {
-      // Convert to normalized device coordinates (-1 to +1)
-      mouseRef.current.x = (event.clientX / size.width) * 2 - 1;
-      mouseRef.current.y = -(event.clientY / size.height) * 2 + 1;
+    let rafId: number | null = null;
+    let needsUpdate = false;
+    let lastX = 0;
+    let lastY = 0;
 
-      // Project mouse position to 3D space at camera's distance
-      const vector = new THREE.Vector3(mouseRef.current.x, mouseRef.current.y, 0.5);
-      vector.unproject(camera);
-      const dir = vector.sub(camera.position).normalize();
-      const distance = -camera.position.z / dir.z;
-      mouse3DRef.current.copy(camera.position).add(dir.multiplyScalar(distance));
+    const handlePointerMove = (event: PointerEvent) => {
+      lastX = event.clientX;
+      lastY = event.clientY;
+      needsUpdate = true;
+
+      if (rafId === null) {
+        rafId = requestAnimationFrame(() => {
+          if (needsUpdate) {
+            // Convert to normalized device coordinates (-1 to +1)
+            mouseRef.current.x = (lastX / size.width) * 2 - 1;
+            mouseRef.current.y = -(lastY / size.height) * 2 + 1;
+
+            // Project mouse position to 3D space at camera's distance
+            const vector = new THREE.Vector3(mouseRef.current.x, mouseRef.current.y, 0.5);
+            vector.unproject(camera);
+            const dir = vector.sub(camera.position).normalize();
+            const distance = -camera.position.z / dir.z;
+            mouse3DRef.current.copy(camera.position).add(dir.multiplyScalar(distance));
+
+            needsUpdate = false;
+          }
+          rafId = null;
+        });
+      }
     };
 
-    window.addEventListener('pointermove', handlePointerMove);
-    return () => window.removeEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
   }, [camera, size]);
 
   // Generate particle positions
@@ -93,7 +122,7 @@ export function ParticleField({ count = 8000 }: ParticleFieldProps) {
   );
 
   // Animation
-  useFrame((state) => {
+  useFrame((state, delta) => {
     if (!pointsRef.current) return;
 
     const material = pointsRef.current.material as THREE.ShaderMaterial;
@@ -101,23 +130,25 @@ export function ParticleField({ count = 8000 }: ParticleFieldProps) {
     material.uniforms.u_cameraPosition.value.copy(camera.position);
     material.uniforms.u_mousePosition.value.copy(mouse3DRef.current);
 
-    // Adjust opacity based on scene state
-    if (sceneState === 'boom') {
+    // Adjust opacity based on scene state - frame-aware lerp (use ref for current sceneState)
+    if (sceneStateRef.current === 'boom') {
+      const lerpFactor = Math.min(1, delta * 3); // ~0.05 at 60fps
       material.uniforms.u_opacity.value = THREE.MathUtils.lerp(
         material.uniforms.u_opacity.value,
         0.3,
-        0.05
+        lerpFactor
       );
-    } else if (sceneState === 'idle' || sceneState === 'transition') {
+    } else if (sceneStateRef.current === 'idle' || sceneStateRef.current === 'transition') {
+      const lerpFactor = Math.min(1, delta * 1.2); // ~0.02 at 60fps
       material.uniforms.u_opacity.value = THREE.MathUtils.lerp(
         material.uniforms.u_opacity.value,
         1.0,
-        0.02
+        lerpFactor
       );
     }
 
-    // Slow rotation
-    pointsRef.current.rotation.y += 0.0001;
+    // Slow rotation - frame-aware
+    pointsRef.current.rotation.y += 0.0001 * (delta * 60); // Normalize to 60fps
   });
 
   // Handle compression event for singularity

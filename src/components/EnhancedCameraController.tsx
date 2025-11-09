@@ -7,9 +7,22 @@ import * as THREE from 'three';
 
 export function EnhancedCameraController() {
   const { camera, size } = useThree();
-  const { sceneState, selectedEntity, entities, reducedMotion } = useSceneStore();
+
+  // Use individual selectors to minimize re-renders
+  const sceneState = useSceneStore((state) => state.sceneState);
+  const selectedEntity = useSceneStore((state) => state.selectedEntity);
+  const entities = useSceneStore((state) => state.entities);
+  const reducedMotion = useSceneStore((state) => state.reducedMotion);
+
   const isAnimating = useRef(false);
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
+  const hoverTweenRef = useRef<gsap.core.Tween | null>(null);
+
+  // Keep refs in sync to avoid stale closures in useFrame
+  const sceneStateRef = useRef(sceneState);
+  const reducedMotionRef = useRef(reducedMotion);
+  sceneStateRef.current = sceneState;
+  reducedMotionRef.current = reducedMotion;
 
   // Enable touch gestures for mobile
   useTouchGestures();
@@ -77,37 +90,44 @@ export function EnhancedCameraController() {
   useFrame((state, delta) => {
     if (!cameraRigInitialized) return;
 
-    if (!isAnimating.current) {
-      // Smooth interpolation to target position
-      camera.position.lerp(targetPosition.current, 0.05);
+    // Only run orbital animation when NOT animating and in idle state (use refs for current values)
+    if (!isAnimating.current && sceneStateRef.current === 'idle' && !reducedMotionRef.current) {
+      // Orbital rotation (very slow) - frame-aware
+      cameraRig.current.rotation.y += 0.0002 * (delta * 60); // Normalize to 60fps
+
+      // Mouse parallax effect - frame-aware lerp
+      const lerpFactor = Math.min(1, delta * 7.2); // ~0.12 at 60fps
+      currentRotation.current.x = THREE.MathUtils.lerp(
+        currentRotation.current.x,
+        targetRotation.current.x,
+        lerpFactor
+      );
+      currentRotation.current.y = THREE.MathUtils.lerp(
+        currentRotation.current.y,
+        targetRotation.current.y,
+        lerpFactor
+      );
+
+      cameraRig.current.rotation.x = currentRotation.current.x;
+      cameraRig.current.rotation.y += currentRotation.current.y * delta;
+
+      // Zoom interpolation - frame-aware
+      const zoomLerpFactor = Math.min(1, delta * 6); // ~0.1 at 60fps
+      currentZoom.current = THREE.MathUtils.lerp(
+        currentZoom.current,
+        targetZoom.current,
+        zoomLerpFactor
+      );
+
+      // Apply zoom to camera position
+      const zoomVector = new THREE.Vector3(0, 0, currentZoom.current);
+      camera.position.copy(zoomVector);
+    }
+
+    // Only lerp to target position when not in idle or when animating (use ref for current sceneState)
+    if (isAnimating.current || sceneStateRef.current !== 'idle') {
+      camera.position.lerp(targetPosition.current, Math.min(1, delta * 3));
       camera.lookAt(targetLookAt.current);
-
-      if (sceneState === 'idle' && !reducedMotion) {
-        // Orbital rotation (very slow)
-        cameraRig.current.rotation.y += 0.0002;
-
-        // Mouse parallax effect
-        currentRotation.current.x = THREE.MathUtils.lerp(
-          currentRotation.current.x,
-          targetRotation.current.x,
-          0.12
-        );
-        currentRotation.current.y = THREE.MathUtils.lerp(
-          currentRotation.current.y,
-          targetRotation.current.y,
-          0.12
-        );
-
-        cameraRig.current.rotation.x = currentRotation.current.x;
-        cameraRig.current.rotation.y += currentRotation.current.y * delta;
-
-        // Zoom interpolation
-        currentZoom.current = THREE.MathUtils.lerp(currentZoom.current, targetZoom.current, 0.1);
-
-        // Apply zoom to camera position
-        const zoomVector = new THREE.Vector3(0, 0, currentZoom.current);
-        camera.position.copy(zoomVector);
-      }
     }
   });
 
@@ -240,6 +260,12 @@ export function EnhancedCameraController() {
     const handleCameraRush = () => {
       isAnimating.current = true;
 
+      // Kill any hover tweens
+      if (hoverTweenRef.current) {
+        hoverTweenRef.current.kill();
+        hoverTweenRef.current = null;
+      }
+
       gsap.fromTo(
         camera.position,
         { z: -200 },
@@ -267,18 +293,23 @@ export function EnhancedCameraController() {
       const customEvent = event as CustomEvent;
       const { entityId, active } = customEvent.detail;
 
-      if (sceneState !== 'idle') return;
+      if (sceneState !== 'idle' || isAnimating.current) return;
+
+      // Kill previous hover tween to prevent conflicts
+      if (hoverTweenRef.current) {
+        hoverTweenRef.current.kill();
+      }
 
       if (active) {
         // Dolly in z -= 8 (duration 220ms)
-        gsap.to(camera.position, {
+        hoverTweenRef.current = gsap.to(camera.position, {
           z: camera.position.z - 8,
           duration: 0.22,
           ease: 'power2.out',
         });
       } else {
         // Return to current zoom
-        gsap.to(camera.position, {
+        hoverTweenRef.current = gsap.to(camera.position, {
           z: currentZoom.current,
           duration: 0.22,
           ease: 'power2.out',
@@ -287,7 +318,13 @@ export function EnhancedCameraController() {
     };
 
     window.addEventListener('kairo:entity-hover', handleEntityHover);
-    return () => window.removeEventListener('kairo:entity-hover', handleEntityHover);
+    return () => {
+      window.removeEventListener('kairo:entity-hover', handleEntityHover);
+      // Clean up on unmount
+      if (hoverTweenRef.current) {
+        hoverTweenRef.current.kill();
+      }
+    };
   }, [sceneState, camera]);
 
   return null;

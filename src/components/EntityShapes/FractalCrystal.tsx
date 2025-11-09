@@ -61,6 +61,9 @@ export function FractalCrystal({ color, intensity = 1.0, scale = 1 }: FractalCry
 
     // Pulsing effect on each crystal
     groupRef.current.children.forEach((child, index) => {
+      // Skip if this child doesn't have a corresponding crystal in the array
+      if (!crystals[index] || !child.scale) return;
+
       const pulse = Math.sin(state.clock.elapsedTime * 2 + index) * 0.05 + 1;
       child.scale.y = crystals[index].scale[1] * pulse;
     });

@@ -13,13 +13,22 @@ export function KairoLogoEnhanced({ position = [0, 0, 0] }: KairoLogoProps) {
   const logoGroupRef = useRef<THREE.Group>(null);
   const logoMarkRef = useRef<THREE.Mesh>(null);
   const rimGlowRef = useRef<THREE.Mesh>(null);
+  const sunMeshRef = useRef<THREE.Mesh>(null);
   const { viewport, size, camera } = useThree();
-  const { sceneState, performanceMode } = useSceneStore();
+
+  // Use individual selectors to minimize re-renders
+  const sceneState = useSceneStore((state) => state.sceneState);
+  const performanceMode = useSceneStore((state) => state.performanceMode);
 
   const [isHovered, setIsHovered] = useState(false);
   const [pointerPos, setPointerPos] = useState({ x: 0, y: 0 });
   const breathPhase = useRef(0);
   const [logoTexture, setLogoTexture] = useState<THREE.Texture | null>(null);
+
+  // Animation control refs
+  const isExploding = useRef(false);
+  const hoverTweenRef = useRef<gsap.core.Tween | null>(null);
+  const explosionTimelineRef = useRef<gsap.core.Timeline | null>(null);
 
   // Load logo texture with error handling using imported URL
   useEffect(() => {
@@ -124,12 +133,15 @@ export function KairoLogoEnhanced({ position = [0, 0, 0] }: KairoLogoProps) {
   }, []);
 
   // Idle breathing animation (6s cycle)
-  useFrame((state) => {
+  useFrame((state, delta) => {
     if (!logoGroupRef.current) return;
+
+    // Don't animate if exploding - let GSAP handle it
+    if (isExploding.current) return;
 
     const t = state.clock.elapsedTime;
 
-    // Breathing pulse - 6000ms cycle
+    // Breathing pulse - 6000ms cycle (only when not hovering GSAP animation)
     breathPhase.current = (t * 1000) % 6000;
     const breathProgress = breathPhase.current / 6000;
     const breathEase = cubicBezier(breathProgress, 0.22, 1, 0.36, 1);
@@ -137,35 +149,39 @@ export function KairoLogoEnhanced({ position = [0, 0, 0] }: KairoLogoProps) {
 
     logoGroupRef.current.scale.setScalar(breathScale * logoScale);
 
-    // Update fresnel material time
+    // Update fresnel material time (always update, it's just a time uniform)
     if (fresnelMaterial.uniforms) {
       fresnelMaterial.uniforms.u_time.value = t;
 
-      // Pulsing emissive with 250ms phase offset
-      const pulsePhase = ((t * 1000 + 250) % 6000) / 6000;
-      const pulseEase = cubicBezier(pulsePhase, 0.22, 1, 0.36, 1);
-      fresnelMaterial.uniforms.u_intensity.value = 0.06 + pulseEase * 0.10; // 0.06 → 0.16
+      // Only animate intensity pulsing when not hovered (GSAP controls it when hovered)
+      if (!isHovered && !hoverTweenRef.current) {
+        const pulsePhase = ((t * 1000 + 250) % 6000) / 6000;
+        const pulseEase = cubicBezier(pulsePhase, 0.22, 1, 0.36, 1);
+        fresnelMaterial.uniforms.u_intensity.value = 0.06 + pulseEase * 0.10; // 0.06 → 0.16
+      }
     }
 
-    // Hover tilt
+    // Hover tilt - frame-aware lerp
     if (isHovered && logoMarkRef.current) {
       const targetRotY = pointerPos.x * 0.1; // ±6° = ±0.105 rad
       const targetRotX = pointerPos.y * 0.05; // ±3° = ±0.052 rad
+      const lerpFactor = Math.min(1, delta * 6); // ~0.1 at 60fps
 
       logoMarkRef.current.rotation.y = THREE.MathUtils.lerp(
         logoMarkRef.current.rotation.y,
         targetRotY,
-        0.1
+        lerpFactor
       );
       logoMarkRef.current.rotation.x = THREE.MathUtils.lerp(
         logoMarkRef.current.rotation.x,
         targetRotX,
-        0.1
+        lerpFactor
       );
     } else if (logoMarkRef.current) {
-      // Return to center
-      logoMarkRef.current.rotation.y = THREE.MathUtils.lerp(logoMarkRef.current.rotation.y, 0, 0.1);
-      logoMarkRef.current.rotation.x = THREE.MathUtils.lerp(logoMarkRef.current.rotation.x, 0, 0.1);
+      // Return to center - frame-aware
+      const lerpFactor = Math.min(1, delta * 6);
+      logoMarkRef.current.rotation.y = THREE.MathUtils.lerp(logoMarkRef.current.rotation.y, 0, lerpFactor);
+      logoMarkRef.current.rotation.x = THREE.MathUtils.lerp(logoMarkRef.current.rotation.x, 0, lerpFactor);
     }
   });
 
@@ -197,9 +213,14 @@ export function KairoLogoEnhanced({ position = [0, 0, 0] }: KairoLogoProps) {
       if (nowHovered !== wasHovered) {
         setIsHovered(nowHovered);
 
+        // Kill previous hover tween
+        if (hoverTweenRef.current) {
+          hoverTweenRef.current.kill();
+        }
+
         if (nowHovered) {
           // Hover enter
-          gsap.to(fresnelMaterial.uniforms.u_intensity, {
+          hoverTweenRef.current = gsap.to(fresnelMaterial.uniforms.u_intensity, {
             value: 0.28,
             duration: 0.18,
             ease: 'power2.out',
@@ -219,10 +240,13 @@ export function KairoLogoEnhanced({ position = [0, 0, 0] }: KairoLogoProps) {
           }));
         } else {
           // Hover leave
-          gsap.to(fresnelMaterial.uniforms.u_intensity, {
+          hoverTweenRef.current = gsap.to(fresnelMaterial.uniforms.u_intensity, {
             value: 0.06,
             duration: 0.24,
             ease: 'power2.out',
+            onComplete: () => {
+              hoverTweenRef.current = null;
+            },
           });
 
           window.dispatchEvent(new CustomEvent('kairo:logo-hover', {
@@ -269,7 +293,25 @@ export function KairoLogoEnhanced({ position = [0, 0, 0] }: KairoLogoProps) {
 
       console.log('[KairoLogo] Triggering explosion sequence');
 
-      const tl = gsap.timeline();
+      // Set exploding flag to stop useFrame animations
+      isExploding.current = true;
+
+      // Kill any existing animations
+      if (hoverTweenRef.current) {
+        hoverTweenRef.current.kill();
+        hoverTweenRef.current = null;
+      }
+      if (explosionTimelineRef.current) {
+        explosionTimelineRef.current.kill();
+      }
+
+      const tl = gsap.timeline({
+        onComplete: () => {
+          isExploding.current = false;
+        },
+      });
+
+      explosionTimelineRef.current = tl;
 
       // Phase 1: Compression (0-420ms)
       tl.to(logoGroupRef.current.scale, {
@@ -315,7 +357,16 @@ export function KairoLogoEnhanced({ position = [0, 0, 0] }: KairoLogoProps) {
     };
 
     window.addEventListener('kairo:explosion-sequence', handleExplosion);
-    return () => window.removeEventListener('kairo:explosion-sequence', handleExplosion);
+    return () => {
+      window.removeEventListener('kairo:explosion-sequence', handleExplosion);
+      // Cleanup on unmount
+      if (explosionTimelineRef.current) {
+        explosionTimelineRef.current.kill();
+      }
+      if (hoverTweenRef.current) {
+        hoverTweenRef.current.kill();
+      }
+    };
   }, [logoScale, logoPosition, fresnelMaterial]);
 
   // Don't render during certain states
@@ -350,6 +401,19 @@ export function KairoLogoEnhanced({ position = [0, 0, 0] }: KairoLogoProps) {
         color={0xF4EDE4}
         decay={2}
       />
+
+      {/* Sun mesh for GodRays effect (invisible but provides light source) */}
+      <mesh ref={sunMeshRef}>
+        <sphereGeometry args={[0.5, 16, 16]} />
+        <meshBasicMaterial
+          color={0xF4EDE4}
+          transparent
+          opacity={0}
+        />
+      </mesh>
     </group>
   );
 }
+
+// Export sun mesh ref for use in PostProcessing
+export { KairoLogoEnhanced as default };

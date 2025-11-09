@@ -10,7 +10,9 @@ interface SceneControllerProps {
 export function SceneController({ onLoadComplete, children }: SceneControllerProps) {
   console.log('[SceneController] Component rendering');
 
-  const { setSceneState, setLoadingProgress } = useSceneStore();
+  // Use Zustand selectors to only subscribe to actions (stable references, no re-renders)
+  const setSceneState = useSceneStore((state) => state.setSceneState);
+  const setLoadingProgress = useSceneStore((state) => state.setLoadingProgress);
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 

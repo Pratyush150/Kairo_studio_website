@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { loadEntityContent } from './contentAPI';
 
 export type SceneState = 'loading' | 'singularity' | 'boom' | 'idle' | 'transition' | 'panel';
 
@@ -36,6 +37,7 @@ interface SceneStore {
   setAudioVolume: (volume: number) => void;
   setPerformanceMode: (mode: 'high' | 'medium' | 'low') => void;
   setReducedMotion: (enabled: boolean) => void;
+  loadEntitiesFromCMS: () => Promise<void>;
 
   // Scene control methods
   goTo: (slug: string) => Promise<void>;
@@ -157,6 +159,18 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
   },
   setPerformanceMode: (mode) => set({ performanceMode: mode }),
   setReducedMotion: (enabled) => set({ reducedMotion: enabled }),
+
+  loadEntitiesFromCMS: async () => {
+    try {
+      console.log('[SceneAPI] Loading entities from CMS...');
+      const entities = await loadEntityContent();
+      set({ entities });
+      console.log(`[SceneAPI] Loaded ${entities.length} entities from CMS`);
+    } catch (error) {
+      console.error('[SceneAPI] Failed to load entities from CMS:', error);
+      // Keep existing hardcoded entities as fallback
+    }
+  },
 
   // Scene control
   goTo: async (slug: string) => {

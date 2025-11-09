@@ -15,6 +15,7 @@ import { EnhancedCameraController } from './EnhancedCameraController';
 import { PostProcessingEnhanced } from './PostProcessingEnhanced';
 import { PerformanceMonitor } from './PerformanceMonitor';
 import { FocusIndicator } from './FocusIndicator';
+import { SpaceEnvironment } from './SpaceEnvironment';
 import { useSceneStore } from '../lib/sceneAPI';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 
@@ -48,10 +49,14 @@ export function CanvasShell({ focusedEntityId }: CanvasShellProps) {
         far: 2000,
       }}
       gl={{
-        antialias: true,
+        antialias: performanceMode !== 'low',
         alpha: true,
         powerPreference: 'high-performance',
+        stencil: false,
+        depth: true,
       }}
+      frameloop="always"
+      performance={{ min: 0.5 }}
       style={{ background: 'transparent' }}
     >
       {/* Background color */}
@@ -66,6 +71,9 @@ export function CanvasShell({ focusedEntityId }: CanvasShellProps) {
       <pointLight position={[-10, -10, -5]} intensity={0.3} color="#A854FF" />
 
       <Suspense fallback={null}>
+        {/* Procedural Space Environment for reflections */}
+        <SpaceEnvironment />
+
         {/* Enhanced Camera system with mouse tracking */}
         <EnhancedCameraController />
 
@@ -75,10 +83,10 @@ export function CanvasShell({ focusedEntityId }: CanvasShellProps) {
         {/* Main scene elements */}
         {/* Enhanced Logo as Cosmic Singularity */}
         <KairoLogoEnhanced />
-        <LogoParticleField count={performanceMode === 'low' ? 3000 : 12000} />
+        <LogoParticleField count={performanceMode === 'low' ? 800 : performanceMode === 'medium' ? 2000 : 3500} />
 
         {/* Original particle field */}
-        <ParticleField count={performanceMode === 'low' ? 3000 : 8000} />
+        <ParticleField count={performanceMode === 'low' ? 1200 : performanceMode === 'medium' ? 2500 : 4000} />
         <ParticleTrail />
 
         {/* Entities */}

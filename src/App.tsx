@@ -15,12 +15,17 @@ import { useKeyboardNavigation } from './hooks/useKeyboardNavigation';
 import { detectDevice, getRecommendedPerformanceMode, shouldUseMobileFallback } from './utils/detectDevice';
 
 function App() {
-  const { setReducedMotion, setPerformanceMode } = useSceneStore();
+  const { setReducedMotion, setPerformanceMode, loadEntitiesFromCMS } = useSceneStore();
   const reducedMotion = useReducedMotion();
   const fpsData = useFPSMonitor();
   const keyboardNav = useKeyboardNavigation();
   const [useMobileFallback, setUseMobileFallback] = useState(false);
   const [deviceInfo, setDeviceInfo] = useState<ReturnType<typeof detectDevice> | null>(null);
+
+  // Load entities from CMS on mount
+  useEffect(() => {
+    loadEntitiesFromCMS();
+  }, [loadEntitiesFromCMS]);
 
   // Device detection on mount
   useEffect(() => {
@@ -33,11 +38,11 @@ function App() {
     const shouldFallback = shouldUseMobileFallback(info);
     setUseMobileFallback(shouldFallback);
 
-    // Set recommended performance mode
+    // Set recommended performance mode ONCE on mount
     const recommendedMode = getRecommendedPerformanceMode(info);
     setPerformanceMode(recommendedMode);
 
-    console.log(`[App] Performance mode: ${recommendedMode}, Mobile fallback: ${shouldFallback}`);
+    console.log(`[App] Initial performance mode: ${recommendedMode}, Mobile fallback: ${shouldFallback}`);
   }, [setPerformanceMode]);
 
   // Update reduced motion state
@@ -45,17 +50,18 @@ function App() {
     setReducedMotion(reducedMotion);
   }, [reducedMotion, setReducedMotion]);
 
-  // Dynamic performance adjustment
-  useEffect(() => {
-    if (fpsData.isLowPerformance) {
-      console.log('Low performance detected, reducing quality...');
-      setPerformanceMode('low');
-    } else if (fpsData.average < 50) {
-      setPerformanceMode('medium');
-    } else {
-      setPerformanceMode('high');
-    }
-  }, [fpsData.isLowPerformance, fpsData.average, setPerformanceMode]);
+  // Dynamic performance adjustment - DISABLED to prevent conflicts
+  // PerformanceMonitor component handles dynamic degradation instead
+  // useEffect(() => {
+  //   if (fpsData.isLowPerformance) {
+  //     console.log('Low performance detected, reducing quality...');
+  //     setPerformanceMode('low');
+  //   } else if (fpsData.average < 50) {
+  //     setPerformanceMode('medium');
+  //   } else {
+  //     setPerformanceMode('high');
+  //   }
+  // }, [fpsData.isLowPerformance, fpsData.average, setPerformanceMode]);
 
   // Set up global event listeners
   useEffect(() => {

@@ -13,6 +13,7 @@ import {
   HolographicPrism,
   GatewayRing,
 } from './EntityShapes';
+import { useLOD } from '../hooks/useLOD';
 import gsap from 'gsap';
 
 interface EntityProps {
@@ -22,13 +23,25 @@ interface EntityProps {
 export function Entity({ data }: EntityProps) {
   const groupRef = useRef<THREE.Group>(null);
   const [isHovered, setIsHovered] = useState(false);
-  const [intensity, setIntensity] = useState(1.0);
   const [isSignatureMoment, setIsSignatureMoment] = useState(false);
+
+  // Use refs instead of state to avoid triggering re-renders in animation loops
+  const intensityRef = useRef(1.0);
+  const [, forceUpdate] = useState({});
+  const currentPositionRef = useRef<THREE.Vector3>(new THREE.Vector3(...data.position));
   const originalPositionRef = useRef(new THREE.Vector3());
-  const { hoverEntity, selectEntity, goTo, sceneState, hoveredEntity, entities } =
+  const intensityTweenRef = useRef<gsap.core.Tween | null>(null);
+
+  const { hoverEntity, selectEntity, goTo, sceneState, hoveredEntity, entities, performanceMode } =
     useSceneStore();
 
   const isThisHovered = hoveredEntity === data.id;
+
+  // LOD system - Improved distances for better performance
+  const { lodLevel } = useLOD(currentPositionRef.current, {
+    highDistance: 180,
+    mediumDistance: 100,
+  });
 
   // Listen for signature moment event
   useEffect(() => {
@@ -52,6 +65,14 @@ export function Entity({ data }: EntityProps) {
         const targetY = Math.sin(angle) * radius * 0.3; // Flatter circle
         const targetZ = Math.sin(angle) * radius;
 
+        // Kill any existing animations first
+        if (groupRef.current) {
+          gsap.killTweensOf(groupRef.current.position);
+        }
+        if (intensityTweenRef.current) {
+          intensityTweenRef.current.kill();
+        }
+
         // Animate to formation
         if (groupRef.current) {
           gsap.to(groupRef.current.position, {
@@ -62,14 +83,15 @@ export function Entity({ data }: EntityProps) {
             ease: 'power3.inOut',
           });
 
-          // Pulsing glow effect
+          // Pulsing glow effect using ref
+          const intensityProxy = { value: intensityRef.current };
           const pulseTimeline = gsap.timeline({ repeat: -1, yoyo: true });
-          pulseTimeline.to({ value: intensity }, {
+          intensityTweenRef.current = pulseTimeline.to(intensityProxy, {
             value: 2.5,
             duration: 1.0,
             ease: 'sine.inOut',
-            onUpdate: function () {
-              setIntensity(this.targets()[0].value);
+            onUpdate: () => {
+              intensityRef.current = intensityProxy.value;
             },
           });
         }
@@ -78,17 +100,28 @@ export function Entity({ data }: EntityProps) {
       } else {
         // Return to normal orbit
         setIsSignatureMoment(false);
-        setIntensity(1.0);
+        intensityRef.current = 1.0;
 
         // Kill all animations
-        gsap.killTweensOf(groupRef.current?.position);
-        gsap.killTweensOf({ value: intensity });
+        if (groupRef.current) {
+          gsap.killTweensOf(groupRef.current.position);
+        }
+        if (intensityTweenRef.current) {
+          intensityTweenRef.current.kill();
+          intensityTweenRef.current = null;
+        }
       }
     };
 
     window.addEventListener('kairo:signature-moment', handleSignatureMoment);
-    return () => window.removeEventListener('kairo:signature-moment', handleSignatureMoment);
-  }, [data.id, entities, intensity]);
+    return () => {
+      window.removeEventListener('kairo:signature-moment', handleSignatureMoment);
+      // Clean up on unmount
+      if (intensityTweenRef.current) {
+        intensityTweenRef.current.kill();
+      }
+    };
+  }, [data.id, entities]); // Removed intensity from dependencies
 
   // Orbital animation
   useFrame((state) => {
@@ -114,6 +147,9 @@ export function Entity({ data }: EntityProps) {
 
     groupRef.current.position.set(x, y, z);
 
+    // Update position ref for LOD calculation (no re-render!)
+    currentPositionRef.current.set(x, y, z);
+
     // Face camera
     groupRef.current.lookAt(state.camera.position);
   });
@@ -133,17 +169,23 @@ export function Entity({ data }: EntityProps) {
         })
       );
 
-      // Animate intensity
-      gsap.to({ value: intensity }, {
+      // Kill previous intensity tween if exists
+      if (intensityTweenRef.current) {
+        intensityTweenRef.current.kill();
+      }
+
+      // Animate intensity using ref
+      const intensityProxy = { value: intensityRef.current };
+      intensityTweenRef.current = gsap.to(intensityProxy, {
         value: 1.6,
         duration: 0.18,
         ease: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
-        onUpdate: function () {
-          setIntensity(this.targets()[0].value);
+        onUpdate: () => {
+          intensityRef.current = intensityProxy.value;
         },
       });
     },
-    [data.id, hoverEntity, intensity, sceneState]
+    [data.id, hoverEntity, sceneState]
   );
 
   const handlePointerOut = useCallback(() => {
@@ -151,14 +193,21 @@ export function Entity({ data }: EntityProps) {
     hoverEntity(null);
     document.body.style.cursor = 'auto';
 
-    gsap.to({ value: intensity }, {
+    // Kill previous intensity tween if exists
+    if (intensityTweenRef.current) {
+      intensityTweenRef.current.kill();
+    }
+
+    // Animate intensity back to normal using ref
+    const intensityProxy = { value: intensityRef.current };
+    intensityTweenRef.current = gsap.to(intensityProxy, {
       value: 1.0,
       duration: 0.18,
-      onUpdate: function () {
-        setIntensity(this.targets()[0].value);
+      onUpdate: () => {
+        intensityRef.current = intensityProxy.value;
       },
     });
-  }, [hoverEntity, intensity]);
+  }, [hoverEntity]);
 
   const handleClick = useCallback(
     (e: ThreeEvent<MouseEvent>) => {
@@ -188,13 +237,34 @@ export function Entity({ data }: EntityProps) {
     [data.id, data.slug, goTo, selectEntity, sceneState]
   );
 
-  // Render appropriate shape based on type
+  // Render appropriate shape based on type and LOD level
   const renderShape = () => {
-    const props = {
+    const baseProps = {
       color: data.color,
-      intensity,
+      intensity: intensityRef.current,
       scale: isThisHovered ? 1.15 : 1,
     };
+
+    // Use simple sphere for low LOD (distant objects) to improve performance
+    if (performanceMode !== 'low' && lodLevel === 'low') {
+      return (
+        <mesh>
+          <sphereGeometry args={[2, 8, 8]} />
+          <meshStandardMaterial
+            color={data.color}
+            emissive={data.color}
+            emissiveIntensity={intensityRef.current * 0.5}
+            transparent
+            opacity={0.8}
+          />
+        </mesh>
+      );
+    }
+
+    // Medium LOD - slightly simplified
+    const props = lodLevel === 'medium'
+      ? { ...baseProps, scale: baseProps.scale * 0.9 }
+      : baseProps;
 
     switch (data.type) {
       case 'fractal':
@@ -232,9 +302,9 @@ export function Entity({ data }: EntityProps) {
     >
       {renderShape()}
 
-      {/* Label */}
-      {(isHovered || isThisHovered) && (
-        <Html center distanceFactor={8}>
+      {/* Label - Only show in high/medium LOD to reduce HTML render overhead */}
+      {(isHovered || isThisHovered) && lodLevel !== 'low' && (
+        <Html center distanceFactor={8} zIndexRange={[0, 0]}>
           <div
             style={{
               background: 'rgba(2, 3, 18, 0.9)',
@@ -249,7 +319,7 @@ export function Entity({ data }: EntityProps) {
               fontWeight: 600,
               color: '#ffffff',
               textShadow: `0 0 10px ${data.color}`,
-              animation: 'fadeIn 0.3s ease-out',
+              willChange: 'transform',
             }}
           >
             {data.title}

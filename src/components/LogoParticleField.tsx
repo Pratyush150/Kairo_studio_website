@@ -15,7 +15,9 @@ export function LogoParticleField({
 }: LogoParticleFieldProps) {
   const pointsRef = useRef<THREE.Points>(null);
   const { size } = useThree();
-  const { performanceMode } = useSceneStore();
+
+  // Use selector to minimize re-renders
+  const performanceMode = useSceneStore((state) => state.performanceMode);
 
   const isHovered = useRef(false);
   const attractionStrength = useRef(110); // G constant
@@ -224,13 +226,13 @@ export function LogoParticleField({
   }, [particleCount, logoPosition, positions]);
 
   // Animation loop
-  useFrame((state) => {
+  useFrame((state, delta) => {
     if (!pointsRef.current) return;
 
     shaderMaterial.uniforms.u_time.value = state.clock.elapsedTime;
 
-    // Slow orbital rotation
-    pointsRef.current.rotation.y += 0.0001;
+    // Slow orbital rotation - frame-aware
+    pointsRef.current.rotation.y += 0.0001 * (delta * 60); // Normalize to 60fps
   });
 
   return (

@@ -2,7 +2,6 @@ import { useRef, useMemo, useEffect, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useSceneStore } from '../lib/sceneAPI';
-import { useTexture } from '@react-three/drei';
 import gsap from 'gsap';
 
 interface KairoLogoProps {
@@ -19,9 +18,24 @@ export function KairoLogoEnhanced({ position = [0, 0, 0] }: KairoLogoProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [pointerPos, setPointerPos] = useState({ x: 0, y: 0 });
   const breathPhase = useRef(0);
+  const [logoTexture, setLogoTexture] = useState<THREE.Texture | null>(null);
 
-  // Load logo texture
-  const logoTexture = useTexture('/assets/logo/kairo_logo.jpg');
+  // Load logo texture with error handling
+  useEffect(() => {
+    const loader = new THREE.TextureLoader();
+    loader.load(
+      '/assets/logo/kairo_logo.jpg',
+      (texture) => {
+        console.log('[KairoLogoEnhanced] Logo texture loaded successfully');
+        setLogoTexture(texture);
+      },
+      undefined,
+      (error) => {
+        console.warn('[KairoLogoEnhanced] Logo texture failed to load, using solid color fallback', error);
+        setLogoTexture(null);
+      }
+    );
+  }, []);
 
   // Calculate responsive scale
   const logoScale = useMemo(() => {
@@ -39,14 +53,20 @@ export function KairoLogoEnhanced({ position = [0, 0, 0] }: KairoLogoProps) {
 
   // Graphite base material
   const graphiteMaterial = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
+    const materialProps: THREE.MeshStandardMaterialParameters = {
       color: 0x0b0b0b, // #0b0b0b
       metalness: 0.65,
       roughness: 0.18,
       envMapIntensity: 0.9,
-      map: logoTexture,
       transparent: true,
-    });
+    };
+
+    // Only add texture map if it loaded successfully
+    if (logoTexture) {
+      materialProps.map = logoTexture;
+    }
+
+    return new THREE.MeshStandardMaterial(materialProps);
   }, [logoTexture]);
 
   // Emissive rim material

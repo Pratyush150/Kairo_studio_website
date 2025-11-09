@@ -14,10 +14,15 @@ import { CameraController } from './CameraController';
 import { EnhancedCameraController } from './EnhancedCameraController';
 import { PostProcessingEnhanced } from './PostProcessingEnhanced';
 import { PerformanceMonitor } from './PerformanceMonitor';
+import { FocusIndicator } from './FocusIndicator';
 import { useSceneStore } from '../lib/sceneAPI';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 
-export function CanvasShell() {
+interface CanvasShellProps {
+  focusedEntityId?: string | null;
+}
+
+export function CanvasShell({ focusedEntityId }: CanvasShellProps) {
   const { entities, sceneState, performanceMode } = useSceneStore();
   const reducedMotion = useReducedMotion();
   const controlsRef = useRef<any>(null);
@@ -78,7 +83,17 @@ export function CanvasShell() {
 
         {/* Entities */}
         {entities.map((entity) => (
-          <Entity key={entity.id} data={entity} />
+          <group key={entity.id}>
+            <Entity data={entity} />
+            {/* Focus indicator for keyboard navigation */}
+            {focusedEntityId === entity.id && (
+              <FocusIndicator
+                position={entity.position}
+                color={entity.color}
+                active={true}
+              />
+            )}
+          </group>
         ))}
 
         {/* Camera controls */}

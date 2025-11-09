@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { EffectComposer, Bloom, ChromaticAberration } from '@react-three/postprocessing';
+import { EffectComposer, Bloom, ChromaticAberration, Noise } from '@react-three/postprocessing';
 import { BlendFunction } from 'postprocessing';
 import * as THREE from 'three';
 import { useSceneStore } from '../lib/sceneAPI';
@@ -63,6 +63,15 @@ export function PostProcessingEnhanced({ enabled = true }: PostProcessingEnhance
         radius={performanceMode === 'high' ? 0.6 : 0.4}
         mipmapBlur
       />
+
+      {/* Film grain effect - Subtle noise overlay for cinematic feel */}
+      {performanceMode !== 'low' && (
+        <Noise
+          premultiply
+          blendFunction={BlendFunction.OVERLAY}
+          opacity={0.02}
+        />
+      )}
 
       {/* Chromatic aberration with dynamic offset */}
       {performanceMode === 'high' && (

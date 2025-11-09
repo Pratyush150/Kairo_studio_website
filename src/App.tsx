@@ -11,12 +11,14 @@ import { AnalyticsTracker } from './components/AnalyticsTracker';
 import { useSceneStore } from './lib/sceneAPI';
 import { useReducedMotion } from './hooks/useReducedMotion';
 import { useFPSMonitor } from './hooks/useFPSMonitor';
+import { useKeyboardNavigation } from './hooks/useKeyboardNavigation';
 import { detectDevice, getRecommendedPerformanceMode, shouldUseMobileFallback } from './utils/detectDevice';
 
 function App() {
   const { setReducedMotion, setPerformanceMode } = useSceneStore();
   const reducedMotion = useReducedMotion();
   const fpsData = useFPSMonitor();
+  const keyboardNav = useKeyboardNavigation();
   const [useMobileFallback, setUseMobileFallback] = useState(false);
   const [deviceInfo, setDeviceInfo] = useState<ReturnType<typeof detectDevice> | null>(null);
 
@@ -102,7 +104,7 @@ function App() {
     >
       <SceneController>
         {/* 3D Canvas */}
-        <CanvasShell />
+        <CanvasShell focusedEntityId={keyboardNav.focusedEntityId} />
 
         {/* UI Overlays */}
         <Preloader />

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { CanvasShell } from './components/CanvasShell';
 import { Preloader } from './components/Preloader';
 import { SceneController } from './components/SceneController';
@@ -6,14 +6,37 @@ import { HUD } from './components/HUD';
 import { PanelView } from './components/PanelView';
 import { AudioManager } from './components/AudioManager';
 import { SignatureMoment } from './components/SignatureMoment';
+import { MobileFallback } from './components/MobileFallback';
+import { AnalyticsTracker } from './components/AnalyticsTracker';
 import { useSceneStore } from './lib/sceneAPI';
 import { useReducedMotion } from './hooks/useReducedMotion';
 import { useFPSMonitor } from './hooks/useFPSMonitor';
+import { detectDevice, getRecommendedPerformanceMode, shouldUseMobileFallback } from './utils/detectDevice';
 
 function App() {
   const { setReducedMotion, setPerformanceMode } = useSceneStore();
   const reducedMotion = useReducedMotion();
   const fpsData = useFPSMonitor();
+  const [useMobileFallback, setUseMobileFallback] = useState(false);
+  const [deviceInfo, setDeviceInfo] = useState<ReturnType<typeof detectDevice> | null>(null);
+
+  // Device detection on mount
+  useEffect(() => {
+    const info = detectDevice();
+    setDeviceInfo(info);
+
+    console.log('[App] Device detected:', info);
+
+    // Set mobile fallback
+    const shouldFallback = shouldUseMobileFallback(info);
+    setUseMobileFallback(shouldFallback);
+
+    // Set recommended performance mode
+    const recommendedMode = getRecommendedPerformanceMode(info);
+    setPerformanceMode(recommendedMode);
+
+    console.log(`[App] Performance mode: ${recommendedMode}, Mobile fallback: ${shouldFallback}`);
+  }, [setPerformanceMode]);
 
   // Update reduced motion state
   useEffect(() => {
@@ -51,6 +74,23 @@ function App() {
     };
   }, []);
 
+  // Render mobile fallback if needed
+  if (useMobileFallback) {
+    return (
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        <MobileFallback />
+        <AnalyticsTracker />
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
@@ -74,6 +114,9 @@ function App() {
 
         {/* Signature Moment */}
         <SignatureMoment />
+
+        {/* Analytics */}
+        <AnalyticsTracker />
       </SceneController>
 
       {/* Accessibility announcement region */}

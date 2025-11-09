@@ -11,7 +11,10 @@ import { ParticleField } from './ParticleField';
 import { ParticleTrail } from './ParticleTrail';
 import { Entity } from './Entity';
 import { CameraController } from './CameraController';
+import { EnhancedCameraController } from './EnhancedCameraController';
 import { DepthOfFieldController } from './DepthOfFieldController';
+import { PostProcessingEnhanced } from './PostProcessingEnhanced';
+import { PerformanceMonitor } from './PerformanceMonitor';
 import { useSceneStore } from '../lib/sceneAPI';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 
@@ -59,8 +62,11 @@ export function CanvasShell() {
       <pointLight position={[-10, -10, -5]} intensity={0.3} color="#A854FF" />
 
       <Suspense fallback={null}>
-        {/* Camera system */}
-        <CameraController />
+        {/* Enhanced Camera system with mouse tracking */}
+        <EnhancedCameraController />
+
+        {/* Performance Monitor */}
+        <PerformanceMonitor />
 
         {/* Main scene elements */}
         {/* Enhanced Logo as Cosmic Singularity */}
@@ -90,28 +96,14 @@ export function CanvasShell() {
           enabled={sceneState === 'idle'}
         />
 
-        {/* Post-processing effects */}
+        {/* Enhanced Post-processing with dynamic chromatic aberration */}
         {performanceMode !== 'low' && (
-          <EffectComposer>
-            <Bloom
-              intensity={performanceMode === 'high' ? 1.4 : 0.9}
-              kernelSize={6}
-              luminanceThreshold={0.12}
-              luminanceSmoothing={0.9}
-              mipmapBlur
-            />
+          <>
+            <PostProcessingEnhanced enabled={true} />
             {performanceMode === 'high' && (
-              <>
-                <ChromaticAberration
-                  blendFunction={BlendFunction.NORMAL}
-                  offset={new THREE.Vector2(0.001, 0.002)}
-                  radialModulation={false}
-                  modulationOffset={0}
-                />
-                <DepthOfFieldController enabled={true} />
-              </>
+              <DepthOfFieldController enabled={true} />
             )}
-          </EffectComposer>
+          </>
         )}
       </Suspense>
     </Canvas>

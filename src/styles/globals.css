@@ -1,0 +1,129 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* Color Palette */
+  --color-white: #FFFFFF;
+  --color-silver: #B5C3FF;
+  --color-violet: #A854FF;
+  --color-cyan: #00FFFF;
+  --color-amber: #FFC857;
+  --color-magenta: #E23EFF;
+  --color-turquoise: #50FFC8;
+  --color-gold: #FFD369;
+  --color-electric-blue: #3B9CFF;
+
+  /* Backgrounds */
+  --bg-space-dark: #020312;
+  --bg-space-mid: #0B0D21;
+  --bg-space-light: #160B33;
+
+  /* Font */
+  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font-primary);
+  background: var(--bg-space-dark);
+  color: var(--color-white);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  position: fixed;
+  touch-action: none;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+canvas {
+  display: block;
+  touch-action: none;
+}
+
+/* Text Glow Effects */
+.text-glow-violet {
+  text-shadow: 0 0 10px rgba(168, 84, 255, 0.6);
+}
+
+.text-glow-cyan {
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
+}
+
+.text-glow-amber {
+  text-shadow: 0 0 10px rgba(255, 200, 87, 0.6);
+}
+
+/* Loading Animation */
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-space-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-violet);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-cyan);
+}
+
+/* Selection */
+::selection {
+  background: var(--color-violet);
+  color: var(--color-white);
+}
+
+/* Focus Outline */
+:focus-visible {
+  outline: 2px solid var(--color-cyan);
+  outline-offset: 2px;
+}

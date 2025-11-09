@@ -1,289 +1,140 @@
-# Kairo Studio - PERN Stack Application
+# Kairoverse - The Living Galaxy of Ideas
 
-A modern full-stack web application with an immersive 3D experience built using PostgreSQL, Express, React, and Node.js (PERN stack).
+A cinematic 3D website experience for Kairo Studio, built with React, Three.js, and cutting-edge web technologies.
 
-## Architecture
+## 🌌 Overview
 
-### Backend (Server)
-- **Node.js** with **Express** - RESTful API server
-- **PostgreSQL** - Relational database
-- **Environment**: ES6 modules, CORS, Rate limiting, Security headers
+Kairoverse is an immersive, interactive galaxy where every service, project, and demo floats as part of a cosmic ecosystem. Built with performance, accessibility, and stunning visuals in mind.
 
-### Frontend (Client)
-- **React 18** with **Vite** - Modern build tool and development server
-- **Three.js** - 3D graphics and WebGL
-- **GSAP** - Smooth animations
-- **CSS3** - Modern styling with CSS variables
+## ✨ Features
 
-## Features
+- **Cinematic Entry Sequence**: Loading → Singularity compression → Explosive boom → Galaxy reveal
+- **8 Interactive Entities**: Each representing a core service/offering with unique 3D geometry
+- **Custom GLSL Shaders**: Particle systems, metaball morphing, and procedural effects
+- **Post-Processing Effects**: Bloom, chromatic aberration, depth of field
+- **Performance Optimization**: Dynamic LOD, FPS monitoring, adaptive quality settings
+- **Full Accessibility**: Reduced motion support, keyboard navigation, ARIA labels
+- **Responsive Design**: Works on desktop, tablet, and mobile devices
 
-- ✨ Immersive 3D hexagonal studio experience
-- 🎨 Interactive project showcases
-- 📊 Real-time performance monitoring
-- ♿ Accessibility features (motion toggle, keyboard navigation)
-- 📱 Responsive design with mobile fallback
-- 🔒 Secure API with rate limiting
-- 📧 Contact form with validation
-- 🗄️ PostgreSQL database with migrations
+## 🚀 Tech Stack
 
-## Prerequisites
+- **React 18** - UI framework
+- **Three.js** - 3D rendering
+- **React Three Fiber** - React renderer for Three.js
+- **React Three Drei** - Useful helpers for R3F
+- **React Three Postprocessing** - Post-processing effects
+- **GSAP** - Animation timeline and tweening
+- **Howler.js** - Spatial audio system
+- **Zustand** - State management
+- **TypeScript** - Type safety
+- **Vite** - Build tool and dev server
 
-- **Node.js** (v14 or higher)
-- **PostgreSQL** (v12 or higher)
-- **npm** or **yarn**
-
-## Installation & Setup
-
-### 1. Clone the repository
+## 📦 Installation
 
 ```bash
-git clone <repository-url>
-cd kairo_studio
-```
-
-### 2. Database Setup
-
-**Create PostgreSQL database:**
-
-```bash
-# Login to PostgreSQL
-psql -U postgres
-
-# Create database
-CREATE DATABASE kairo_studio;
-
-# Exit psql
-\q
-```
-
-**Configure database credentials:**
-
-Edit `server/.env` and update the database settings:
-```
-DB_USER=postgres
-DB_HOST=localhost
-DB_NAME=kairo_studio
-DB_PASSWORD=your_password_here
-DB_PORT=5432
-```
-
-### 3. Server Setup
-
-```bash
-# Navigate to server directory
-cd server
-
-# Install dependencies
 npm install
+```
 
-# Run database migrations
-npm run db:migrate
+## 🛠️ Development
 
-# (Optional) Seed database with sample data
-node seeds/seedData.js
-
-# Start development server
+```bash
 npm run dev
 ```
 
-The server will start on `http://localhost:5000`
+Open [http://localhost:3000](http://localhost:3000) to view in browser.
 
-### 4. Client Setup
-
-Open a new terminal:
+## 🏗️ Build
 
 ```bash
-# Navigate to client directory
-cd client
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
+npm run build
 ```
 
-The client will start on `http://localhost:5173`
-
-## Project Structure
+## 📁 Project Structure
 
 ```
-kairo_studio/
-├── server/                  # Backend Express API
-│   ├── config/
-│   │   └── database.js     # PostgreSQL connection
-│   ├── routes/
-│   │   ├── projects.js     # Project endpoints
-│   │   ├── contact.js      # Contact form endpoints
-│   │   └── content.js      # Content endpoints
-│   ├── migrations/
-│   │   ├── 001_initial_schema.sql
-│   │   └── runMigrations.js
-│   ├── seeds/
-│   │   └── seedData.js     # Sample data seeding
-│   ├── server.js           # Express app entry point
-│   ├── package.json
-│   └── .env                # Environment variables
-│
-├── client/                  # Frontend React app
-│   ├── public/
-│   │   └── assets/
-│   │       └── js/
-│   │           └── main.js # Three.js logic
-│   ├── src/
-│   │   ├── App.jsx         # Main React component
-│   │   ├── main.jsx        # React entry point
-│   │   └── index.css       # Styles
-│   ├── index.html
-│   ├── vite.config.js
-│   ├── package.json
-│   └── .env                # Environment variables
-│
-└── README.md
+/kairoverse
+├─ /public              # Static assets
+│  ├─ /assets
+│  │  ├─ /sfx          # Sound effects
+│  │  └─ /lottie       # Lottie animations
+│  └─ favicon.svg
+├─ /src
+│  ├─ /components      # React components
+│  │  ├─ CanvasShell.tsx
+│  │  ├─ KairoLogo.tsx
+│  │  ├─ Entity.tsx
+│  │  ├─ ParticleField.tsx
+│  │  ├─ Preloader.tsx
+│  │  ├─ SceneController.tsx
+│  │  ├─ HUD.tsx
+│  │  ├─ PanelView.tsx
+│  │  └─ /EntityShapes
+│  ├─ /hooks           # Custom React hooks
+│  ├─ /shaders         # GLSL shaders
+│  ├─ /styles          # Global styles
+│  ├─ /lib             # Utilities and state
+│  ├─ App.tsx
+│  └─ index.tsx
+└─ package.json
 ```
 
-## API Endpoints
+## 🎨 Entity Types
 
-### Projects
-- `GET /api/projects` - Get all projects
-- `GET /api/projects/:slug` - Get project by slug
+1. **Brand Strategy** - Fractal crystal cluster (Violet)
+2. **Design & Creative** - Morphing metaball blob (Cyan)
+3. **SaaS & Automation** - Modular cube matrix (Electric Blue)
+4. **Performance Marketing** - Twisting helix vortex (Amber)
+5. **Case Studies** - Energy orb with satellites (Magenta)
+6. **Collaborations** - Network lattice (White)
+7. **Experiments** - Holographic prism (Turquoise)
+8. **Contact** - Gateway ring (Gold)
 
-### Content
-- `GET /api/content/services` - Get all services
-- `GET /api/content/stats` - Get statistics
+## 🎮 Controls
 
-### Contact
-- `POST /api/contact` - Submit contact form
-- `GET /api/contact/messages` - Get all messages (admin)
+- **Mouse Move**: Parallax camera rotation
+- **Scroll**: Zoom in/out
+- **Click Entity**: Fly to entity and open panel
+- **ESC**: Close panel and return to galaxy view
+- **Hover Bottom Edge**: Show HUD controls
 
-## Environment Variables
+## ⚡ Performance
 
-### Server (.env)
-```env
-PORT=5000
-NODE_ENV=development
-DB_USER=postgres
-DB_HOST=localhost
-DB_NAME=kairo_studio
-DB_PASSWORD=your_password_here
-DB_PORT=5432
-CORS_ORIGIN=http://localhost:5173
-```
+- Dynamic quality adjustment based on FPS
+- Particle count scales with device capability
+- Frustum culling for off-screen entities
+- LOD system for 3D models
+- Shader complexity adapts to performance
 
-### Client (.env)
-```env
-VITE_API_URL=http://localhost:5000/api
-VITE_NODE_ENV=development
-```
+## ♿ Accessibility
 
-## Development Commands
+- Full keyboard navigation
+- Screen reader support with ARIA labels
+- Reduced motion mode (honors `prefers-reduced-motion`)
+- High contrast focus indicators
+- Semantic HTML structure
 
-### Server
-```bash
-npm run dev          # Start development server with nodemon
-npm start            # Start production server
-npm run db:migrate   # Run database migrations
-```
+## 🎵 Audio System
 
-### Client
-```bash
-npm run dev          # Start Vite dev server
-npm run build        # Build for production
-npm run preview      # Preview production build
-```
+- Spatial audio with 3D positioning
+- Ambient cosmic soundscape
+- Interaction sound effects (hover, click, transition)
+- Mute toggle with localStorage persistence
 
-## Production Deployment
+## 🔮 Future Enhancements
 
-### Server
-1. Set environment variables in production
-2. Run migrations: `npm run db:migrate`
-3. Start server: `npm start`
+- [ ] Mobile-specific optimizations and gestures
+- [ ] CMS integration for dynamic content
+- [ ] Additional entity types
+- [ ] VR/XR support
+- [ ] Advanced particle physics
+- [ ] Real-time collaboration features
 
-### Client
-1. Build the app: `npm run build`
-2. Serve the `dist` folder with a static file server (Nginx, Apache, etc.)
+## 📝 License
 
-## Database Schema
+Copyright © 2024 Kairo Studio. All rights reserved.
 
-### Tables
-- **projects** - Portfolio projects with images, descriptions, and metadata
-- **services** - Service offerings with descriptions
-- **contact_messages** - Contact form submissions
-- **stats** - Site statistics and metrics
+## 🙌 Credits
 
-See `server/migrations/001_initial_schema.sql` for full schema.
+Built with ❤️ by the Kairo Studio team.
 
-## Technologies Used
-
-### Backend
-- Express.js
-- PostgreSQL (pg library)
-- Helmet (security headers)
-- CORS
-- express-rate-limit
-- Joi (validation)
-- dotenv
-
-### Frontend
-- React 18
-- Vite
-- Three.js (3D graphics)
-- GSAP (animations)
-- Modern CSS3
-
-## Key Features & Navigation
-
-### 3D Navigation
-- **Arrow Keys**: Navigate through hexagonal walls
-- **Number Keys (1-6)**: Jump to specific sections
-- **Mouse**: Click or hover over walls
-- **ESC**: Close panels and return to center
-
-### Sections
-1. **Entry** - Welcome and navigation guide
-2. **About** - Company information and stats
-3. **Work** - Case studies and projects
-4. **Services** - Service workflow and offerings
-5. **Demos** - Interactive demonstrations
-6. **Contact** - Contact form and information
-
-### Performance
-- FPS monitor in top-right corner
-- Automatic performance throttling
-- Motion toggle for accessibility
-- WebGL detection and fallbacks
-
-## Browser Support
-
-- Chrome 90+
-- Firefox 88+
-- Safari 14+
-- Edge 90+
-
-Requires WebGL support for 3D features.
-
-## Troubleshooting
-
-### Database Connection Issues
-- Verify PostgreSQL is running: `psql -U postgres -c "SELECT version();"`
-- Check credentials in `server/.env`
-- Ensure database `kairo_studio` exists
-
-### Port Already in Use
-- Server: Change `PORT` in `server/.env`
-- Client: Vite will automatically try next available port
-
-### Three.js Not Loading
-- Check browser console for errors
-- Ensure CDN links are accessible
-- Try clearing browser cache
-
-## License
-
-MIT License - see LICENSE file for details
-
-## Support
-
-For issues and questions:
-- Email: hello@kairostudio.com
-- GitHub Issues: [repository-url]/issues
+Powered by Claude Code v3.0

@@ -4,6 +4,7 @@ import { Preloader } from './components/Preloader';
 import { SceneController } from './components/SceneController';
 import { HUD } from './components/HUD';
 import { PanelView } from './components/PanelView';
+import { AudioManager } from './components/AudioManager';
 import { useSceneStore } from './lib/sceneAPI';
 import { useReducedMotion } from './hooks/useReducedMotion';
 import { useFPSMonitor } from './hooks/useFPSMonitor';
@@ -66,6 +67,9 @@ function App() {
         <Preloader />
         <HUD />
         <PanelView />
+
+        {/* Audio System */}
+        <AudioManager />
       </SceneController>
 
       {/* Accessibility announcement region */}

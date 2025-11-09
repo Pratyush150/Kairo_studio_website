@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { KairoLogo } from './KairoLogo';
 import { ParticleField } from './ParticleField';
 import { Entity } from './Entity';
+import { CameraController } from './CameraController';
 import { useSceneStore } from '../lib/sceneAPI';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 
@@ -54,6 +55,9 @@ export function CanvasShell() {
       <pointLight position={[-10, -10, -5]} intensity={0.3} color="#A854FF" />
 
       <Suspense fallback={null}>
+        {/* Camera system */}
+        <CameraController />
+
         {/* Main scene elements */}
         <KairoLogo />
         <ParticleField count={performanceMode === 'low' ? 3000 : 8000} />

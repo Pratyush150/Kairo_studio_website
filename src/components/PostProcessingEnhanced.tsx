@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { EffectComposer, Bloom, ChromaticAberration, Noise, DepthOfField, Vignette, ToneMapping, GodRays as GodRaysEffect } from '@react-three/postprocessing';
-import { BlendFunction, KernelSize } from 'postprocessing';
+import { EffectComposer, Bloom, ChromaticAberration, Vignette } from '@react-three/postprocessing';
+import { BlendFunction } from 'postprocessing';
 import * as THREE from 'three';
 import { useSceneStore } from '../lib/sceneAPI';
 import gsap from 'gsap';
@@ -112,48 +112,13 @@ export function PostProcessingEnhanced({ enabled = true, lightSource }: PostProc
         mipmapBlur={performanceMode === 'high'}
       />
 
-      {/* Film grain effect - Subtle noise overlay for cinematic feel */}
-      {performanceMode !== 'low' && (
-        <Noise
-          premultiply
-          blendFunction={BlendFunction.OVERLAY}
-          opacity={0.02}
-        />
-      )}
-
-      {/* Vignette effect - Cinematic dark edges */}
-      {performanceMode !== 'low' && (
+      {/* Vignette effect - Cinematic dark edges (only in high mode) */}
+      {performanceMode === 'high' && (
         <Vignette
-          offset={0.3}
-          darkness={0.5}
+          offset={0.35}
+          darkness={0.4}
           eskil={false}
           blendFunction={BlendFunction.NORMAL}
-        />
-      )}
-
-      {/* Depth of Field during transitions - Reduced quality for performance */}
-      {performanceMode === 'high' && sceneState === 'transition' && (
-        <DepthOfField
-          focusDistance={0.05}
-          focalLength={0.015}
-          bokehScale={2.0}
-          height={360}
-        />
-      )}
-
-      {/* God Rays - Volumetric lighting (DISABLED for performance - re-enable manually if needed) */}
-      {false && performanceMode === 'high' && sunMesh && sceneState === 'idle' && (
-        <GodRaysEffect
-          sun={sunMesh}
-          blendFunction={BlendFunction.SCREEN}
-          samples={40}
-          density={0.94}
-          decay={0.90}
-          weight={0.3}
-          exposure={0.5}
-          clampMax={1}
-          kernelSize={KernelSize.VERY_SMALL}
-          blur={false}
         />
       )}
 

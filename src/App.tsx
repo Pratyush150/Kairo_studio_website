@@ -32,7 +32,18 @@ function App() {
     const info = detectDevice();
     setDeviceInfo(info);
 
-    console.log('[App] Device detected:', info);
+    // Comprehensive device logging per optimization guide
+    console.group('[App] Device Detection');
+    console.log('Platform:', info.platform);
+    console.log('Device Type:', info.isMobile ? 'Mobile' : info.isTablet ? 'Tablet' : 'Desktop');
+    console.log('CPU Cores:', info.cores);
+    console.log('Memory (GB):', info.memory || 'Unknown');
+    console.log('WebGL:', info.hasWebGL ? '✓' : '✗');
+    console.log('WebGL2:', info.hasWebGL2 ? '✓' : '✗');
+    console.log('Touch:', info.hasTouch ? '✓' : '✗');
+    console.log('Low Power Mode:', info.isLowPowerMode ? '✓' : '✗');
+    console.log('Device Category:', info.isHighEnd ? 'High-End' : info.isLowEnd ? 'Low-End' : 'Mid-Range');
+    console.groupEnd();
 
     // Set mobile fallback
     const shouldFallback = shouldUseMobileFallback(info);
@@ -42,7 +53,16 @@ function App() {
     const recommendedMode = getRecommendedPerformanceMode(info);
     setPerformanceMode(recommendedMode);
 
-    console.log(`[App] Initial performance mode: ${recommendedMode}, Mobile fallback: ${shouldFallback}`);
+    console.log(`[App] Initial performance mode: ${recommendedMode} | Mobile fallback: ${shouldFallback ? 'YES' : 'NO'}`);
+
+    // Warn if low-end device
+    if (info.isLowEnd) {
+      console.warn('[App] Low-end device detected. Auto-switched to LOW performance mode.');
+      if (info.cores <= 4) console.warn('  → Reason: CPU cores <= 4');
+      if (info.memory && info.memory < 4) console.warn('  → Reason: RAM < 4GB');
+      if (!info.hasWebGL2) console.warn('  → Reason: No WebGL2 support');
+      if (info.isLowPowerMode) console.warn('  → Reason: Battery saver enabled');
+    }
   }, [setPerformanceMode]);
 
   // Update reduced motion state

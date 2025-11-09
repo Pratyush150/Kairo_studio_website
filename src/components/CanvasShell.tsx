@@ -40,8 +40,13 @@ export function CanvasShell({ focusedEntityId }: CanvasShellProps) {
 
   return (
     <Canvas
-      shadows
-      dpr={[1, performanceMode === 'high' ? 2 : 1]}
+      shadows={performanceMode === 'high'}
+      dpr={(() => {
+        // Clamp device pixel ratio for performance
+        const isMobile = window.innerWidth < 768;
+        const maxDPR = isMobile ? 1.0 : 1.25;
+        return Math.min(window.devicePixelRatio || 1, maxDPR);
+      })()}
       camera={{
         position: [0, 0, 120],
         fov: 45,
@@ -49,7 +54,7 @@ export function CanvasShell({ focusedEntityId }: CanvasShellProps) {
         far: 2000,
       }}
       gl={{
-        antialias: performanceMode !== 'low',
+        antialias: performanceMode === 'high',
         alpha: true,
         powerPreference: 'high-performance',
         stencil: false,

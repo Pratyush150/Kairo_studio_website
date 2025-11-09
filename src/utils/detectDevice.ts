@@ -8,8 +8,13 @@ export interface DeviceInfo {
   isDesktop: boolean;
   hasTouch: boolean;
   hasWebGL: boolean;
+  hasWebGL2: boolean;
   isHighEnd: boolean;
+  isLowEnd: boolean;
   platform: string;
+  cores: number;
+  memory: number | null;
+  isLowPowerMode: boolean;
 }
 
 export function detectDevice(): DeviceInfo {
@@ -20,8 +25,13 @@ export function detectDevice(): DeviceInfo {
       isDesktop: true,
       hasTouch: false,
       hasWebGL: false,
+      hasWebGL2: false,
       isHighEnd: false,
+      isLowEnd: false,
       platform: 'server',
+      cores: 1,
+      memory: null,
+      isLowPowerMode: false,
     };
   }
 
@@ -47,9 +57,9 @@ export function detectDevice(): DeviceInfo {
   const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
   // WebGL detection
+  const canvas = document.createElement('canvas');
   const hasWebGL = (() => {
     try {
-      const canvas = document.createElement('canvas');
       return !!(
         window.WebGLRenderingContext &&
         (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
@@ -59,23 +69,61 @@ export function detectDevice(): DeviceInfo {
     }
   })();
 
-  // High-end device detection
+  // WebGL2 detection (required for best performance)
+  const hasWebGL2 = (() => {
+    try {
+      return !!(
+        window.WebGL2RenderingContext &&
+        canvas.getContext('webgl2')
+      );
+    } catch (e) {
+      return false;
+    }
+  })();
+
+  // Hardware specs
+  const cores = navigator.hardwareConcurrency || 1;
+  const memory = (navigator as any).deviceMemory || null;
+
+  // Low power mode detection (battery saver)
+  const isLowPowerMode = (() => {
+    // Check for battery API
+    const nav = navigator as any;
+    if (nav.getBattery) {
+      // Async but we'll handle it separately
+      return false; // Will be updated async
+    }
+    // Check for connection.saveData (Chrome data saver)
+    if (nav.connection && nav.connection.saveData) {
+      return true;
+    }
+    return false;
+  })();
+
+  // Low-end device detection (stricter criteria)
+  const isLowEnd = (() => {
+    // Strict low-end criteria per optimization guide
+    if (cores <= 4) return true; // <= 4 cores = auto low mode
+    if (memory !== null && memory < 4) return true; // < 4GB RAM = low mode
+    if (!hasWebGL2) return true; // No WebGL2 = low mode
+    if (isLowPowerMode) return true; // Battery saver = low mode
+    return false;
+  })();
+
+  // High-end device detection (only the best devices)
   const isHighEnd = (() => {
-    // Check for high RAM (>= 8GB)
-    const memory = (navigator as any).deviceMemory;
-    const hasHighRAM = memory ? memory >= 8 : false;
+    // Must have WebGL2, good RAM, and good cores
+    if (!hasWebGL2) return false;
+    if (cores < 8) return false; // Need 8+ cores for high mode
+    if (memory !== null && memory < 8) return false; // Need 8GB+ RAM
 
-    // Check for high CPU cores (>= 4)
-    const cores = navigator.hardwareConcurrency || 1;
-    const hasHighCPU = cores >= 4;
-
-    // iOS/Safari high-end check
-    const isIOSHighEnd = /iPad|iPhone/i.test(userAgent) && width >= 1024;
+    // iOS/Safari high-end check (recent iPads/iPhones)
+    const isIOSHighEnd = /iPad|iPhone/i.test(userAgent) && width >= 1024 && cores >= 6;
 
     // Android high-end check
-    const isAndroidHighEnd = /android/i.test(userAgent) && hasHighRAM && hasHighCPU;
+    const isAndroidHighEnd = /android/i.test(userAgent) && memory && memory >= 6 && cores >= 8;
 
-    return (isDesktop && hasHighRAM && hasHighCPU) || isIOSHighEnd || isAndroidHighEnd;
+    return (isDesktop && memory && memory >= 8 && cores >= 8) || isIOSHighEnd || isAndroidHighEnd;
   })();
 
   // Platform
@@ -94,24 +142,38 @@ export function detectDevice(): DeviceInfo {
     isDesktop,
     hasTouch,
     hasWebGL,
+    hasWebGL2,
     isHighEnd,
+    isLowEnd,
     platform,
+    cores,
+    memory,
+    isLowPowerMode,
   };
 }
 
 export function getRecommendedPerformanceMode(deviceInfo: DeviceInfo): 'high' | 'medium' | 'low' {
+  // Fail-safe checks per optimization guide
   if (!deviceInfo.hasWebGL) return 'low';
+  if (deviceInfo.isLowEnd) return 'low'; // Auto low mode for <= 4 cores, < 4GB RAM, no WebGL2, or battery saver
 
+  // Mobile devices
   if (deviceInfo.isMobile) {
     return deviceInfo.isHighEnd ? 'medium' : 'low';
   }
 
+  // Tablet devices
   if (deviceInfo.isTablet) {
     return deviceInfo.isHighEnd ? 'medium' : 'low';
   }
 
-  // Desktop
-  return deviceInfo.isHighEnd ? 'high' : 'medium';
+  // Desktop devices
+  if (deviceInfo.isHighEnd) {
+    return 'high'; // Only true high-end (8+ cores, 8GB+ RAM, WebGL2)
+  }
+
+  // Default to medium for mid-range desktops
+  return 'medium';
 }
 
 export function shouldUseMobileFallback(deviceInfo: DeviceInfo): boolean {

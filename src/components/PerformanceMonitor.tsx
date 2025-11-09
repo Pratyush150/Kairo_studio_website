@@ -10,9 +10,9 @@ interface PerformanceMonitorProps {
 }
 
 export function PerformanceMonitor({
-  targetFPS = 40, // Reduced from 45 to be less aggressive
-  degradeThreshold = 5000, // Increased from 3000ms to 5000ms
-  sampleSize = 90 // Increased from 60 to 90 for better averaging
+  targetFPS = 45, // Per optimization guide: degrade if < 45 FPS for 3s
+  degradeThreshold = 3000, // Per optimization guide: 3 seconds threshold
+  sampleSize = 180 // 3 seconds at 60fps for better averaging
 }: PerformanceMonitorProps) {
   // Use separate selectors to avoid re-renders from unrelated state changes
   const performanceMode = useSceneStore((state) => state.performanceMode);
@@ -59,7 +59,7 @@ export function PerformanceMonitor({
     // Calculate average FPS
     const avgFPS = fpsHistory.current.reduce((a, b) => a + b, 0) / fpsHistory.current.length;
 
-    // Check if performance is consistently low
+    // Check if performance is consistently low (per optimization guide)
     if (avgFPS < targetFPS && fpsHistory.current.length >= sampleSize) {
       if (lowFPSStartTime.current === null) {
         lowFPSStartTime.current = now;
@@ -67,37 +67,50 @@ export function PerformanceMonitor({
 
       const lowFPSDuration = now - lowFPSStartTime.current;
 
-      // Degrade if low FPS for more than threshold
+      // Degrade if low FPS for more than threshold (3 seconds per guide)
       if (lowFPSDuration > degradeThreshold && !hasDegrad.current) {
-        console.warn(`[PerformanceMonitor] Low FPS detected (avg: ${avgFPS.toFixed(1)}fps). Degrading performance mode.`);
+        console.warn(`[PerformanceMonitor] Low FPS detected (avg: ${avgFPS.toFixed(1)}fps < ${targetFPS}fps for ${(lowFPSDuration/1000).toFixed(1)}s). Auto-degrading.`);
 
         hasDegrad.current = true;
 
         // Use ref to get current mode (avoid stale closure)
         const currentMode = performanceModeRef.current;
 
-        // Degrade performance mode
+        // Step-wise degrade per optimization guide
+        // step1: high → medium (reduce bloom, lower render resolution)
+        // step2: medium → low (reduce particles, disable heavy effects)
         if (currentMode === 'high') {
           setPerformanceMode('medium');
-          console.log('[PerformanceMonitor] Switched to medium performance mode');
+          console.log('[PerformanceMonitor] Step 1: high → medium (reduced bloom, lower DPR)');
         } else if (currentMode === 'medium') {
           setPerformanceMode('low');
-          console.log('[PerformanceMonitor] Switched to low performance mode');
+          console.log('[PerformanceMonitor] Step 2: medium → low (minimal particles, no post-processing)');
+        } else {
+          console.warn('[PerformanceMonitor] Already at lowest performance mode. Cannot degrade further.');
         }
 
         // Emit analytics event
         window.dispatchEvent(new CustomEvent('kairo:performance-degrade', {
-          detail: { fps: avgFPS, timestamp: Date.now(), mode: currentMode }
+          detail: {
+            fps: avgFPS,
+            timestamp: Date.now(),
+            fromMode: currentMode,
+            toMode: currentMode === 'high' ? 'medium' : 'low',
+            duration: lowFPSDuration
+          }
         }));
 
-        // Reset after delay to prevent rapid switching
+        // Reset after delay to prevent rapid switching (but shorter for responsiveness)
         setTimeout(() => {
           lowFPSStartTime.current = null;
           hasDegrad.current = false;
-        }, 5000); // Wait 5 seconds before allowing another degrade
+        }, 3000); // Wait 3 seconds before allowing another degrade
       }
     } else {
       // Reset if FPS recovers
+      if (lowFPSStartTime.current !== null) {
+        console.log(`[PerformanceMonitor] FPS recovered to ${avgFPS.toFixed(1)}fps`);
+      }
       lowFPSStartTime.current = null;
     }
 

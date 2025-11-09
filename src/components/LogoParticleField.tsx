@@ -16,20 +16,11 @@ export function LogoParticleField({
   const pointsRef = useRef<THREE.Points>(null);
   const { size } = useThree();
 
-  // Use selector to minimize re-renders
-  const performanceMode = useSceneStore((state) => state.performanceMode);
-
   const isHovered = useRef(false);
   const attractionStrength = useRef(110); // G constant
 
-  // Adjust particle count based on performance and device
-  const particleCount = useMemo(() => {
-    const isMobile = size.width < 768;
-    if (isMobile) return 3000;
-    if (performanceMode === 'low') return 3000;
-    if (performanceMode === 'medium') return 6000;
-    return count;
-  }, [count, performanceMode, size.width]);
+  // Use count directly - performance mode handled by parent via key prop remount
+  const particleCount = count;
 
   // Generate particles in spherical shell around logo
   const { positions, velocities, colors, sizes } = useMemo(() => {

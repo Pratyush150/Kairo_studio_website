@@ -83,10 +83,17 @@ export function CanvasShell({ focusedEntityId }: CanvasShellProps) {
         {/* Main scene elements */}
         {/* Enhanced Logo as Cosmic Singularity */}
         <KairoLogoEnhanced />
-        <LogoParticleField count={performanceMode === 'low' ? 800 : performanceMode === 'medium' ? 2000 : 3500} />
+        {/* Key prop forces remount when performance mode changes to avoid buffer resize error */}
+        <LogoParticleField
+          key={`logo-particles-${performanceMode}`}
+          count={performanceMode === 'low' ? 800 : performanceMode === 'medium' ? 2000 : 3500}
+        />
 
         {/* Original particle field */}
-        <ParticleField count={performanceMode === 'low' ? 1200 : performanceMode === 'medium' ? 2500 : 4000} />
+        <ParticleField
+          key={`particles-${performanceMode}`}
+          count={performanceMode === 'low' ? 1200 : performanceMode === 'medium' ? 2500 : 4000}
+        />
         <ParticleTrail />
 
         {/* Entities */}

@@ -24,12 +24,8 @@ export function ParticleField({ count = 8000 }: ParticleFieldProps) {
   const sceneStateRef = useRef(sceneState);
   sceneStateRef.current = sceneState;
 
-  // Adjust particle count based on performance - Further reduced
-  const particleCount = useMemo(() => {
-    if (performanceMode === 'low') return Math.min(count, 1500);
-    if (performanceMode === 'medium') return Math.min(count, 3000);
-    return count;
-  }, [count, performanceMode]);
+  // Use count directly - performance mode handled by parent via key prop remount
+  const particleCount = count;
 
   // Track mouse position - Throttled for performance
   useEffect(() => {

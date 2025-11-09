@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import { useSceneStore } from '../lib/sceneAPI';
+import { useTouchGestures } from '../hooks/useTouchGestures';
 import gsap from 'gsap';
 import * as THREE from 'three';
 
@@ -9,6 +10,9 @@ export function EnhancedCameraController() {
   const { sceneState, selectedEntity, entities, reducedMotion } = useSceneStore();
   const isAnimating = useRef(false);
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
+
+  // Enable touch gestures for mobile
+  useTouchGestures();
 
   // Mouse tracking state
   const mousePos = useRef({ x: 0, y: 0 });

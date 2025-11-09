@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { EffectComposer, Bloom, ChromaticAberration, Noise } from '@react-three/postprocessing';
-import { BlendFunction } from 'postprocessing';
+import { EffectComposer, Bloom, ChromaticAberration, Noise, DepthOfField, Vignette, ToneMapping, GodRays as GodRaysEffect } from '@react-three/postprocessing';
+import { BlendFunction, KernelSize } from 'postprocessing';
 import * as THREE from 'three';
 import { useSceneStore } from '../lib/sceneAPI';
 import gsap from 'gsap';
@@ -11,7 +11,7 @@ interface PostProcessingEnhancedProps {
 }
 
 export function PostProcessingEnhanced({ enabled = true }: PostProcessingEnhancedProps) {
-  const { performanceMode } = useSceneStore();
+  const { performanceMode, sceneState } = useSceneStore();
   const chromaticAberrationRef = useRef<any>(null);
   const [chromaticOffset, setChromaticOffset] = useState(new THREE.Vector2(0.001, 0.002));
 
@@ -70,6 +70,26 @@ export function PostProcessingEnhanced({ enabled = true }: PostProcessingEnhance
           premultiply
           blendFunction={BlendFunction.OVERLAY}
           opacity={0.02}
+        />
+      )}
+
+      {/* Vignette effect - Cinematic dark edges */}
+      {performanceMode !== 'low' && (
+        <Vignette
+          offset={0.3}
+          darkness={0.5}
+          eskil={false}
+          blendFunction={BlendFunction.NORMAL}
+        />
+      )}
+
+      {/* Motion blur during transitions */}
+      {performanceMode === 'high' && sceneState === 'transition' && (
+        <DepthOfField
+          focusDistance={0.05}
+          focalLength={0.015}
+          bokehScale={3.0}
+          height={480}
         />
       )}
 

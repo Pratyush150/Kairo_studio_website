@@ -19,7 +19,7 @@ interface SimpleEntityProps {
 export function EnergyOrb({ color, intensity = 1.0, scale = 1 }: SimpleEntityProps) {
   const groupRef = useRef<THREE.Group>(null);
 
-  useFrame((state) => {
+  useFrame(() => {
     if (!groupRef.current) return;
     groupRef.current.rotation.y += 0.01;
   });
@@ -96,7 +96,7 @@ export function NetworkLattice({ color, intensity = 1.0, scale = 1 }: SimpleEnti
 export function HolographicPrism({ color, intensity = 1.0, scale = 1 }: SimpleEntityProps) {
   const meshRef = useRef<THREE.Mesh>(null);
 
-  useFrame((state) => {
+  useFrame(() => {
     if (!meshRef.current) return;
     meshRef.current.rotation.x += 0.005;
     meshRef.current.rotation.y += 0.008;

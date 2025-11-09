@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, ThreeEvent } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { useSceneStore, EntityData } from '../lib/sceneAPI';
@@ -23,10 +23,9 @@ export function Entity({ data }: EntityProps) {
   const groupRef = useRef<THREE.Group>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [intensity, setIntensity] = useState(1.0);
-  const { hoverEntity, selectEntity, goTo, sceneState, selectedEntity, hoveredEntity } =
+  const { hoverEntity, selectEntity, goTo, sceneState, hoveredEntity } =
     useSceneStore();
 
-  const isSelected = selectedEntity === data.id;
   const isThisHovered = hoveredEntity === data.id;
 
   // Orbital animation
@@ -51,7 +50,7 @@ export function Entity({ data }: EntityProps) {
   });
 
   const handlePointerOver = useCallback(
-    (e: THREE.Event) => {
+    (e: ThreeEvent<PointerEvent>) => {
       if (sceneState !== 'idle' && sceneState !== 'transition') return;
       e.stopPropagation();
       setIsHovered(true);
@@ -93,7 +92,7 @@ export function Entity({ data }: EntityProps) {
   }, [hoverEntity, intensity]);
 
   const handleClick = useCallback(
-    (e: THREE.Event) => {
+    (e: ThreeEvent<MouseEvent>) => {
       if (sceneState !== 'idle') return;
       e.stopPropagation();
 

@@ -91,6 +91,8 @@ export function CanvasShell() {
               <ChromaticAberration
                 blendFunction={BlendFunction.NORMAL}
                 offset={new THREE.Vector2(0.001, 0.002)}
+                radialModulation={false}
+                modulationOffset={0}
               />
             )}
           </EffectComposer>

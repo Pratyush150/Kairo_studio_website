@@ -8,7 +8,7 @@ interface SceneControllerProps {
 }
 
 export function SceneController({ onLoadComplete, children }: SceneControllerProps) {
-  const { sceneState, loadingProgress, setSceneState, setLoadingProgress } = useSceneStore();
+  const { setSceneState, setLoadingProgress } = useSceneStore();
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
   const hasInitialized = useRef(false);
 

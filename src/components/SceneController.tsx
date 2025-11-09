@@ -8,23 +8,33 @@ interface SceneControllerProps {
 }
 
 export function SceneController({ onLoadComplete, children }: SceneControllerProps) {
+  console.log('[SceneController] Component rendering');
+
   const { setSceneState, setLoadingProgress } = useSceneStore();
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
-  const hasInitialized = useRef(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Simulate loading
   useEffect(() => {
-    if (hasInitialized.current) return;
-    hasInitialized.current = true;
+    console.log('[SceneController] useEffect executing');
+
+    // Prevent duplicate intervals if effect runs multiple times
+    if (intervalRef.current) {
+      console.log('[SceneController] Already loading, skipping...');
+      return;
+    }
 
     console.log('[SceneController] Starting loading sequence...');
 
     let progress = 0;
-    const interval = setInterval(() => {
+    intervalRef.current = setInterval(() => {
       progress += Math.random() * 15;
       if (progress >= 100) {
         progress = 100;
-        clearInterval(interval);
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
         setLoadingProgress(100);
         console.log('[SceneController] Loading complete, triggering entry sequence');
 
@@ -41,7 +51,10 @@ export function SceneController({ onLoadComplete, children }: SceneControllerPro
 
     return () => {
       console.log('[SceneController] Cleanup: clearing interval');
-      clearInterval(interval);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     };
   }, [setLoadingProgress]);
 

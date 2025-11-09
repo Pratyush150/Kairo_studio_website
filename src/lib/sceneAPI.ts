@@ -226,4 +226,25 @@ export const sceneAPI = {
     }
   },
   resetView: () => useSceneStore.getState().resetView(),
+
+  // Logo singularity controls
+  explosionSequence: async () => {
+    return new Promise<void>((resolve) => {
+      window.dispatchEvent(new CustomEvent('kairo:explosion-sequence'));
+      // Resolve after sequence completes (~1200ms)
+      setTimeout(resolve, 1200);
+    });
+  },
+
+  hoverState: (enable: boolean) => {
+    window.dispatchEvent(new CustomEvent('kairo:logo-hover', {
+      detail: { active: enable }
+    }));
+  },
+
+  logoEn: () => {
+    window.dispatchEvent(new CustomEvent('kairo:logo-pulse', {
+      detail: { intensity: 1.8 }
+    }));
+  },
 };

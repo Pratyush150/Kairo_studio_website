@@ -5,6 +5,8 @@ import { EffectComposer, Bloom, ChromaticAberration } from '@react-three/postpro
 import { BlendFunction } from 'postprocessing';
 import * as THREE from 'three';
 import { KairoLogo } from './KairoLogo';
+import { KairoLogoEnhanced } from './KairoLogoEnhanced';
+import { LogoParticleField } from './LogoParticleField';
 import { ParticleField } from './ParticleField';
 import { ParticleTrail } from './ParticleTrail';
 import { Entity } from './Entity';
@@ -61,7 +63,11 @@ export function CanvasShell() {
         <CameraController />
 
         {/* Main scene elements */}
-        <KairoLogo />
+        {/* Enhanced Logo as Cosmic Singularity */}
+        <KairoLogoEnhanced />
+        <LogoParticleField count={performanceMode === 'low' ? 3000 : 12000} />
+
+        {/* Original particle field */}
         <ParticleField count={performanceMode === 'low' ? 3000 : 8000} />
         <ParticleTrail />
 

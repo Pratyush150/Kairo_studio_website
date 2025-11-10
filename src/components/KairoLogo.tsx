@@ -1,193 +1,128 @@
+/**
+ * Kairo Logo
+ * Initial logo that ripples and morphs into Origin shape
+ */
+
 import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useSceneStore } from '../lib/sceneAPI';
+import { colors } from '../lib/tokens';
 import gsap from 'gsap';
 
 export function KairoLogo() {
-  const logoGroupRef = useRef<THREE.Group>(null);
-  const coreMeshRef = useRef<THREE.Mesh>(null);
-  const glowMeshRef = useRef<THREE.Mesh>(null);
-  const { sceneState } = useSceneStore();
+  const groupRef = useRef<THREE.Group>(null);
+  const meshRef = useRef<THREE.Mesh>(null);
+  const sceneState = useSceneStore((s) => s.sceneState);
 
-  // Core material with emissive properties
-  const coreMaterial = useMemo(
+  // Logo material with emissive violet
+  const material = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
-        color: 0xa854ff,
-        emissive: 0xa854ff,
-        emissiveIntensity: 0.5,
-        metalness: 0.8,
-        roughness: 0.2,
+        color: colors.accentViolet,
+        emissive: colors.accentViolet,
+        emissiveIntensity: 0.6,
+        metalness: 0.7,
+        roughness: 0.3,
       }),
     []
   );
 
-  // Glow material
-  const glowMaterial = useMemo(
-    () =>
-      new THREE.MeshBasicMaterial({
-        color: 0xa854ff,
-        transparent: true,
-        opacity: 0.3,
-        side: THREE.BackSide,
-      }),
-    []
-  );
-
-  // Breathing pulse animation
+  // Breathing animation
   useFrame((state) => {
-    if (!logoGroupRef.current || sceneState === 'boom') return;
+    if (!groupRef.current || sceneState !== 'loading') return;
 
-    const breathe = Math.sin(state.clock.elapsedTime * 0.5) * 0.05 + 1;
-    logoGroupRef.current.scale.setScalar(breathe);
+    const breathe = Math.sin(state.clock.elapsedTime * 0.8) * 0.03 + 1;
+    groupRef.current.scale.setScalar(breathe);
 
-    // Update emissive intensity
-    if (coreMeshRef.current) {
-      const mat = coreMeshRef.current.material as THREE.MeshStandardMaterial;
-      mat.emissiveIntensity = 0.5 + Math.sin(state.clock.elapsedTime * 2) * 0.2;
-    }
+    // Rotate slowly
+    groupRef.current.rotation.y += 0.005;
   });
 
-  // Handle pulse event
+  // Ripple effect on load complete
   useEffect(() => {
-    const handlePulse = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      const intensity = customEvent.detail?.intensity || 1.5;
-
-      if (coreMeshRef.current) {
-        const mat = coreMeshRef.current.material as THREE.MeshStandardMaterial;
-        gsap.to(mat, {
-          emissiveIntensity: intensity,
-          duration: 0.3,
+    if (sceneState === 'idle' && groupRef.current) {
+      // Ripple animation
+      gsap.timeline()
+        .to(groupRef.current.scale, {
+          x: 1.4,
+          y: 1.4,
+          z: 1.4,
+          duration: 0.4,
           ease: 'power2.out',
+        })
+        .to(groupRef.current.scale, {
+          x: 1,
+          y: 1,
+          z: 1,
+          duration: 0.6,
+          ease: 'elastic.out(1, 0.5)',
+        });
+
+      // Flash emissive
+      if (meshRef.current) {
+        const mat = meshRef.current.material as THREE.MeshStandardMaterial;
+        gsap.to(mat, {
+          emissiveIntensity: 1.2,
+          duration: 0.3,
           yoyo: true,
           repeat: 1,
-        });
-      }
-
-      if (logoGroupRef.current) {
-        gsap.to(logoGroupRef.current.scale, {
-          x: 1.3,
-          y: 1.3,
-          z: 1.3,
-          duration: 0.3,
-          ease: 'power2.out',
-          yoyo: true,
-          repeat: 1,
-        });
-      }
-    };
-
-    window.addEventListener('kairo:logo-pulse', handlePulse);
-    return () => window.removeEventListener('kairo:logo-pulse', handlePulse);
-  }, []);
-
-  // Handle explode event
-  useEffect(() => {
-    const handleExplode = () => {
-      if (!logoGroupRef.current) return;
-
-      // Flash bright
-      if (coreMeshRef.current) {
-        const mat = coreMeshRef.current.material as THREE.MeshStandardMaterial;
-        gsap.to(mat, {
-          emissiveIntensity: 3.0,
-          duration: 0.1,
-          onComplete: () => {
-            gsap.to(mat, {
-              emissiveIntensity: 0,
-              duration: 0.3,
-            });
-          },
-        });
-      }
-
-      // Scale down and fade
-      gsap.to(logoGroupRef.current.scale, {
-        x: 0.1,
-        y: 0.1,
-        z: 0.1,
-        duration: 0.3,
-        ease: 'power3.in',
-      });
-
-      if (glowMeshRef.current) {
-        const glowMat = glowMeshRef.current.material as THREE.MeshBasicMaterial;
-        gsap.to(glowMat, {
-          opacity: 0,
-          duration: 0.3,
-        });
-      }
-
-      // Create explosion particles
-      createExplosionParticles();
-    };
-
-    window.addEventListener('kairo:logo-explode', handleExplode);
-    return () => window.removeEventListener('kairo:logo-explode', handleExplode);
-  }, []);
-
-  const createExplosionParticles = () => {
-    // This would create a burst of particles
-    // For now, we'll use a custom event that the ParticleField can listen to
-    window.dispatchEvent(
-      new CustomEvent('kairo:create-explosion', {
-        detail: { position: [0, 0, 0], count: 500 },
-      })
-    );
-  };
-
-  // Reset on state change
-  useEffect(() => {
-    if (sceneState === 'idle' && logoGroupRef.current) {
-      gsap.to(logoGroupRef.current.scale, {
-        x: 1,
-        y: 1,
-        z: 1,
-        duration: 0.5,
-        ease: 'power2.out',
-      });
-
-      if (coreMeshRef.current) {
-        const mat = coreMeshRef.current.material as THREE.MeshStandardMaterial;
-        gsap.to(mat, {
-          emissiveIntensity: 0.5,
-          duration: 0.5,
-        });
-      }
-
-      if (glowMeshRef.current) {
-        const glowMat = glowMeshRef.current.material as THREE.MeshBasicMaterial;
-        gsap.to(glowMat, {
-          opacity: 0.3,
-          duration: 0.5,
         });
       }
     }
   }, [sceneState]);
 
-  if (sceneState === 'boom' || sceneState === 'idle' || sceneState === 'transition') {
-    // Hide logo after boom
+  // Fade out during morphing or panel states
+  useEffect(() => {
+    if ((sceneState === 'morphing' || sceneState === 'panel') && groupRef.current) {
+      gsap.to(groupRef.current.scale, {
+        x: 0,
+        y: 0,
+        z: 0,
+        duration: 0.8,
+        ease: 'power3.in',
+      });
+    } else if (sceneState === 'idle' && groupRef.current) {
+      gsap.to(groupRef.current.scale, {
+        x: 1,
+        y: 1,
+        z: 1,
+        duration: 0.8,
+        ease: 'power3.out',
+      });
+    }
+  }, [sceneState]);
+
+  // Hide completely when not loading or idle
+  if (sceneState !== 'loading' && sceneState !== 'idle') {
     return null;
   }
 
   return (
-    <group ref={logoGroupRef} position={[0, 0, 0]}>
+    <group ref={groupRef} position={[0, 0, 0]}>
       {/* Core sphere */}
-      <mesh ref={coreMeshRef}>
-        <sphereGeometry args={[15, 32, 32]} />
-        <primitive object={coreMaterial} attach="material" />
+      <mesh ref={meshRef}>
+        <sphereGeometry args={[12, 32, 32]} />
+        <primitive object={material} attach="material" />
       </mesh>
 
-      {/* Glow sphere (larger, behind) */}
-      <mesh ref={glowMeshRef} scale={1.3}>
-        <sphereGeometry args={[15, 32, 32]} />
-        <primitive object={glowMaterial} attach="material" />
+      {/* Rim light */}
+      <mesh scale={1.15}>
+        <sphereGeometry args={[12, 32, 32]} />
+        <meshBasicMaterial
+          color={colors.accentViolet}
+          transparent
+          opacity={0.2}
+          side={THREE.BackSide}
+        />
       </mesh>
 
-      {/* Point light for illumination */}
-      <pointLight intensity={2} distance={100} color={0xa854ff} />
+      {/* Point light */}
+      <pointLight
+        intensity={1.5}
+        distance={80}
+        color={colors.accentViolet}
+      />
     </group>
   );
 }

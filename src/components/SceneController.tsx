@@ -10,11 +10,19 @@ interface SceneControllerProps {
 export function SceneController({ onLoadComplete, children }: SceneControllerProps) {
   console.log('[SceneController] Component rendering');
 
-  // Use Zustand selectors to only subscribe to actions (stable references, no re-renders)
+  // Use Zustand selectors to subscribe to state
   const setSceneState = useSceneStore((state) => state.setSceneState);
   const setLoadingProgress = useSceneStore((state) => state.setLoadingProgress);
+  const sceneState = useSceneStore((state) => state.sceneState);
+
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const safetyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Debug: Log scene state changes
+  useEffect(() => {
+    console.log(`[SceneController] Scene state changed to: ${sceneState}`);
+  }, [sceneState]);
 
   // Simulate loading
   useEffect(() => {
@@ -27,6 +35,24 @@ export function SceneController({ onLoadComplete, children }: SceneControllerPro
     }
 
     console.log('[SceneController] Starting loading sequence...');
+
+    // Safety timeout - force idle state after 5 seconds if something goes wrong
+    // Only set if not already set to prevent duplicates in strict mode
+    if (!safetyTimeoutRef.current) {
+      safetyTimeoutRef.current = setTimeout(() => {
+        console.warn('[SceneController] Safety timeout triggered! Forcing idle state...');
+        const currentState = useSceneStore.getState().sceneState;
+        if (currentState !== 'idle') {
+          console.error(`[SceneController] Scene was stuck in '${currentState}' state`);
+          setSceneState('idle');
+          setLoadingProgress(100);
+          if (onLoadComplete) {
+            onLoadComplete();
+          }
+        }
+        safetyTimeoutRef.current = null;
+      }, 5000);
+    }
 
     let progress = 0;
     intervalRef.current = setInterval(() => {
@@ -52,13 +78,17 @@ export function SceneController({ onLoadComplete, children }: SceneControllerPro
     }, 100);
 
     return () => {
-      console.log('[SceneController] Cleanup: clearing interval');
+      console.log('[SceneController] Cleanup: clearing interval and safety timeout');
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
+      if (safetyTimeoutRef.current) {
+        clearTimeout(safetyTimeoutRef.current);
+        safetyTimeoutRef.current = null;
+      }
     };
-  }, [setLoadingProgress]);
+  }, [setLoadingProgress, setSceneState, onLoadComplete]);
 
   const playEntrySequence = () => {
     console.log('[SceneController] Playing entry sequence (singularity → boom → idle)');
@@ -67,6 +97,13 @@ export function SceneController({ onLoadComplete, children }: SceneControllerPro
       onComplete: () => {
         console.log('[SceneController] Entry sequence complete, setting state to idle');
         setSceneState('idle');
+
+        // Clear safety timeout since we completed successfully
+        if (safetyTimeoutRef.current) {
+          clearTimeout(safetyTimeoutRef.current);
+          safetyTimeoutRef.current = null;
+        }
+
         if (onLoadComplete) {
           onLoadComplete();
         }

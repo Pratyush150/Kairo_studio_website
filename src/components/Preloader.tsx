@@ -29,16 +29,24 @@ export function Preloader() {
         opacity: 0,
         duration: 0.4,
         ease: 'power2.inOut',
-        onComplete: () => {
+        onStart: () => {
           if (containerRef.current) {
             containerRef.current.style.pointerEvents = 'none';
+          }
+        },
+        onComplete: () => {
+          if (containerRef.current) {
+            containerRef.current.style.display = 'none';
           }
         },
       });
     }
   }, [isVisible]);
 
-  if (!isVisible && loadingProgress === 100) return null;
+  // Don't render at all once loading is complete and fade out is done
+  if (!isVisible && loadingProgress === 100) {
+    return null;
+  }
 
   return (
     <div ref={containerRef} className="preloader">

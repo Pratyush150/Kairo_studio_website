@@ -6,7 +6,11 @@ interface FPSData {
   isLowPerformance: boolean;
 }
 
-export function useFPSMonitor(): FPSData {
+/**
+ * Morphing Canvas FPS Monitor
+ * Tracks FPS and calls onDegrade callback when FPS drops below threshold
+ */
+export function useFPSMonitor(onDegrade?: (fps: number) => void): FPSData {
   const [fpsData, setFpsData] = useState<FPSData>({
     current: 60,
     average: 60,
@@ -36,10 +40,15 @@ export function useFPSMonitor(): FPSData {
           fpsHistory.current.reduce((a, b) => a + b, 0) / fpsHistory.current.length
         );
 
-        // Consider low performance if average FPS < 40 for sustained period
-        const isLowPerformance = fpsHistory.current.length >= 10 && average < 40;
+        // Consider low performance if average FPS < 45 (Morphing Canvas threshold)
+        const isLowPerformance = fpsHistory.current.length >= 10 && average < 45;
 
         setFpsData({ current: fps, average, isLowPerformance });
+
+        // Call degrade callback if FPS drops below threshold
+        if (fps < 45 && onDegrade) {
+          onDegrade(fps);
+        }
 
         frameCount.current = 0;
         lastTime.current = now;
@@ -56,7 +65,7 @@ export function useFPSMonitor(): FPSData {
         cancelAnimationFrame(rafId.current);
       }
     };
-  }, []);
+  }, [onDegrade]);
 
   return fpsData;
 }

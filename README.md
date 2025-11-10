@@ -4,7 +4,7 @@
 
 ### *The Living Galaxy of Ideas*
 
-<img src="https://img.shields.io/badge/version-3.0.0-blue.svg" alt="Version">
+<img src="https://img.shields.io/badge/version-3.1.0-blue.svg" alt="Version">
 <img src="https://img.shields.io/badge/status-live-success.svg" alt="Status">
 <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">
 <img src="https://img.shields.io/badge/React-18.2-61dafb.svg" alt="React">
@@ -30,10 +30,12 @@ Kairoverse is an **immersive 3D web experience** for Kairo Studio, a digital and
 Every motion, color, sound, and interaction is designed to feel **alive, intentional, and emotionally striking**:
 
 - 🎬 **Cinematic Entry** - Loading → Singularity compression → Explosive boom → Galaxy reveal
-- 🌟 **8 Interactive Entities** - Each service represented as a unique 3D geometry
-- 🎨 **Custom GLSL Shaders** - Particle systems, metaball morphing, procedural effects
+- 🌟 **Morphing System** - 4 unique morph shapes with smooth transitions (Origin, Flow, Network, Portal)
+- 🎨 **Custom GLSL Shaders** - Advanced particle systems, fresnel effects, displacement, line pulse animations
+- 🎥 **Camera Rig System** - Smooth parallax, fly-in transitions, state-based camera movements
 - 🎵 **Spatial Audio** - 3D positioned sound effects and cosmic ambience
-- ⚡ **Performance Optimized** - Dynamic quality adjustment, LOD system, FPS monitoring
+- ⚡ **Performance Optimized** - FPS-based quality degradation, dynamic post-processing, LOD system
+- 🎨 **Design Token System** - Centralized constants for colors, typography, animations, and performance
 - ♿ **Fully Accessible** - Keyboard navigation, screen reader support, reduced motion mode
 
 ---
@@ -66,25 +68,27 @@ Every motion, color, sound, and interaction is designed to feel **alive, intenti
 <tr>
 <td>
 
-### 🎯 8 Interactive Entities
-- **Brand Strategy** - Fractal Crystal
-- **Design & Creative** - Metaball Blob
-- **SaaS & Automation** - Cube Matrix
-- **Performance Marketing** - Helix Vortex
-- **Case Studies** - Energy Orb
-- **Collaborations** - Network Lattice
-- **Experiments** - Holographic Prism
-- **Contact** - Gateway Ring
+### 🌟 4 Morphing Shapes
+- **Origin** - About section with violet accent
+- **Flow** - Work showcase with cyan accent
+- **Network** - Collaboration with amber accent
+- **Portal** - Contact gateway with beige accent
+- **Smooth transitions** between morphs
+- **State-based animations** (idle, morphing, panel)
+- **Hover pulse effects** on interaction
+- **Camera fly-in** on morph changes
 
 </td>
 <td>
 
 ### ⚡ Performance
-- **Dynamic LOD** system
-- **FPS monitoring** & adaptation
-- **Frustum culling** optimization
+- **FPS-based quality degradation** (<45 FPS)
+- **Dynamic post-processing** disable/enable
+- **Adaptive particle counts** by device
+- **Design token system** for consistency
 - **Code splitting** (326KB gzipped)
 - **Mobile optimized** (30+ FPS)
+- **Responsive utilities** hook
 
 </td>
 </tr>
@@ -167,24 +171,36 @@ kairoverse/
 ├── 📂 src/
 │   ├── 📂 components/      # React components
 │   │   ├── CanvasShell.tsx
+│   │   ├── CameraRig.tsx          # 🆕 Camera system
+│   │   ├── Effects.tsx            # 🆕 Post-processing
+│   │   ├── MorphManager.tsx       # 🆕 Morph orchestration
+│   │   ├── ParticleLayer.tsx      # 🆕 Particle system
 │   │   ├── KairoLogo.tsx
-│   │   ├── Entity.tsx
-│   │   ├── ParticleField.tsx
 │   │   ├── Preloader.tsx
 │   │   ├── HUD.tsx
 │   │   ├── PanelView.tsx
-│   │   └── 📂 EntityShapes/
+│   │   ├── SceneController.tsx
+│   │   ├── AudioManager.tsx
+│   │   ├── MobileFallback.tsx
+│   │   └── 📂 morphs/             # 🆕 Morph shapes
+│   │       ├── Origin.tsx         # About morph
+│   │       ├── Flow.tsx           # Work morph
+│   │       ├── Network.tsx        # Collaborate morph
+│   │       └── Portal.tsx         # Contact morph
 │   ├── 📂 hooks/           # Custom hooks
-│   │   ├── useAudio.ts
 │   │   ├── useFPSMonitor.ts
-│   │   └── useReducedMotion.ts
+│   │   ├── useReducedMotion.ts
+│   │   └── useResponsive.ts       # 🆕 Responsive utilities
 │   ├── 📂 shaders/         # GLSL shaders
-│   │   ├── particle.vert.glsl
-│   │   ├── particle.frag.glsl
-│   │   ├── metaball.vert.glsl
-│   │   └── metaball.frag.glsl
+│   │   ├── particle.vert          # 🆕 Particle vertex
+│   │   ├── particle.frag          # 🆕 Particle fragment
+│   │   ├── linePulse.vert         # 🆕 Line animation vertex
+│   │   ├── linePulse.frag         # 🆕 Line animation fragment
+│   │   ├── fresnel.frag           # 🆕 Fresnel effect
+│   │   └── displace.vert          # 🆕 Displacement vertex
 │   ├── 📂 lib/             # Utilities
-│   │   └── sceneAPI.ts
+│   │   ├── sceneAPI.ts
+│   │   └── tokens.ts              # 🆕 Design token system
 │   ├── 📂 styles/          # Global styles
 │   │   └── globals.css
 │   ├── App.tsx
@@ -197,62 +213,46 @@ kairoverse/
 
 ---
 
-## 🎨 Entity Showcase
+## 🌟 Morph Showcase
 
 <table>
 <tr>
 <td align="center" width="25%">
-<img src="https://via.placeholder.com/200x200/A854FF/FFFFFF?text=Fractal" alt="Fractal Crystal">
-<br><b>Brand Strategy</b>
-<br><sub>Fractal Crystal</sub>
+<img src="https://via.placeholder.com/200x200/A854FF/FFFFFF?text=Origin" alt="Origin Morph">
+<br><b>Origin</b>
+<br><sub>About Section</sub>
 <br><code>#A854FF</code>
+<br><small>Violet Accent</small>
 </td>
 <td align="center" width="25%">
-<img src="https://via.placeholder.com/200x200/00FFFF/000000?text=Metaball" alt="Metaball Blob">
-<br><b>Design & Creative</b>
-<br><sub>Metaball Blob</sub>
+<img src="https://via.placeholder.com/200x200/00FFFF/000000?text=Flow" alt="Flow Morph">
+<br><b>Flow</b>
+<br><sub>Work Showcase</sub>
 <br><code>#00FFFF</code>
+<br><small>Cyan Accent</small>
 </td>
 <td align="center" width="25%">
-<img src="https://via.placeholder.com/200x200/3B9CFF/FFFFFF?text=Cube" alt="Cube Matrix">
-<br><b>SaaS & Automation</b>
-<br><sub>Cube Matrix</sub>
-<br><code>#3B9CFF</code>
-</td>
-<td align="center" width="25%">
-<img src="https://via.placeholder.com/200x200/FFC857/000000?text=Helix" alt="Helix Vortex">
-<br><b>Performance Marketing</b>
-<br><sub>Helix Vortex</sub>
+<img src="https://via.placeholder.com/200x200/FFC857/000000?text=Network" alt="Network Morph">
+<br><b>Network</b>
+<br><sub>Collaboration</sub>
 <br><code>#FFC857</code>
+<br><small>Amber Accent</small>
 </td>
-</tr>
-<tr>
-<td align="center">
-<img src="https://via.placeholder.com/200x200/E23EFF/FFFFFF?text=Orb" alt="Energy Orb">
-<br><b>Case Studies</b>
-<br><sub>Energy Orb</sub>
-<br><code>#E23EFF</code>
-</td>
-<td align="center">
-<img src="https://via.placeholder.com/200x200/FFFFFF/000000?text=Lattice" alt="Network Lattice">
-<br><b>Collaborations</b>
-<br><sub>Network Lattice</sub>
-<br><code>#FFFFFF</code>
-</td>
-<td align="center">
-<img src="https://via.placeholder.com/200x200/50FFC8/000000?text=Prism" alt="Holographic Prism">
-<br><b>Experiments</b>
-<br><sub>Holographic Prism</sub>
-<br><code>#50FFC8</code>
-</td>
-<td align="center">
-<img src="https://via.placeholder.com/200x200/FFD369/000000?text=Gateway" alt="Gateway Ring">
-<br><b>Contact</b>
-<br><sub>Gateway Ring</sub>
-<br><code>#FFD369</code>
+<td align="center" width="25%">
+<img src="https://via.placeholder.com/200x200/F4EDE4/000000?text=Portal" alt="Portal Morph">
+<br><b>Portal</b>
+<br><sub>Contact Gateway</sub>
+<br><code>#F4EDE4</code>
+<br><small>Beige Accent</small>
 </td>
 </tr>
 </table>
+
+### Morph Features
+- **Smooth Transitions** - Seamless morphing between shapes
+- **State Management** - Idle, morphing, and panel states
+- **Interactive Hover** - Pulse effects on proximity
+- **Camera Choreography** - Dynamic fly-in and zoom animations
 
 ---
 
@@ -284,24 +284,58 @@ kairoverse/
 
 ---
 
+## 🏗️ Architecture Highlights
+
+### Design Token System
+Centralized design constants in `src/lib/tokens.ts` for:
+- **Colors** - Brand palette with semantic naming
+- **Typography** - Font families, weights, and responsive sizes
+- **Animation** - Durations and easing functions
+- **Performance** - FPS thresholds, particle counts, LOD distances
+- **Interaction** - Hover distances, camera lerp, pulse intensities
+- **Audio** - Volume levels and file paths
+
+### Component Architecture
+- **CameraRig** - Parallax, smooth lerp, state-based transitions
+- **Effects** - Post-processing with FPS monitoring and degradation
+- **MorphManager** - Orchestrates 4 morph shapes with state management
+- **ParticleLayer** - Adaptive particle system based on device capability
+
+### Shader System
+Six custom GLSL shaders:
+- `particle.vert/frag` - Particle system rendering
+- `linePulse.vert/frag` - Animated line effects
+- `fresnel.frag` - Edge lighting effects
+- `displace.vert` - Vertex displacement animations
+
+---
+
 ## 🎯 Roadmap
 
 ### ✅ Phase 1 - Complete
 - [x] Core 3D scene with React Three Fiber
-- [x] 8 interactive entities
+- [x] 4 morphing interactive shapes
 - [x] Entry sequence animation
-- [x] Custom GLSL shaders
-- [x] Post-processing effects
-- [x] Performance monitoring
+- [x] Custom GLSL shaders (6+ shaders)
+- [x] Post-processing effects with FPS degradation
+- [x] Performance monitoring & adaptive quality
 - [x] Accessibility support
+- [x] Design token system
 
-### 🚧 Phase 2 - In Progress
+### ✅ Phase 2 - Complete
+- [x] Enhanced camera rig system
+- [x] Camera fly-in animations
+- [x] Morph state management
+- [x] Advanced shader effects (fresnel, displacement, line pulse)
+- [x] Responsive utilities hook
+- [x] Code refactoring (~200 lines reduced)
+
+### 🚧 Phase 3 - In Progress
 - [ ] Full audio system integration
-- [ ] Enhanced camera fly-in animations
 - [ ] Content management system integration
 - [ ] Advanced particle physics
 
-### 🔮 Phase 3 - Planned
+### 🔮 Phase 4 - Planned
 - [ ] LOD system for 3D models
 - [ ] Mobile gesture controls
 - [ ] VR/XR support

@@ -1,140 +1,94 @@
-import { Suspense, useEffect, useRef } from 'react';
+/**
+ * Morphing Canvas Shell
+ * Main r3f Canvas container with scene setup
+ */
+
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
-import { EffectComposer, Bloom, ChromaticAberration } from '@react-three/postprocessing';
-import { BlendFunction } from 'postprocessing';
-import * as THREE from 'three';
-import { KairoLogo } from './KairoLogo';
-import { KairoLogoEnhanced } from './KairoLogoEnhanced';
-import { LogoParticleField } from './LogoParticleField';
-import { ParticleField } from './ParticleField';
-import { ParticleTrail } from './ParticleTrail';
-import { Entity } from './Entity';
-import { CameraController } from './CameraController';
-import { EnhancedCameraController } from './EnhancedCameraController';
-import { PostProcessingEnhanced } from './PostProcessingEnhanced';
-import { PerformanceMonitor } from './PerformanceMonitor';
-import { FocusIndicator } from './FocusIndicator';
-import { SpaceEnvironment } from './SpaceEnvironment';
+import { Suspense } from 'react';
+import { Preload } from '@react-three/drei';
+import { useResponsive } from '../hooks/useResponsive';
 import { useSceneStore } from '../lib/sceneAPI';
-import { useReducedMotion } from '../hooks/useReducedMotion';
+import { performance as perfSettings } from '../lib/tokens';
+import { KairoLogo } from './KairoLogo';
+import { MorphManager } from './MorphManager';
+import { ParticleLayer } from './ParticleLayer';
+import { Effects } from './Effects';
+import { CameraRig } from './CameraRig';
+import { PerformanceMonitor } from './PerformanceMonitor';
 
-interface CanvasShellProps {
-  focusedEntityId?: string | null;
-}
-
-export function CanvasShell({ focusedEntityId }: CanvasShellProps) {
-  const { entities, sceneState, performanceMode } = useSceneStore();
-  const reducedMotion = useReducedMotion();
-  const controlsRef = useRef<any>(null);
+export function CanvasShell() {
+  const { isMobile, isTablet } = useResponsive();
+  const performanceMode = useSceneStore((s) => s.performanceMode);
 
   // SSR guard
   if (typeof window === 'undefined') return null;
 
-  // Disable controls during transitions
-  useEffect(() => {
-    if (controlsRef.current) {
-      controlsRef.current.enabled = sceneState === 'idle';
-    }
-  }, [sceneState]);
+  // Calculate pixel ratio based on device and performance mode
+  const pixelRatio = isMobile || isTablet
+    ? perfSettings.pixelRatio.mobile
+    : performanceMode === 'low'
+    ? 1
+    : Math.min(window.devicePixelRatio, perfSettings.pixelRatio.desktop);
 
   return (
-    <Canvas
-      shadows={performanceMode === 'high'}
-      dpr={(() => {
-        // Clamp device pixel ratio for performance
-        const isMobile = window.innerWidth < 768;
-        const maxDPR = isMobile ? 1.0 : 1.25;
-        return Math.min(window.devicePixelRatio || 1, maxDPR);
-      })()}
-      camera={{
-        position: [0, 0, 120],
-        fov: 45,
-        near: 0.1,
-        far: 2000,
-      }}
-      gl={{
-        antialias: performanceMode === 'high',
-        alpha: true,
-        powerPreference: 'high-performance',
-        stencil: false,
-        depth: true,
-      }}
-      frameloop="always"
-      performance={{ min: 0.5 }}
-      style={{ background: 'transparent' }}
-    >
-      {/* Background color */}
-      <color attach="background" args={['#020312']} />
+    <div style={{ width: '100%', height: '100%', position: 'fixed', top: 0, left: 0, zIndex: 1 }}>
+      <Canvas
+        camera={{
+          position: [0, 0, 120],
+          fov: 45,
+          near: 0.1,
+          far: 2000,
+        }}
+        gl={{
+          antialias: true,
+          alpha: true,
+          powerPreference: isMobile ? 'low-power' : 'high-performance',
+        }}
+        dpr={pixelRatio}
+        shadows={performanceMode === 'high'}
+        frameloop="always"
+        style={{ background: 'transparent' }}
+      >
+        {/* Background color */}
+        <color attach="background" args={['#06070A']} />
 
-      {/* Fog for depth */}
-      <fog attach="fog" args={['#020312', 400, 1500]} />
-
-      {/* Lights */}
-      <ambientLight intensity={0.3} color="#160B33" />
-      <directionalLight position={[10, 10, 5]} intensity={0.8} color="#FFFFFF" castShadow />
-      <pointLight position={[-10, -10, -5]} intensity={0.3} color="#A854FF" />
-
-      <Suspense fallback={null}>
-        {/* Procedural Space Environment for reflections */}
-        <SpaceEnvironment />
-
-        {/* Enhanced Camera system with mouse tracking */}
-        <EnhancedCameraController />
-
-        {/* Performance Monitor */}
-        <PerformanceMonitor />
-
-        {/* Main scene elements */}
-        {/* Enhanced Logo as Cosmic Singularity */}
-        <KairoLogoEnhanced />
-        {/* Key prop forces remount when performance mode changes to avoid buffer resize error */}
-        <LogoParticleField
-          key={`logo-particles-${performanceMode}`}
-          count={performanceMode === 'low' ? 800 : performanceMode === 'medium' ? 2000 : 3500}
+        {/* Lighting */}
+        <ambientLight intensity={0.25} />
+        <directionalLight
+          position={[10, 10, 5]}
+          intensity={0.5}
+          color="#ffffff"
+        />
+        <pointLight
+          position={[-10, -10, -5]}
+          intensity={0.3}
+          color="#00E5FF"
         />
 
-        {/* Original particle field */}
-        <ParticleField
-          key={`particles-${performanceMode}`}
-          count={performanceMode === 'low' ? 1200 : performanceMode === 'medium' ? 2500 : 4000}
-        />
-        <ParticleTrail />
+        {/* Main Scene */}
+        <Suspense fallback={null}>
+          {/* Performance Monitor */}
+          <PerformanceMonitor />
 
-        {/* Entities */}
-        {entities.map((entity) => (
-          <group key={entity.id}>
-            <Entity data={entity} />
-            {/* Focus indicator for keyboard navigation */}
-            {focusedEntityId === entity.id && (
-              <FocusIndicator
-                position={entity.position}
-                color={entity.color}
-                active={true}
-              />
-            )}
-          </group>
-        ))}
+          {/* Camera System */}
+          <CameraRig>
+            {/* Logo */}
+            <KairoLogo />
 
-        {/* Camera controls */}
-        <OrbitControls
-          ref={controlsRef}
-          enableZoom={true}
-          enablePan={false}
-          enableRotate={true}
-          minDistance={80}
-          maxDistance={200}
-          rotateSpeed={reducedMotion ? 0 : 0.5}
-          zoomSpeed={0.8}
-          dampingFactor={0.05}
-          enabled={sceneState === 'idle'}
-        />
+            {/* Morph Shapes */}
+            <MorphManager />
 
-        {/* Enhanced Post-processing with dynamic chromatic aberration */}
-        {performanceMode !== 'low' && (
-          <PostProcessingEnhanced enabled={true} />
-        )}
-      </Suspense>
-    </Canvas>
+            {/* Particle Layer */}
+            <ParticleLayer />
+          </CameraRig>
+
+          {/* Post-processing Effects */}
+          <Effects />
+
+          {/* Preload assets */}
+          <Preload all />
+        </Suspense>
+      </Canvas>
+    </div>
   );
 }

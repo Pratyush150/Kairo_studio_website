@@ -30,6 +30,7 @@ export function AudioManager() {
   });
 
   const initialized = useRef(false);
+  const ambientFadeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize audio system
   useEffect(() => {
@@ -175,23 +176,48 @@ export function AudioManager() {
 
   // Play ambient when entering idle state
   useEffect(() => {
+    const ambient = soundsRef.current.ambient.howl;
+
+    // Clear any pending fade timeout
+    if (ambientFadeTimeoutRef.current) {
+      clearTimeout(ambientFadeTimeoutRef.current);
+      ambientFadeTimeoutRef.current = null;
+    }
+
     if (sceneState === 'idle' && audioEnabled) {
-      const ambient = soundsRef.current.ambient.howl;
       if (ambient && soundsRef.current.ambient.loaded) {
-        // Fade in ambient
-        ambient.fade(0, 0.3, 2000);
+        // Stop any existing playback first to prevent conflicts
+        if (ambient.playing()) {
+          ambient.stop();
+        }
+
+        // Start fresh playback with fade in
+        ambient.volume(0);
         ambient.play();
+        ambient.fade(0, 0.3, 2000);
       }
     } else {
-      const ambient = soundsRef.current.ambient.howl;
       if (ambient && ambient.playing()) {
         // Fade out ambient
-        ambient.fade(0.3, 0, 1000);
-        setTimeout(() => {
-          ambient.stop();
+        ambient.fade(ambient.volume(), 0, 1000);
+
+        // Schedule stop after fade completes
+        ambientFadeTimeoutRef.current = setTimeout(() => {
+          if (ambient.playing()) {
+            ambient.stop();
+          }
+          ambientFadeTimeoutRef.current = null;
         }, 1000);
       }
     }
+
+    // Cleanup function
+    return () => {
+      if (ambientFadeTimeoutRef.current) {
+        clearTimeout(ambientFadeTimeoutRef.current);
+        ambientFadeTimeoutRef.current = null;
+      }
+    };
   }, [sceneState, audioEnabled]);
 
   // Handle boom sound on boom state
@@ -221,7 +247,8 @@ export function AudioManager() {
 
       const sound = soundsRef.current[type];
       if (!sound.howl || !sound.loaded) {
-        console.warn(`[AudioManager] Sound "${type}" not loaded`);
+        // Silently fail - audio files are optional for development
+        // console.warn(`[AudioManager] Sound "${type}" not loaded`);
         return;
       }
 

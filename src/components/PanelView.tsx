@@ -1,14 +1,19 @@
+/**
+ * Panel View
+ * Content panel displayed when morph is clicked
+ */
+
 import { useEffect, useRef } from 'react';
-import { useSceneStore } from '../lib/sceneAPI';
+import { useSceneStore, sceneAPI } from '../lib/sceneAPI';
 import gsap from 'gsap';
 import './PanelView.css';
 
 export function PanelView() {
-  const { sceneState, selectedEntity, entities, closePanel } = useSceneStore();
+  const { sceneState, panelOpen, panelContent } = useSceneStore();
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const entity = entities.find((e) => e.id === selectedEntity);
-  const isVisible = sceneState === 'panel' && entity;
+  const isVisible = sceneState === 'panel' && panelOpen && panelContent;
+  const morphData = panelContent ? sceneAPI.getMorphData(panelContent) : null;
 
   useEffect(() => {
     if (isVisible && panelRef.current) {
@@ -44,8 +49,14 @@ export function PanelView() {
           delay: 0.2,
         }
       );
+
+      // Set aria-live announcement
+      const announcer = document.getElementById('a11y-announcer');
+      if (announcer && morphData) {
+        announcer.textContent = `${morphData.name} panel opened`;
+      }
     }
-  }, [isVisible]);
+  }, [isVisible, morphData]);
 
   const handleClose = () => {
     if (panelRef.current) {
@@ -55,59 +66,45 @@ export function PanelView() {
         duration: 0.3,
         ease: 'power2.in',
         onComplete: () => {
-          closePanel();
+          sceneAPI.closePanel();
         },
       });
     }
   };
 
-  if (!isVisible || !entity) return null;
+  if (!isVisible || !morphData) return null;
 
   return (
     <div className="panel-overlay">
       <div ref={panelRef} className="panel">
         {/* Close button */}
         <button className="panel-close" onClick={handleClose} aria-label="Close panel">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </button>
 
         {/* Header */}
-        <div className="panel-section panel-header" style={{ borderColor: entity.color }}>
-          <div
-            className="panel-icon"
-            style={{
-              background: `linear-gradient(135deg, ${entity.color}40, ${entity.color}20)`,
-              boxShadow: `0 0 30px ${entity.color}40`,
-            }}
-          >
-            <div
-              className="panel-icon-glow"
-              style={{
-                background: `radial-gradient(circle, ${entity.color}60, transparent)`,
-              }}
-            />
-          </div>
-          <h1 className="panel-title" style={{ color: entity.color }}>
-            {entity.title}
+        <div className="panel-section panel-header" style={{ borderColor: morphData.accent }}>
+          <h1 className="panel-title" style={{ color: morphData.accent }}>
+            {morphData.name}
           </h1>
-          <p className="panel-subtitle">{entity.description}</p>
+          <p className="panel-subtitle">{morphData.description}</p>
         </div>
 
         {/* Content */}
         <div className="panel-section panel-content">
           <h2 className="panel-section-title">Overview</h2>
           <p className="panel-text">
-            {getEntityContent(entity.slug)}
+            {getMorphContent(morphData.slug)}
           </p>
 
-          <h2 className="panel-section-title">Key Features</h2>
+          <h2 className="panel-section-title">What We Offer</h2>
           <ul className="panel-list">
-            {getEntityFeatures(entity.slug).map((feature, index) => (
+            {getMorphFeatures(morphData.slug).map((feature, index) => (
               <li key={index} className="panel-list-item">
-                <span className="panel-list-bullet" style={{ backgroundColor: entity.color }} />
+                <span className="panel-list-bullet" style={{ backgroundColor: morphData.accent }} />
                 {feature}
               </li>
             ))}
@@ -118,20 +115,27 @@ export function PanelView() {
             <button
               className="panel-button"
               style={{
-                borderColor: entity.color,
-                color: entity.color,
-                boxShadow: `0 0 20px ${entity.color}40`,
+                borderColor: morphData.accent,
+                color: morphData.accent,
+                boxShadow: `0 0 20px ${morphData.accent}40`,
               }}
               onClick={() => {
                 // Track CTA click
                 if (typeof window !== 'undefined' && (window as any).gtag) {
                   (window as any).gtag('event', 'cta_click', {
-                    entity_slug: entity.slug,
+                    morph_type: morphData.id,
+                    morph_slug: morphData.slug,
                   });
                 }
               }}
             >
-              Learn More
+              Talk to us
+            </button>
+            <button
+              className="panel-button panel-button-secondary"
+              onClick={handleClose}
+            >
+              Back to Canvas
             </button>
           </div>
         </div>
@@ -140,71 +144,43 @@ export function PanelView() {
   );
 }
 
-// Helper functions for content (would typically come from CMS)
-function getEntityContent(slug: string): string {
+// Helper functions for content
+function getMorphContent(slug: string): string {
   const content: Record<string, string> = {
-    'brand-strategy': 'Strategic brand development that positions your business for sustainable growth and market leadership.',
-    'design-creative': 'Innovative design solutions that captivate audiences and elevate your brand presence across all touchpoints.',
-    'saas-automation': 'Cutting-edge SaaS solutions and intelligent automation that streamline operations and accelerate growth.',
-    'performance-marketing': 'Data-driven marketing campaigns optimized for maximum ROI and sustainable customer acquisition.',
-    'case-studies': 'Real-world success stories showcasing transformative results for clients across industries.',
-    'collaborations': 'Strategic partnerships and collaborative ventures that amplify impact and drive mutual success.',
-    'experiments': 'Innovative explorations at the intersection of technology, design, and creative problem-solving.',
-    'contact': 'Connect with us to explore how we can help transform your vision into reality.',
+    about: 'Kairo Studio is a performance-driven agency that builds systems that move. We combine strategic thinking, creative excellence, and technical expertise to deliver transformative results.',
+    work: 'We craft digital experiences that flow seamlessly across platforms. From SaaS products to marketing campaigns, we build solutions that perform.',
+    collaborate: 'Great work happens through great partnerships. We collaborate with forward-thinking brands to create systems that scale and adapt.',
+    contact: 'Ready to start? Let\'s talk about how we can help you build systems that work.',
   };
 
   return content[slug] || 'Discover how we can help you achieve your goals.';
 }
 
-function getEntityFeatures(slug: string): string[] {
+function getMorphFeatures(slug: string): string[] {
   const features: Record<string, string[]> = {
-    'brand-strategy': [
-      'Brand positioning & messaging',
-      'Market research & competitive analysis',
-      'Visual identity & brand guidelines',
-      'Go-to-market strategy',
+    about: [
+      'Performance marketing & automation',
+      'SaaS product development',
+      'Brand strategy & positioning',
+      'End-to-end digital transformation',
     ],
-    'design-creative': [
-      'UI/UX design & prototyping',
-      'Motion graphics & animation',
-      'Brand identity design',
-      'Creative direction & art direction',
+    work: [
+      'High-converting web experiences',
+      'Marketing automation systems',
+      'SaaS platform development',
+      'Data-driven optimization',
     ],
-    'saas-automation': [
-      'Custom SaaS platform development',
-      'Workflow automation & integration',
-      'API development & management',
-      'Cloud infrastructure & DevOps',
-    ],
-    'performance-marketing': [
-      'Paid media strategy & execution',
-      'Conversion rate optimization',
-      'Marketing analytics & attribution',
-      'Growth experimentation',
-    ],
-    'case-studies': [
-      '50+ successful project deliveries',
-      'Average 3x ROI improvement',
-      'Cross-industry expertise',
-      'End-to-end transformation stories',
-    ],
-    'collaborations': [
-      'Strategic technology partnerships',
-      'Creative agency collaborations',
-      'Industry thought leadership',
-      'Open-source contributions',
-    ],
-    'experiments': [
-      'AI & machine learning explorations',
-      '3D & immersive experiences',
-      'Generative design tools',
-      'Emerging technology R&D',
-    ],
-    'contact': [
-      'Free consultation call',
-      '24-hour response time',
+    collaborate: [
+      'Strategic partnerships',
       'Flexible engagement models',
-      'Global team, local presence',
+      'Dedicated team support',
+      'Results-focused approach',
+    ],
+    contact: [
+      'Free consultation call',
+      'Fast response time',
+      'Transparent pricing',
+      'No-obligation discussion',
     ],
   };
 

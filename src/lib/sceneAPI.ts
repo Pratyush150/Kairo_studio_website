@@ -1,46 +1,48 @@
+/**
+ * Morphing Canvas Scene API
+ * Zustand store for managing scene state and interactions
+ */
+
 import { create } from 'zustand';
-import { loadEntityContent } from './contentAPI';
+import { morphs, type MorphType } from './tokens';
 
-export type SceneState = 'loading' | 'singularity' | 'boom' | 'idle' | 'transition' | 'panel';
+export type SceneState = 'loading' | 'idle' | 'morphing' | 'panel';
 
-export interface EntityData {
-  id: string;
-  title: string;
+export interface MorphData {
+  id: MorphType;
+  name: string;
   slug: string;
-  type: 'fractal' | 'metaball' | 'cube-matrix' | 'helix' | 'orb' | 'lattice' | 'prism' | 'gateway';
+  accent: string;
   description: string;
-  color: string;
-  position: [number, number, number];
-  orbitSpeed: number;
 }
 
 interface SceneStore {
   // State
   sceneState: SceneState;
   loadingProgress: number;
-  selectedEntity: string | null;
-  hoveredEntity: string | null;
-  audioEnabled: boolean;
-  audioVolume: number; // 0.0 to 1.0
-  performanceMode: 'high' | 'medium' | 'low';
-  reducedMotion: boolean;
+  activeMorph: MorphType;
+  hoveredMorph: MorphType | null;
+  panelOpen: boolean;
+  panelContent: MorphType | null;
 
-  // Entities
-  entities: EntityData[];
+  // Settings
+  audioEnabled: boolean;
+  audioVolume: number;
+  reducedMotion: boolean;
+  performanceMode: 'high' | 'medium' | 'low';
 
   // Actions
   setSceneState: (state: SceneState) => void;
   setLoadingProgress: (progress: number) => void;
-  selectEntity: (id: string | null) => void;
-  hoverEntity: (id: string | null) => void;
+  setActiveMorph: (morph: MorphType) => void;
+  setHoveredMorph: (morph: MorphType | null) => void;
   toggleAudio: () => void;
   setAudioVolume: (volume: number) => void;
-  setPerformanceMode: (mode: 'high' | 'medium' | 'low') => void;
   setReducedMotion: (enabled: boolean) => void;
-  loadEntitiesFromCMS: () => Promise<void>;
+  setPerformanceMode: (mode: 'high' | 'medium' | 'low') => void;
 
   // Scene control methods
-  goTo: (slug: string) => Promise<void>;
+  goToMorph: (slug: string) => Promise<void>;
   openPanel: (slug: string) => Promise<void>;
   closePanel: () => Promise<void>;
   resetView: () => void;
@@ -50,185 +52,113 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
   // Initial state
   sceneState: 'loading',
   loadingProgress: 0,
-  selectedEntity: null,
-  hoveredEntity: null,
+  activeMorph: 'origin',
+  hoveredMorph: null,
+  panelOpen: false,
+  panelContent: null,
+
+  // Settings from localStorage
   audioEnabled: localStorage.getItem('audioMuted') !== 'true',
   audioVolume: parseFloat(localStorage.getItem('audioVolume') || '0.5'),
-  performanceMode: 'high',
   reducedMotion: false,
-
-  // Entity data - matches the spec
-  entities: [
-    {
-      id: '1',
-      title: 'Brand Strategy',
-      slug: 'brand-strategy',
-      type: 'fractal',
-      description: 'Fractal crystal cluster with pulsing core',
-      color: '#A854FF', // Violet
-      position: [120, 30, -50],
-      orbitSpeed: 18,
-    },
-    {
-      id: '2',
-      title: 'Design & Creative',
-      slug: 'design-creative',
-      type: 'metaball',
-      description: 'Fluid morphing metaball blob',
-      color: '#00FFFF', // Cyan
-      position: [-100, -40, 60],
-      orbitSpeed: 24,
-    },
-    {
-      id: '3',
-      title: 'SaaS & Automation',
-      slug: 'saas-automation',
-      type: 'cube-matrix',
-      description: 'Modular expanding cube matrix',
-      color: '#3B9CFF', // Electric blue
-      position: [80, -50, 80],
-      orbitSpeed: 20,
-    },
-    {
-      id: '4',
-      title: 'Performance Marketing',
-      slug: 'performance-marketing',
-      type: 'helix',
-      description: 'Twisting helix vortex spiral',
-      color: '#FFC857', // Amber
-      position: [-90, 60, -70],
-      orbitSpeed: 22,
-    },
-    {
-      id: '5',
-      title: 'Case Studies',
-      slug: 'case-studies',
-      type: 'orb',
-      description: 'Energy orb with satellites',
-      color: '#E23EFF', // Magenta
-      position: [0, 80, 100],
-      orbitSpeed: 28,
-    },
-    {
-      id: '6',
-      title: 'Collaborations',
-      slug: 'collaborations',
-      type: 'lattice',
-      description: 'Network lattice with expanding nodes',
-      color: '#FFFFFF', // White
-      position: [110, -70, -90],
-      orbitSpeed: 32,
-    },
-    {
-      id: '7',
-      title: 'Experiments',
-      slug: 'experiments',
-      type: 'prism',
-      description: 'Holographic rotating prism',
-      color: '#50FFC8', // Turquoise
-      position: [-120, 20, 40],
-      orbitSpeed: 26,
-    },
-    {
-      id: '8',
-      title: 'Contact',
-      slug: 'contact',
-      type: 'gateway',
-      description: 'Central gateway ring',
-      color: '#FFD369', // Gold
-      position: [0, -90, 0],
-      orbitSpeed: 40,
-    },
-  ],
+  performanceMode: 'high',
 
   // Actions
   setSceneState: (state) => set({ sceneState: state }),
   setLoadingProgress: (progress) => set({ loadingProgress: progress }),
-  selectEntity: (id) => set({ selectedEntity: id }),
-  hoverEntity: (id) => set({ hoveredEntity: id }),
+  setActiveMorph: (morph) => set({ activeMorph: morph }),
+  setHoveredMorph: (morph) => set({ hoveredMorph: morph }),
+
   toggleAudio: () => set((state) => {
     const newState = !state.audioEnabled;
     localStorage.setItem('audioMuted', String(!newState));
     return { audioEnabled: newState };
   }),
+
   setAudioVolume: (volume) => {
     const clampedVolume = Math.max(0, Math.min(1, volume));
     localStorage.setItem('audioVolume', String(clampedVolume));
     set({ audioVolume: clampedVolume });
-    // Howler will be updated by the AudioManager listening to this change
   },
-  setPerformanceMode: (mode) => set({ performanceMode: mode }),
-  setReducedMotion: (enabled) => set({ reducedMotion: enabled }),
 
-  loadEntitiesFromCMS: async () => {
-    try {
-      console.log('[SceneAPI] Loading entities from CMS...');
-      const entities = await loadEntityContent();
-      set({ entities });
-      console.log(`[SceneAPI] Loaded ${entities.length} entities from CMS`);
-    } catch (error) {
-      console.error('[SceneAPI] Failed to load entities from CMS:', error);
-      // Keep existing hardcoded entities as fallback
-    }
-  },
+  setReducedMotion: (enabled) => set({ reducedMotion: enabled }),
+  setPerformanceMode: (mode) => set({ performanceMode: mode }),
 
   // Scene control
-  goTo: async (slug: string) => {
-    const entity = get().entities.find((e) => e.slug === slug);
-    if (!entity) return;
+  goToMorph: async (slug: string) => {
+    const morphEntry = Object.entries(morphs).find(([_, data]) => data.slug === slug);
+    if (!morphEntry) return;
 
-    set({ sceneState: 'transition', selectedEntity: entity.id });
+    const morphType = morphEntry[0] as MorphType;
+    set({ sceneState: 'morphing', activeMorph: morphType });
 
     // Analytics
     if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'entity_click', {
-        entity_id: entity.id,
-        entity_slug: slug,
+      (window as any).gtag('event', 'morph_navigate', {
+        morph_type: morphType,
+        morph_slug: slug,
       });
     }
 
-    // Wait for transition animation
-    await new Promise((resolve) => setTimeout(resolve, 1800));
-
-    set({ sceneState: 'panel' });
+    // Wait for morph transition
+    await new Promise((resolve) => setTimeout(resolve, 1400));
+    set({ sceneState: 'idle' });
   },
 
   openPanel: async (slug: string) => {
-    await get().goTo(slug);
+    const morphEntry = Object.entries(morphs).find(([_, data]) => data.slug === slug);
+    if (!morphEntry) return;
+
+    const morphType = morphEntry[0] as MorphType;
+
+    set({
+      sceneState: 'morphing',
+      activeMorph: morphType,
+      panelContent: morphType,
+    });
+
+    // Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'panel_open', {
+        morph_type: morphType,
+        morph_slug: slug,
+      });
+    }
+
+    // Wait for camera fly-in animation
+    await new Promise((resolve) => setTimeout(resolve, 1400));
+    set({ sceneState: 'panel', panelOpen: true });
   },
 
   closePanel: async () => {
-    set({ sceneState: 'transition', selectedEntity: null });
+    set({ sceneState: 'morphing', panelOpen: false });
 
     // Analytics
     if (typeof window !== 'undefined' && (window as any).gtag) {
       (window as any).gtag('event', 'panel_close', {});
     }
 
+    // Wait for camera fly-out animation
     await new Promise((resolve) => setTimeout(resolve, 1200));
-    set({ sceneState: 'idle' });
+    set({ sceneState: 'idle', panelContent: null });
   },
 
   resetView: () => {
     set({
       sceneState: 'idle',
-      selectedEntity: null,
-      hoveredEntity: null,
+      activeMorph: 'origin',
+      hoveredMorph: null,
+      panelOpen: false,
+      panelContent: null,
     });
   },
 }));
 
 // Export API for external use
 export const sceneAPI = {
-  goTo: (slug: string) => useSceneStore.getState().goTo(slug),
+  goToMorph: (slug: string) => useSceneStore.getState().goToMorph(slug),
   openPanel: (slug: string) => useSceneStore.getState().openPanel(slug),
   closePanel: () => useSceneStore.getState().closePanel(),
-  highlight: (slug: string) => {
-    const entity = useSceneStore.getState().entities.find((e) => e.slug === slug);
-    if (entity) {
-      useSceneStore.getState().hoverEntity(entity.id);
-    }
-  },
   toggleAudio: (flag?: boolean) => {
     if (flag !== undefined) {
       const currentState = useSceneStore.getState().audioEnabled;
@@ -239,26 +169,29 @@ export const sceneAPI = {
       useSceneStore.getState().toggleAudio();
     }
   },
+  setReducedMotion: (enabled: boolean) => useSceneStore.getState().setReducedMotion(enabled),
   resetView: () => useSceneStore.getState().resetView(),
 
-  // Logo singularity controls
-  explosionSequence: async () => {
-    return new Promise<void>((resolve) => {
-      window.dispatchEvent(new CustomEvent('kairo:explosion-sequence'));
-      // Resolve after sequence completes (~1200ms)
-      setTimeout(resolve, 1200);
-    });
+  // Get morph data
+  getMorphData: (type: MorphType): MorphData => {
+    const morph = morphs[type];
+    return {
+      id: type,
+      name: morph.name,
+      slug: morph.slug,
+      accent: morph.accent,
+      description: morph.description,
+    };
   },
 
-  hoverState: (enable: boolean) => {
-    window.dispatchEvent(new CustomEvent('kairo:logo-hover', {
-      detail: { active: enable }
-    }));
-  },
-
-  logoEn: () => {
-    window.dispatchEvent(new CustomEvent('kairo:logo-pulse', {
-      detail: { intensity: 1.8 }
+  // Get all morphs
+  getAllMorphs: (): MorphData[] => {
+    return Object.entries(morphs).map(([type, data]) => ({
+      id: type as MorphType,
+      name: data.name,
+      slug: data.slug,
+      accent: data.accent,
+      description: data.description,
     }));
   },
 };

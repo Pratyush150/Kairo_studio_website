@@ -1,218 +1,140 @@
-.hud-trigger {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 40px;
-  z-index: 999;
-  pointer-events: all;
-}
+/**
+ * HUD Styles
+ * Minimal top navigation for Morphing Canvas
+ */
 
 .hud {
   position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%) translateY(100px);
-  z-index: 1000;
-  pointer-events: none;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.hud-visible {
-  transform: translateX(-50%) translateY(0);
-}
-
-.hud-content {
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-hud);
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 1rem;
-  padding: 12px 24px;
-  background: rgba(2, 3, 18, 0.85);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(181, 195, 255, 0.2);
-  border-radius: 50px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(168, 84, 255, 0.2);
+  padding: 1.5rem 2rem;
+  pointer-events: none;
+}
+
+.hud-brand {
   pointer-events: all;
 }
 
-.hud-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: transparent;
-  border: 1px solid rgba(181, 195, 255, 0.3);
-  border-radius: 50%;
-  color: var(--color-silver);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  outline: none;
-}
-
-.hud-button:hover {
-  background: rgba(168, 84, 255, 0.2);
-  border-color: var(--color-violet);
-  color: var(--color-cyan);
-  box-shadow: 0 0 20px rgba(168, 84, 255, 0.4);
-}
-
-.hud-button:active {
-  transform: scale(0.95);
-}
-
-.hud-button:focus-visible {
-  outline: 2px solid var(--color-cyan);
-  outline-offset: 2px;
-}
-
-.hud-button svg {
-  width: 20px;
-  height: 20px;
-  stroke-width: 2;
+.brand-text {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-white);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, var(--text-white) 0%, var(--accent-cyan) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .hud-nav {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0 1rem;
-  border-left: 1px solid rgba(181, 195, 255, 0.2);
-  border-right: 1px solid rgba(181, 195, 255, 0.2);
+  gap: 2rem;
+  pointer-events: all;
 }
 
-.hud-label {
+.nav-button {
   font-family: var(--font-primary);
   font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--color-silver);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-/* Audio controls */
-.hud-audio-group {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.hud-volume-slider {
-  position: absolute;
-  left: 50px;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 10px 16px;
-  background: rgba(2, 3, 18, 0.95);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(168, 84, 255, 0.3);
-  border-radius: 50px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 20px rgba(168, 84, 255, 0.3);
-  pointer-events: all;
-  animation: slideInVolume 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes slideInVolume {
-  from {
-    opacity: 0;
-    transform: translateX(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.volume-range {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100px;
-  height: 4px;
-  background: linear-gradient(
-    to right,
-    var(--color-violet) 0%,
-    var(--color-violet) var(--volume-fill, 50%),
-    rgba(181, 195, 255, 0.2) var(--volume-fill, 50%),
-    rgba(181, 195, 255, 0.2) 100%
-  );
-  border-radius: 2px;
-  outline: none;
-  cursor: pointer;
-}
-
-.volume-range::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 14px;
-  height: 14px;
-  background: var(--color-cyan);
-  border-radius: 50%;
-  cursor: pointer;
-  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-  transition: all 0.2s ease;
-}
-
-.volume-range::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
-  box-shadow: 0 0 15px rgba(0, 255, 255, 0.8);
-}
-
-.volume-range::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
-  background: var(--color-cyan);
+  font-weight: 500;
+  color: var(--text-white);
+  background: transparent;
   border: none;
-  border-radius: 50%;
+  padding: 0.5rem 0;
   cursor: pointer;
-  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-  transition: all 0.2s ease;
+  position: relative;
+  transition: color 0.18s ease;
+  opacity: 0.8;
 }
 
-.volume-range::-moz-range-thumb:hover {
-  transform: scale(1.2);
-  box-shadow: 0 0 15px rgba(0, 255, 255, 0.8);
+.nav-button:hover {
+  color: var(--accent-cyan);
+  opacity: 1;
 }
 
-.volume-percentage {
-  font-family: var(--font-primary);
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-cyan);
-  min-width: 40px;
-  text-align: center;
+.nav-button::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--accent-cyan);
+  transition: width 0.18s ease;
+}
+
+.nav-button:hover::after {
+  width: 100%;
+}
+
+.nav-button:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 4px;
+  opacity: 1;
+}
+
+.audio-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  margin-left: 0.5rem;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.18s ease;
+}
+
+.audio-button:hover {
+  border-color: var(--accent-cyan);
+  background: rgba(0, 229, 255, 0.1);
+}
+
+.audio-button::after {
+  display: none;
+}
+
+.audio-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .hud {
+    padding: 1rem 1.5rem;
+  }
+
+  .brand-text {
+    font-size: 1rem;
+  }
+
+  .hud-nav {
+    gap: 1rem;
+  }
+
+  .nav-button {
+    font-size: 0.75rem;
+  }
+
+  .audio-button {
+    width: 32px;
+    height: 32px;
+  }
 }
 
 /* Accessibility */
 @media (prefers-reduced-motion: reduce) {
-  .hud {
+  .nav-button,
+  .nav-button::after,
+  .audio-button {
     transition: none;
-  }
-}
-
-/* Mobile adjustments */
-@media (max-width: 768px) {
-  .hud {
-    bottom: 10px;
-  }
-
-  .hud-content {
-    padding: 10px 20px;
-    gap: 0.75rem;
-  }
-
-  .hud-button {
-    width: 36px;
-    height: 36px;
-  }
-
-  .hud-label {
-    font-size: 0.75rem;
-  }
-
-  .hud-nav {
-    padding: 0 0.75rem;
   }
 }

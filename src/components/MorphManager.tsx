@@ -1,33 +1,33 @@
 /**
  * Morph Manager
- * Manages active morph shape and handles interactions
+ * SINGLE ELEMENT MODE - Only active element visible at origin
+ * Others hidden/offscreen
+ *
+ * User clicks active element to open content (not to navigate)
+ * Navigation via drag/swipe/keyboard
  */
 
 import { useRef, useEffect } from 'react';
-import { useThree } from '@react-three/fiber';
-import { useSceneStore, sceneAPI } from '../lib/sceneAPI';
+import { useSceneStore, sceneAPI, ELEMENT_ORDER } from '../lib/sceneAPI';
+import type { MorphRef } from './morphs/Origin';
 import { Origin } from './morphs/Origin';
 import { Flow } from './morphs/Flow';
 import { Network } from './morphs/Network';
 import { Portal } from './morphs/Portal';
-import { interaction, morphs } from '../lib/tokens';
-import type { MorphRef } from './morphs/Origin';
+import type { MorphType } from '../lib/tokens';
 
 export function MorphManager() {
-  const activeMorph = useSceneStore((s) => s.activeMorph);
-  const hoveredMorph = useSceneStore((s) => s.hoveredMorph);
-  const setHoveredMorph = useSceneStore((s) => s.setHoveredMorph);
+  const activeElement = useSceneStore((s) => s.activeElement);
   const sceneState = useSceneStore((s) => s.sceneState);
+  const panelOpen = useSceneStore((s) => s.panelOpen);
 
   const originRef = useRef<MorphRef>(null);
   const flowRef = useRef<MorphRef>(null);
   const networkRef = useRef<MorphRef>(null);
   const portalRef = useRef<MorphRef>(null);
 
-  const { camera, size } = useThree();
-
-  // Map morph types to their corresponding refs (many-to-one mapping)
-  const getRef = (morphType: typeof activeMorph) => {
+  // Map morph types to refs
+  const getRef = (morphType: MorphType) => {
     switch (morphType) {
       case 'origin':
       case 'services':
@@ -46,98 +46,133 @@ export function MorphManager() {
     }
   };
 
-  // Trigger appear animation on morph change
-  useEffect(() => {
-    const ref = getRef(activeMorph);
-    if (ref.current && sceneState === 'idle') {
-      ref.current.appear();
+  // Handle element click - Opens content (NOT navigation)
+  const handleElementClick = () => {
+    if (sceneState !== 'ELEMENT_ACTIVE') {
+      console.log('[MorphManager] Click ignored - not in ELEMENT_ACTIVE state');
+      return;
     }
-  }, [activeMorph, sceneState]);
 
-  // Trigger zoom animation when entering panel
-  useEffect(() => {
-    if (sceneState === 'panel') {
-      const ref = getRef(activeMorph);
-      if (ref.current) {
-        ref.current.enterZoom();
-      }
-    }
-  }, [sceneState, activeMorph]);
-
-  // Hover pulse on hovered morph
-  useEffect(() => {
-    if (hoveredMorph) {
-      const ref = getRef(hoveredMorph);
-      if (ref.current) {
-        ref.current.hoverPulse(interaction.hoverPulse);
-      }
-    }
-  }, [hoveredMorph]);
-
-  // Raycasting for hover detection
-  useEffect(() => {
-    const handlePointerMove = (e: PointerEvent) => {
-      // Simple proximity detection based on screen position
-      // In a production app, you'd use raycasting here
-      // For now, we'll trigger hover when near center of screen
-
-      const centerX = size.width / 2;
-      const centerY = size.height / 2;
-      const dist = Math.sqrt(
-        Math.pow(e.clientX - centerX, 2) + Math.pow(e.clientY - centerY, 2)
-      );
-
-      if (dist < interaction.hoverDistance && sceneState === 'idle') {
-        setHoveredMorph(activeMorph);
-      } else {
-        setHoveredMorph(null);
-      }
-    };
-
-    window.addEventListener('pointermove', handlePointerMove);
-    return () => window.removeEventListener('pointermove', handlePointerMove);
-  }, [activeMorph, sceneState, size, setHoveredMorph]);
-
-  // Listen for supernova burst event
-  useEffect(() => {
-    const handleSupernovaBurst = () => {
-      console.log('[MorphManager] Supernova burst event received');
-      const ref = getRef(activeMorph);
-      if (ref.current) {
-        console.log('[MorphManager] Triggering burst on', activeMorph);
-        ref.current.supernovaBurst();
-      }
-    };
-
-    window.addEventListener('kairo:supernova-burst', handleSupernovaBurst);
-    return () => window.removeEventListener('kairo:supernova-burst', handleSupernovaBurst);
-  }, [activeMorph]);
-
-  // Map morph types to their corresponding shapes
-  // We have 8 panel types but only 4 physical shapes
-  const getMorphShape = () => {
-    switch (activeMorph) {
-      case 'origin':
-      case 'services':
-      case 'strategy':
-        return <Origin ref={originRef} onClick={() => sceneAPI.openPanel(morphs[activeMorph].slug)} />;
-
-      case 'work':
-      case 'demos':
-        return <Flow ref={flowRef} onClick={() => sceneAPI.openPanel(morphs[activeMorph].slug)} />;
-
-      case 'network':
-        return <Network ref={networkRef} onClick={() => sceneAPI.openPanel(morphs[activeMorph].slug)} />;
-
-      case 'portal':
-      case 'reviews':
-        return <Portal ref={portalRef} onClick={() => sceneAPI.openPanel(morphs[activeMorph].slug)} />;
-
-      default:
-        return <Origin ref={originRef} onClick={() => sceneAPI.openPanel(morphs.origin.slug)} />;
-    }
+    console.log('[MorphManager] Element clicked - opening content');
+    sceneAPI.openActiveElement();
   };
 
-  // Only render active morph for performance
-  return <group>{getMorphShape()}</group>;
+  // Listen for spawn-element event (from star burst timeline)
+  useEffect(() => {
+    const handleSpawnElement = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const { element } = customEvent.detail;
+
+      console.log('[MorphManager] Spawning element:', element);
+
+      const ref = getRef(element);
+      if (ref.current) {
+        // Trigger appear animation
+        ref.current.appear();
+      }
+    };
+
+    window.addEventListener('kairo:spawn-element', handleSpawnElement);
+    return () => window.removeEventListener('kairo:spawn-element', handleSpawnElement);
+  }, []);
+
+  // Listen for element animation events (from open timeline)
+  useEffect(() => {
+    const handleElementAnimate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const { type, scale, emissiveIntensity, duration, ease } = customEvent.detail;
+
+      const ref = getRef(activeElement);
+      if (!ref.current) return;
+
+      const groupRef = (ref.current as any).groupRef?.current;
+      const meshRef = (ref.current as any).meshRef?.current;
+
+      if (!groupRef) return;
+
+      const gsap = (window as any).gsap;
+      if (!gsap) return;
+
+      if (type === 'slap-compress') {
+        gsap.to(groupRef.scale, {
+          x: scale.x,
+          y: scale.y,
+          z: scale.z,
+          duration,
+          ease,
+        });
+      } else if (type === 'slap-expand') {
+        gsap.to(groupRef.scale, {
+          x: scale.x,
+          y: scale.y,
+          z: scale.z,
+          duration,
+          ease,
+        });
+      } else if (type === 'compression') {
+        gsap.to(groupRef.scale, {
+          x: scale.x,
+          y: scale.y,
+          z: scale.z,
+          duration,
+          ease,
+        });
+
+        if (meshRef?.material && emissiveIntensity) {
+          const material = meshRef.material;
+          if ('emissiveIntensity' in material) {
+            gsap.to(material, {
+              emissiveIntensity,
+              duration,
+              ease,
+            });
+          }
+        }
+      } else if (type === 'supernova-burst') {
+        // Trigger existing supernova burst
+        if (ref.current.supernovaBurst) {
+          ref.current.supernovaBurst();
+        }
+      }
+    };
+
+    window.addEventListener('kairo:element-animate', handleElementAnimate);
+    return () => window.removeEventListener('kairo:element-animate', handleElementAnimate);
+  }, [activeElement]);
+
+  // Only render active element
+  // Hide during panel open or during transitions
+  const showElement = sceneState === 'ELEMENT_ACTIVE' && !panelOpen;
+
+  return (
+    <group visible={showElement}>
+      {/* Origin - only visible when active */}
+      {(activeElement === 'origin' || activeElement === 'services' || activeElement === 'strategy') && (
+        <group position={[0, 0, 0]}>
+          <Origin ref={originRef} onClick={handleElementClick} />
+        </group>
+      )}
+
+      {/* Flow (Work) - only visible when active */}
+      {(activeElement === 'work' || activeElement === 'demos') && (
+        <group position={[0, 0, 0]}>
+          <Flow ref={flowRef} onClick={handleElementClick} />
+        </group>
+      )}
+
+      {/* Network - only visible when active */}
+      {activeElement === 'network' && (
+        <group position={[0, 0, 0]}>
+          <Network ref={networkRef} onClick={handleElementClick} />
+        </group>
+      )}
+
+      {/* Portal - only visible when active */}
+      {(activeElement === 'portal' || activeElement === 'reviews') && (
+        <group position={[0, 0, 0]}>
+          <Portal ref={portalRef} onClick={handleElementClick} />
+        </group>
+      )}
+    </group>
+  );
 }

@@ -15,6 +15,12 @@ import { ParticleLayer } from './ParticleLayer';
 import { Effects } from './Effects';
 import { CameraRig } from './CameraRig';
 import { PerformanceMonitor } from './PerformanceMonitor';
+import { CorridorTransit } from './CorridorTransit';
+import { TimelineOrchestrator } from './TimelineOrchestrator';
+import { TunnelEffect } from './TunnelEffect';
+import { StarBurst } from './StarBurst';
+import { RadialRings } from './RadialRings';
+import { PanelShards } from './PanelShards';
 
 export function CanvasShell() {
   const { isMobile, isTablet } = useResponsive();
@@ -30,17 +36,20 @@ export function CanvasShell() {
     ? 1
     : Math.min(window.devicePixelRatio, perfSettings.pixelRatio.desktop);
 
+  // Disable antialiasing on low/medium performance modes
+  const antialias = performanceMode === 'high';
+
   return (
     <div style={{ width: '100%', height: '100%', position: 'fixed', top: 0, left: 0, zIndex: 1 }}>
       <Canvas
         camera={{
-          position: [0, 0, 120],
-          fov: 45,
+          position: [0, 0, 180],
+          fov: 50,
           near: 0.1,
           far: 2000,
         }}
         gl={{
-          antialias: true,
+          antialias,
           alpha: true,
           powerPreference: isMobile ? 'low-power' : 'high-performance',
         }}
@@ -52,21 +61,28 @@ export function CanvasShell() {
         {/* Background color */}
         <color attach="background" args={['#06070A']} />
 
-        {/* Lighting */}
-        <ambientLight intensity={0.25} />
-        <directionalLight
-          position={[10, 10, 5]}
-          intensity={0.5}
-          color="#ffffff"
-        />
-        <pointLight
-          position={[-10, -10, -5]}
-          intensity={0.3}
-          color="#00E5FF"
-        />
+        {/* Lighting - Simplified for low performance mode */}
+        <ambientLight intensity={performanceMode === 'low' ? 0.4 : 0.25} />
+        {performanceMode !== 'low' && (
+          <>
+            <directionalLight
+              position={[10, 10, 5]}
+              intensity={0.5}
+              color="#ffffff"
+            />
+            <pointLight
+              position={[-10, -10, -5]}
+              intensity={0.3}
+              color="#00E5FF"
+            />
+          </>
+        )}
 
         {/* Main Scene */}
         <Suspense fallback={null}>
+          {/* Timeline Orchestrator (wires timelines to scene) */}
+          <TimelineOrchestrator />
+
           {/* Performance Monitor */}
           <PerformanceMonitor />
 
@@ -75,11 +91,26 @@ export function CanvasShell() {
             {/* Logo */}
             <KairoLogo />
 
-            {/* Morph Shapes */}
+            {/* Morph Shapes (single active element) */}
             <MorphManager />
 
             {/* Particle Layer */}
             <ParticleLayer />
+
+            {/* Transit Effects */}
+            <TunnelEffect />
+
+            {/* Star Burst Effect */}
+            <StarBurst />
+
+            {/* Radial Rings (Shock Waves) */}
+            <RadialRings />
+
+            {/* Panel Shards (Convergence) */}
+            <PanelShards />
+
+            {/* Legacy Corridor Transit (can be removed) */}
+            {/* <CorridorTransit /> */}
           </CameraRig>
 
           {/* Post-processing Effects */}

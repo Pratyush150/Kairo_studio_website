@@ -70,8 +70,8 @@ export const performance = {
     mid: 1400,
   },
   particles: {
-    desktop: 1500,  // Reduced from 6000 (75% reduction)
-    mobile: 300,    // Reduced from 800 (62% reduction)
+    desktop: 800,   // Further reduced for better initial performance
+    mobile: 150,    // Further reduced for mobile performance
   },
   fpsThreshold: {
     degrade: 45,

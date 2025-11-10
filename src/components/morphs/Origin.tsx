@@ -15,6 +15,8 @@ export interface MorphRef {
   enterZoom: () => void;
   idleLoop: () => void;
   supernovaBurst: () => void;
+  groupRef?: React.RefObject<THREE.Group>;
+  meshRef?: React.RefObject<THREE.Mesh>;
 }
 
 interface OriginProps {
@@ -25,9 +27,9 @@ export const Origin = forwardRef<MorphRef, OriginProps>(({ onClick }, ref) => {
   const groupRef = useRef<THREE.Group>(null);
   const meshRef = useRef<THREE.Mesh>(null);
 
-  // Crystalline geometry
+  // Crystalline geometry - Reduced subdivision for better performance
   const geometry = useMemo(() => {
-    const geo = new THREE.OctahedronGeometry(20, 2);
+    const geo = new THREE.OctahedronGeometry(20, 1); // Reduced from 2 to 1 subdivision
     // Add some randomness to vertices for crystalline look
     const positions = geo.attributes.position;
     for (let i = 0; i < positions.count; i++) {
@@ -66,6 +68,8 @@ export const Origin = forwardRef<MorphRef, OriginProps>(({ onClick }, ref) => {
   });
 
   useImperativeHandle(ref, () => ({
+    groupRef: { current: groupRef.current } as React.RefObject<THREE.Group>,
+    meshRef: { current: meshRef.current } as React.RefObject<THREE.Mesh>,
     appear: () => {
       if (!groupRef.current) return;
       gsap.fromTo(
@@ -103,34 +107,50 @@ export const Origin = forwardRef<MorphRef, OriginProps>(({ onClick }, ref) => {
       const tl = gsap.timeline();
       const mat = meshRef.current.material as THREE.MeshPhysicalMaterial;
 
-      // Burst animation: compress then explode
+      // Burst animation: compress then EXPLODE with dramatic timing
       tl.to(groupRef.current.scale, {
-        x: 0.8,
-        y: 0.8,
-        z: 0.8,
-        duration: 0.15,
-        ease: 'power2.in',
+        x: 0.14,
+        y: 0.14,
+        z: 0.14,
+        duration: 0.18,
+        ease: 'power3.in',
       })
-      .to([groupRef.current.scale, mat], {
-        x: 2.5,
-        y: 2.5,
-        z: 2.5,
-        emissiveIntensity: 1.5,
-        duration: 0.4,
+      .to(mat, {
+        emissiveIntensity: 1.4,
+        duration: 0.18,
+        ease: 'power3.in',
+      }, '<')
+      .to(groupRef.current.scale, {
+        x: 3.5,
+        y: 3.5,
+        z: 3.5,
+        duration: 0.56,
         ease: 'power4.out',
       }, '>')
+      .to(mat, {
+        emissiveIntensity: 2.2,
+        duration: 0.2,
+        ease: 'power4.out',
+      }, '<')
+      .to(mat, {
+        emissiveIntensity: 0.4,
+        duration: 0.4,
+        ease: 'power2.out',
+      }, '>-0.2')
       .to(groupRef.current.scale, {
         x: 1.5,
         y: 1.5,
         z: 1.5,
-        duration: 0.3,
+        duration: 0.4,
         ease: 'power2.inOut',
-      }, '>-0.1')
-      .to(mat, {
-        emissiveIntensity: 0.4,
-        duration: 0.5,
-        ease: 'power2.out',
       }, '<');
+
+      // Dispatch particle burst event
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('kairo:particle-burst', {
+          detail: { position: groupRef.current.position, intensity: 1.0 }
+        }));
+      }
     },
     enterZoom: () => {
       if (!groupRef.current) return;

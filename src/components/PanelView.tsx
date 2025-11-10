@@ -63,11 +63,13 @@ export function PanelView() {
       );
 
       const children = panelRef.current.querySelectorAll('.panel-section');
-      gsap.fromTo(
-        children,
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: 'power2.out', delay: 0.2 }
-      );
+      if (children.length > 0) {
+        gsap.fromTo(
+          children,
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: 'power2.out', delay: 0.2 }
+        );
+      }
 
       const announcer = document.getElementById('a11y-announcer');
       if (announcer) {
@@ -87,7 +89,7 @@ export function PanelView() {
         duration: 0.3,
         ease: 'power2.in',
         onComplete: () => {
-          sceneAPI.closePanel();
+          sceneAPI.closeBall(); // Use new ball-driven close method
           setSelectedCase(null);
         },
       });

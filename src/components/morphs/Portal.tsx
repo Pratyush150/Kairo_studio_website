@@ -15,6 +15,8 @@ export interface MorphRef {
   enterZoom: () => void;
   idleLoop: () => void;
   supernovaBurst: () => void;
+  groupRef?: React.RefObject<THREE.Group>;
+  meshRef?: React.RefObject<THREE.Mesh>;
 }
 
 interface PortalProps {
@@ -26,14 +28,14 @@ export const Portal = forwardRef<MorphRef, PortalProps>(({ onClick }, ref) => {
   const torusRef = useRef<THREE.Mesh>(null);
   const particlesRef = useRef<THREE.Points>(null);
 
-  // Torus geometry
+  // Torus geometry - Reduced segments for better performance
   const torusGeometry = useMemo(() => {
-    return new THREE.TorusGeometry(16, 3, 24, 64);
+    return new THREE.TorusGeometry(16, 3, 16, 48); // Reduced from 24,64 to 16,48
   }, []);
 
-  // Vortex particles
+  // Vortex particles - Reduced for better performance
   const particleGeometry = useMemo(() => {
-    const count = 500;
+    const count = 300; // Reduced from 500
     const positions = new Float32Array(count * 3);
 
     for (let i = 0; i < count; i++) {
@@ -59,6 +61,8 @@ export const Portal = forwardRef<MorphRef, PortalProps>(({ onClick }, ref) => {
   });
 
   useImperativeHandle(ref, () => ({
+    groupRef: { current: groupRef.current } as React.RefObject<THREE.Group>,
+    meshRef: { current: torusRef.current } as React.RefObject<THREE.Mesh>,
     appear: () => {
       if (!groupRef.current) return;
       gsap.fromTo(
@@ -96,28 +100,35 @@ export const Portal = forwardRef<MorphRef, PortalProps>(({ onClick }, ref) => {
 
       const tl = gsap.timeline();
 
-      // Burst animation: portal vortex collapses then expands
+      // Burst animation: DRAMATIC portal vortex collapses to singularity then EXPLODES
       tl.to(groupRef.current.scale, {
-        x: 0.5,
-        y: 0.5,
-        z: 0.5,
-        duration: 0.15,
-        ease: 'power2.in',
+        x: 0.14,
+        y: 0.14,
+        z: 0.14,
+        duration: 0.18,
+        ease: 'power3.in',
       })
       .to(groupRef.current.scale, {
-        x: 3.5,
-        y: 3.5,
-        z: 3.5,
-        duration: 0.4,
+        x: 4.0,
+        y: 4.0,
+        z: 4.0,
+        duration: 0.56,
         ease: 'power4.out',
       }, '>')
       .to(groupRef.current.scale, {
-        x: 3.0,
-        y: 3.0,
-        z: 3.0,
-        duration: 0.3,
+        x: 1.5,
+        y: 1.5,
+        z: 1.5,
+        duration: 0.4,
         ease: 'power2.inOut',
       }, '>-0.1');
+
+      // Dispatch particle burst event
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('kairo:particle-burst', {
+          detail: { position: groupRef.current.position, intensity: 1.2 }
+        }));
+      }
     },
     idleLoop: () => {
       // Handled in useFrame

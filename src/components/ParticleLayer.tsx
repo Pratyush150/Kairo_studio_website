@@ -1,33 +1,56 @@
 /**
  * Particle Layer
- * GPU-based particle system with depth sorting
+ * GPU-based particle system with depth sorting + supernova burst effects
  */
 
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useSceneStore } from '../lib/sceneAPI';
 import { useResponsive } from '../hooks/useResponsive';
 import { performance as perfSettings } from '../lib/tokens';
 
+interface BurstParticle {
+  id: number;
+  position: THREE.Vector3;
+  velocity: THREE.Vector3;
+  life: number;
+  maxLife: number;
+  size: number;
+}
+
+interface BurstRing {
+  id: number;
+  position: THREE.Vector3;
+  scale: number;
+  opacity: number;
+  life: number;
+  maxLife: number;
+}
+
 export function ParticleLayer() {
   const pointsRef = useRef<THREE.Points>(null);
   const { isMobile } = useResponsive();
   const performanceMode = useSceneStore((s) => s.performanceMode);
 
-  // Calculate particle count based on device and performance mode
+  // Burst effects state
+  const [burstParticles, setBurstParticles] = useState<BurstParticle[]>([]);
+  const [burstRings, setBurstRings] = useState<BurstRing[]>([]);
+  const burstIdCounter = useRef(0);
+
+  // Calculate particle count based on device and performance mode (REDUCED for memory)
   const count = useMemo(() => {
-    if (isMobile) return perfSettings.particles.mobile;
+    if (isMobile) return 150; // Reduced from 300
 
     switch (performanceMode) {
       case 'high':
-        return perfSettings.particles.desktop;
+        return 800; // Reduced from 1500
       case 'medium':
-        return Math.floor(perfSettings.particles.desktop * 0.6);
+        return 480; // Reduced from 900
       case 'low':
-        return perfSettings.particles.mobile;
+        return 150; // Reduced from 300
       default:
-        return perfSettings.particles.desktop;
+        return 800;
     }
   }, [isMobile, performanceMode]);
 
@@ -62,9 +85,70 @@ export function ParticleLayer() {
     return { geometry: geo, velocities };
   }, [count]);
 
-  // Animate particles
-  useFrame((state) => {
+  // Listen for particle burst events
+  useEffect(() => {
+    const handleBurst = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { position, intensity = 1.0 } = customEvent.detail;
+
+      console.log('[ParticleLayer] Burst triggered at:', position, 'intensity:', intensity);
+
+      // Calculate burst particle count based on performance mode
+      const burstCount = performanceMode === 'low' ? 30 : performanceMode === 'medium' ? 60 : 100;
+
+      // Create burst particles
+      const newParticles: BurstParticle[] = [];
+      for (let i = 0; i < burstCount; i++) {
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(Math.random() * 2 - 1);
+        const speed = 20 + Math.random() * 30 * intensity;
+
+        newParticles.push({
+          id: burstIdCounter.current++,
+          position: new THREE.Vector3(position.x, position.y, position.z),
+          velocity: new THREE.Vector3(
+            Math.sin(phi) * Math.cos(theta) * speed,
+            Math.sin(phi) * Math.sin(theta) * speed,
+            Math.cos(phi) * speed
+          ),
+          life: 1.0,
+          maxLife: 0.8 + Math.random() * 0.4,
+          size: 2 + Math.random() * 3,
+        });
+      }
+
+      setBurstParticles((prev) => [...prev, ...newParticles]);
+
+      // Create burst rings (shock waves)
+      const ringCount = performanceMode === 'low' ? 1 : 3;
+      const newRings: BurstRing[] = [];
+      for (let i = 0; i < ringCount; i++) {
+        newRings.push({
+          id: burstIdCounter.current++,
+          position: new THREE.Vector3(position.x, position.y, position.z),
+          scale: 0.1,
+          opacity: 1.0,
+          life: 1.0,
+          maxLife: 0.6 + i * 0.1,
+        });
+      }
+
+      setBurstRings((prev) => [...prev, ...newRings]);
+    };
+
+    window.addEventListener('kairo:particle-burst', handleBurst);
+    return () => window.removeEventListener('kairo:particle-burst', handleBurst);
+  }, [performanceMode]);
+
+  // Animate particles - Throttled for performance
+  const frameCounter = useRef(0);
+
+  useFrame((state, delta) => {
     if (!pointsRef.current) return;
+
+    // Update every 2nd frame for better performance
+    frameCounter.current++;
+    if (frameCounter.current % 2 !== 0) return;
 
     const positions = geometry.attributes.position.array as Float32Array;
 
@@ -73,12 +157,13 @@ export function ParticleLayer() {
       positions[i * 3 + 1] += velocities[i * 3 + 1];
       positions[i * 3 + 2] += velocities[i * 3 + 2];
 
-      // Wrap around boundary
-      const radius = Math.sqrt(
-        positions[i * 3] ** 2 + positions[i * 3 + 1] ** 2 + positions[i * 3 + 2] ** 2
-      );
+      // Wrap around boundary - Optimized calculation
+      const x = positions[i * 3];
+      const y = positions[i * 3 + 1];
+      const z = positions[i * 3 + 2];
+      const radiusSq = x * x + y * y + z * z;
 
-      if (radius > 300) {
+      if (radiusSq > 90000) { // 300^2 to avoid sqrt
         const theta = Math.random() * Math.PI * 2;
         const phi = Math.acos(Math.random() * 2 - 1);
         const newRadius = 100;
@@ -90,19 +175,75 @@ export function ParticleLayer() {
     }
 
     geometry.attributes.position.needsUpdate = true;
+
+    // Update burst particles
+    setBurstParticles((prev) => {
+      return prev
+        .map((p) => ({
+          ...p,
+          position: p.position.clone().add(p.velocity.clone().multiplyScalar(delta)),
+          velocity: p.velocity.clone().multiplyScalar(0.98), // Drag
+          life: p.life - delta / p.maxLife,
+        }))
+        .filter((p) => p.life > 0);
+    });
+
+    // Update burst rings
+    setBurstRings((prev) => {
+      return prev
+        .map((r) => ({
+          ...r,
+          scale: r.scale + delta * 50,
+          opacity: r.life,
+          life: r.life - delta / r.maxLife,
+        }))
+        .filter((r) => r.life > 0);
+    });
   });
 
   return (
-    <points ref={pointsRef} geometry={geometry}>
-      <pointsMaterial
-        color="#ffffff"
-        size={1.5}
-        transparent
-        opacity={0.6}
-        sizeAttenuation
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-      />
-    </points>
+    <>
+      {/* Background particles */}
+      <points ref={pointsRef} geometry={geometry}>
+        <pointsMaterial
+          color="#ffffff"
+          size={1.5}
+          transparent
+          opacity={0.6}
+          sizeAttenuation
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </points>
+
+      {/* Burst particles */}
+      {burstParticles.map((particle) => (
+        <mesh key={particle.id} position={particle.position}>
+          <sphereGeometry args={[particle.size * particle.life, 4, 4]} />
+          <meshBasicMaterial
+            color="#00E5FF"
+            transparent
+            opacity={particle.life * 0.8}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+          />
+        </mesh>
+      ))}
+
+      {/* Burst rings (shock waves) */}
+      {burstRings.map((ring) => (
+        <mesh key={ring.id} position={ring.position}>
+          <ringGeometry args={[ring.scale, ring.scale + 2, 32]} />
+          <meshBasicMaterial
+            color="#A854FF"
+            transparent
+            opacity={ring.opacity * 0.5}
+            side={THREE.DoubleSide}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+          />
+        </mesh>
+      ))}
+    </>
   );
 }

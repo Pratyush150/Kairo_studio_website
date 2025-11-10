@@ -15,6 +15,8 @@ export interface MorphRef {
   enterZoom: () => void;
   idleLoop: () => void;
   supernovaBurst: () => void;
+  groupRef?: React.RefObject<THREE.Group>;
+  meshRef?: React.RefObject<THREE.Mesh>;
 }
 
 interface FlowProps {
@@ -26,9 +28,9 @@ export const Flow = forwardRef<MorphRef, FlowProps>(({ onClick }, ref) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
 
-  // Ribbon geometry
+  // Ribbon geometry - Reduced segments for better performance
   const geometry = useMemo(() => {
-    return new THREE.TorusGeometry(18, 4, 32, 100);
+    return new THREE.TorusGeometry(18, 4, 16, 64); // Reduced from 32,100 to 16,64
   }, []);
 
   // Custom shader material for flowing effect
@@ -82,6 +84,8 @@ export const Flow = forwardRef<MorphRef, FlowProps>(({ onClick }, ref) => {
   });
 
   useImperativeHandle(ref, () => ({
+    groupRef: { current: groupRef.current } as React.RefObject<THREE.Group>,
+    meshRef: { current: meshRef.current } as React.RefObject<THREE.Mesh>,
     appear: () => {
       if (!groupRef.current) return;
       gsap.fromTo(
@@ -125,34 +129,50 @@ export const Flow = forwardRef<MorphRef, FlowProps>(({ onClick }, ref) => {
 
       const tl = gsap.timeline();
 
-      // Burst animation: compress then explode
+      // Burst animation: DRAMATIC compress then EXPLODE
       tl.to(groupRef.current.scale, {
-        x: 0.7,
-        y: 0.7,
-        z: 0.7,
-        duration: 0.15,
-        ease: 'power2.in',
+        x: 0.14,
+        y: 0.14,
+        z: 0.14,
+        duration: 0.18,
+        ease: 'power3.in',
       })
-      .to([groupRef.current.scale, materialRef.current.uniforms.u_emissive], {
-        x: 2.8,
-        y: 2.8,
-        z: 2.8,
-        value: 2.0,
-        duration: 0.4,
+      .to(materialRef.current.uniforms.u_emissive, {
+        value: 1.6,
+        duration: 0.18,
+        ease: 'power3.in',
+      }, '<')
+      .to(groupRef.current.scale, {
+        x: 3.5,
+        y: 3.5,
+        z: 3.5,
+        duration: 0.56,
         ease: 'power4.out',
       }, '>')
+      .to(materialRef.current.uniforms.u_emissive, {
+        value: 2.5,
+        duration: 0.2,
+        ease: 'power4.out',
+      }, '<')
+      .to(materialRef.current.uniforms.u_emissive, {
+        value: 0.5,
+        duration: 0.4,
+        ease: 'power2.out',
+      }, '>-0.2')
       .to(groupRef.current.scale, {
         x: 1.5,
         y: 1.5,
         z: 1.5,
-        duration: 0.3,
+        duration: 0.4,
         ease: 'power2.inOut',
-      }, '>-0.1')
-      .to(materialRef.current.uniforms.u_emissive, {
-        value: 0.5,
-        duration: 0.5,
-        ease: 'power2.out',
       }, '<');
+
+      // Dispatch particle burst event
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('kairo:particle-burst', {
+          detail: { position: groupRef.current.position, intensity: 1.0 }
+        }));
+      }
     },
     idleLoop: () => {
       // Already handled in useFrame

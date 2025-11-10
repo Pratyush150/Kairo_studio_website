@@ -16,7 +16,13 @@ export function HUD() {
   }
 
   const handleNavClick = (slug: string) => {
-    sceneAPI.openPanel(slug);
+    // Header navigation: Direct to element via goToIndex()
+    // Does NOT open panel - only navigates to element
+    // User must click element to open content
+    const index = sceneAPI.getAllMorphs().findIndex(m => m.slug === slug);
+    if (index >= 0) {
+      sceneAPI.goToIndex(index);
+    }
   };
 
   return (

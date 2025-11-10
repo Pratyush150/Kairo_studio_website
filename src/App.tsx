@@ -9,7 +9,9 @@ import { Preloader } from './components/Preloader';
 import { HUD } from './components/HUD';
 import { PanelView } from './components/PanelView';
 import { MobileFallback } from './components/MobileFallback';
-import { useSceneStore } from './lib/sceneAPI';
+import { GestureHandler } from './components/GestureHandler';
+import { AudioSystem } from './components/AudioSystem';
+import { useSceneStore, sceneAPI, getSlugIndex } from './lib/sceneAPI';
 import { useReducedMotion } from './hooks/useReducedMotion';
 import { useFPSMonitor } from './hooks/useFPSMonitor';
 import { useResponsive } from './hooks/useResponsive';
@@ -56,24 +58,53 @@ function App() {
   useEffect(() => {
     if (sceneState === 'loading') {
       const timer = setTimeout(() => {
-        setSceneState('idle');
+        // Set to ELEMENT_ACTIVE (first element ready to interact)
+        setSceneState('ELEMENT_ACTIVE');
+
+        // Check URL hash on load and navigate if specified
+        if (typeof window !== 'undefined' && window.location.hash) {
+          const slug = window.location.hash.replace('#', '');
+          console.log('[App] Initial URL hash detected:', slug);
+
+          // Wait for scene to be ready, then navigate to index
+          setTimeout(() => {
+            const index = getSlugIndex(slug);
+            if (index >= 0) {
+              sceneAPI.goToIndex(index);
+            }
+          }, 500);
+        }
       }, 2000);
 
       return () => clearTimeout(timer);
     }
   }, [sceneState, setSceneState]);
 
-  // Handle ESC key to close panel
+  // ESC key handled by GestureHandler component
+
+  // Handle browser back/forward buttons
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && sceneState === 'panel') {
-        useSceneStore.getState().closePanel();
+    const handlePopState = () => {
+      const hash = window.location.hash.replace('#', '');
+
+      if (hash) {
+        // Navigate to index
+        const index = getSlugIndex(hash);
+        if (index >= 0) {
+          sceneAPI.goToIndex(index);
+        }
+      } else {
+        // Close panel if open
+        const state = useSceneStore.getState();
+        if (state.panelOpen) {
+          sceneAPI.closeContent();
+        }
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [sceneState]);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   // Render mobile fallback if needed
   if (useMobileFallback) {
@@ -91,6 +122,12 @@ function App() {
 
       {/* 3D Canvas */}
       <CanvasShell />
+
+      {/* Gesture Handler (drag/swipe/keyboard navigation) */}
+      <GestureHandler />
+
+      {/* Audio System (procedural sounds) */}
+      <AudioSystem />
 
       {/* UI Overlays */}
       <HUD />

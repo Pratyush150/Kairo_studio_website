@@ -37,7 +37,7 @@ export function AudioManager() {
     if (initialized.current) return;
     initialized.current = true;
 
-    console.log('[AudioManager] Initializing audio system...');
+    console.log('[AudioManager] Initializing audio system (graceful degradation enabled)...');
 
     // Set global volume from localStorage
     const savedVolume = localStorage.getItem('audioVolume');
@@ -46,6 +46,8 @@ export function AudioManager() {
     } else {
       Howler.volume(0.5); // Default 50%
     }
+
+    // Note: Audio files are optional. Missing files will fail silently with fallback sounds.
 
     // Load ambient loop
     try {
@@ -58,8 +60,8 @@ export function AudioManager() {
           soundsRef.current.ambient.loaded = true;
           console.log('[AudioManager] Ambient loaded');
         },
-        onloaderror: (id, error) => {
-          console.warn('[AudioManager] Ambient load failed (using silent mode):', error);
+        onloaderror: () => {
+          // Silent fallback - audio files are optional for development
           soundsRef.current.ambient.loaded = false;
         },
       });
@@ -77,7 +79,7 @@ export function AudioManager() {
           console.log('[AudioManager] Hover loaded');
         },
         onloaderror: () => {
-          console.warn('[AudioManager] Hover sound not found (silent mode)');
+          // Silent fallback
         },
       });
     } catch (error) {
@@ -94,7 +96,7 @@ export function AudioManager() {
           console.log('[AudioManager] Click loaded');
         },
         onloaderror: () => {
-          console.warn('[AudioManager] Click sound not found (silent mode)');
+          // Silent fallback
         },
       });
     } catch (error) {
@@ -111,7 +113,7 @@ export function AudioManager() {
           console.log('[AudioManager] Boom loaded');
         },
         onloaderror: () => {
-          console.warn('[AudioManager] Boom sound not found (silent mode)');
+          // Silent fallback
         },
       });
     } catch (error) {
@@ -128,7 +130,7 @@ export function AudioManager() {
           console.log('[AudioManager] Transition loaded');
         },
         onloaderror: () => {
-          console.warn('[AudioManager] Transition sound not found (silent mode)');
+          // Silent fallback
         },
       });
     } catch (error) {
@@ -145,7 +147,7 @@ export function AudioManager() {
           console.log('[AudioManager] Panel open loaded');
         },
         onloaderror: () => {
-          console.warn('[AudioManager] Panel open sound not found (silent mode)');
+          // Silent fallback
         },
       });
 
@@ -157,7 +159,7 @@ export function AudioManager() {
           console.log('[AudioManager] Panel close loaded');
         },
         onloaderror: () => {
-          console.warn('[AudioManager] Panel close sound not found (silent mode)');
+          // Silent fallback
         },
       });
     } catch (error) {
@@ -186,15 +188,17 @@ export function AudioManager() {
 
     if (sceneState === 'idle' && audioEnabled) {
       if (ambient && soundsRef.current.ambient.loaded) {
-        // Stop any existing playback first to prevent conflicts
-        if (ambient.playing()) {
-          ambient.stop();
+        // Only start if not already playing
+        if (!ambient.playing()) {
+          // Use setTimeout to avoid race conditions with stop()
+          setTimeout(() => {
+            if (ambient && !ambient.playing()) {
+              ambient.volume(0);
+              ambient.play();
+              ambient.fade(0, 0.3, 2000);
+            }
+          }, 50);
         }
-
-        // Start fresh playback with fade in
-        ambient.volume(0);
-        ambient.play();
-        ambient.fade(0, 0.3, 2000);
       }
     } else {
       if (ambient && ambient.playing()) {
@@ -203,7 +207,7 @@ export function AudioManager() {
 
         // Schedule stop after fade completes
         ambientFadeTimeoutRef.current = setTimeout(() => {
-          if (ambient.playing()) {
+          if (ambient && ambient.playing()) {
             ambient.stop();
           }
           ambientFadeTimeoutRef.current = null;
@@ -289,6 +293,41 @@ export function AudioManager() {
 
     return () => {
       window.removeEventListener('kairo:play-sound', handlePlaySound);
+    };
+  }, [playSound]);
+
+  // Listen for ball interaction sounds
+  useEffect(() => {
+    const handleBallSound = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { type, volume } = customEvent.detail;
+
+      // Map ball sound types to existing sounds (graceful degradation)
+      switch (type) {
+        case 'slap':
+          playSound('click', { volume: volume || 0.7 });
+          break;
+        case 'compression':
+          // Use ambient for compression swell (lower volume)
+          break;
+        case 'burst':
+          playSound('boom', { volume: volume || 0.8 });
+          break;
+        case 'transit':
+          playSound('transition', { volume: volume || 0.6 });
+          break;
+        case 'close':
+          playSound('panelClose');
+          break;
+        default:
+          console.log('[AudioManager] Unknown ball sound type:', type);
+      }
+    };
+
+    window.addEventListener('kairo:play-ball-sound', handleBallSound);
+
+    return () => {
+      window.removeEventListener('kairo:play-ball-sound', handleBallSound);
     };
   }, [playSound]);
 

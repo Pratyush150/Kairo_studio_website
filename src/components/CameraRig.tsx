@@ -52,17 +52,21 @@ export function CameraRig({ children }: CameraRigProps) {
 
   // Camera fly-in transitions
   useEffect(() => {
-    if (sceneState === 'morphing') {
+    if (sceneState === 'morphing' || sceneState === 'transitioning') {
       // Animate camera closer during morph transition
       gsap.to(camera.position, {
+        x: 0,
+        y: 0,
         z: 80,
         duration: 1.4,
         ease: 'power3.inOut',
       });
     } else if (sceneState === 'idle') {
-      // Return to default position
+      // Return to wide view to see all balls
       gsap.to(camera.position, {
-        z: 120,
+        x: 0,
+        y: 0,
+        z: 180, // Further back to see all balls in circle
         duration: 1.2,
         ease: 'power3.out',
       });
@@ -73,8 +77,60 @@ export function CameraRig({ children }: CameraRigProps) {
         duration: 1.4,
         ease: 'power3.inOut',
       });
+    } else if (sceneState === 'ball-opening') {
+      // During ball opening: dramatic camera rush forward
+      gsap.to(camera.position, {
+        z: 60,
+        duration: 0.42, // During compression phase
+        ease: 'power3.in',
+      });
     }
   }, [sceneState, camera]);
+
+  // Ball opening camera shake + burst dolly
+  useEffect(() => {
+    const handleBallOpening = () => {
+      console.log('[CameraRig] Ball opening - triggering camera animations');
+
+      // Timeline synced with ball animations
+      const tl = gsap.timeline();
+
+      // Slap reaction: small shake (0-240ms)
+      tl.to(camera.position, {
+        x: '+=2',
+        y: '+=1',
+        duration: 0.08,
+        ease: 'power2.inOut',
+        yoyo: true,
+        repeat: 1,
+      });
+
+      // Compression phase: dolly forward (240-420ms)
+      tl.to(camera.position, {
+        z: 40,
+        duration: 0.18,
+        ease: 'power3.in',
+      }, 0.24);
+
+      // Burst explosion: dramatic shake + recoil (420-920ms)
+      tl.to(camera.position, {
+        x: '+=5',
+        y: '+=3',
+        duration: 0.1,
+        ease: 'power4.out',
+      }, 0.42)
+      .to(camera.position, {
+        x: '-=5',
+        y: '-=3',
+        z: 50, // Pull back slightly
+        duration: 0.4,
+        ease: 'elastic.out(1, 0.4)',
+      }, 0.52);
+    };
+
+    window.addEventListener('kairo:ball-opening', handleBallOpening);
+    return () => window.removeEventListener('kairo:ball-opening', handleBallOpening);
+  }, [camera]);
 
   return <group ref={groupRef}>{children}</group>;
 }

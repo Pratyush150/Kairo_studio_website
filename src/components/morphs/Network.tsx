@@ -15,6 +15,8 @@ export interface MorphRef {
   enterZoom: () => void;
   idleLoop: () => void;
   supernovaBurst: () => void;
+  groupRef?: React.RefObject<THREE.Group>;
+  meshRef?: React.RefObject<THREE.Mesh>;
 }
 
 interface NetworkProps {
@@ -88,6 +90,8 @@ export const Network = forwardRef<MorphRef, NetworkProps>(({ onClick }, ref) => 
   });
 
   useImperativeHandle(ref, () => ({
+    groupRef: { current: groupRef.current } as React.RefObject<THREE.Group>,
+    meshRef: { current: nodesRef.current as any } as React.RefObject<THREE.Mesh>,
     appear: () => {
       if (!groupRef.current) return;
       gsap.fromTo(
@@ -124,28 +128,35 @@ export const Network = forwardRef<MorphRef, NetworkProps>(({ onClick }, ref) => 
 
       const tl = gsap.timeline();
 
-      // Burst animation: nodes explode outward
+      // Burst animation: DRAMATIC nodes collapse then EXPLODE outward
       tl.to(groupRef.current.scale, {
-        x: 0.6,
-        y: 0.6,
-        z: 0.6,
-        duration: 0.15,
-        ease: 'power2.in',
+        x: 0.14,
+        y: 0.14,
+        z: 0.14,
+        duration: 0.18,
+        ease: 'power3.in',
       })
       .to(groupRef.current.scale, {
-        x: 3.0,
-        y: 3.0,
-        z: 3.0,
-        duration: 0.4,
+        x: 3.5,
+        y: 3.5,
+        z: 3.5,
+        duration: 0.56,
         ease: 'power4.out',
       }, '>')
       .to(groupRef.current.scale, {
         x: 1.5,
         y: 1.5,
         z: 1.5,
-        duration: 0.3,
+        duration: 0.4,
         ease: 'power2.inOut',
       }, '>-0.1');
+
+      // Dispatch particle burst event
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('kairo:particle-burst', {
+          detail: { position: groupRef.current.position, intensity: 1.0 }
+        }));
+      }
     },
     idleLoop: () => {
       // Handled in useFrame

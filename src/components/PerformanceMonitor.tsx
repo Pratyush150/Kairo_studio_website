@@ -12,7 +12,7 @@ interface PerformanceMonitorProps {
 export function PerformanceMonitor({
   targetFPS = 45, // Per optimization guide: degrade if < 45 FPS for 3s
   degradeThreshold = 3000, // Per optimization guide: 3 seconds threshold
-  sampleSize = 180 // 3 seconds at 60fps for better averaging
+  sampleSize = 60 // Reduced from 180 to 60 for memory optimization (1 second at 60fps)
 }: PerformanceMonitorProps) {
   // Use separate selectors to avoid re-renders from unrelated state changes
   const performanceMode = useSceneStore((state) => state.performanceMode);
@@ -27,20 +27,18 @@ export function PerformanceMonitor({
   // Keep ref in sync with state
   performanceModeRef.current = performanceMode;
 
-  // Memory monitoring
+  // Memory monitoring - reduced frequency
   const logMemory = useRef(
     throttle(() => {
       const memory = getMemoryUsage();
       if (memory) {
-        console.log(`[PerformanceMonitor] Memory: ${memory.used}MB / ${memory.total}MB`);
-
-        // Warn if memory usage is high
+        // Only log if usage is high to reduce console spam
         const usagePercent = (memory.used / memory.total) * 100;
-        if (usagePercent > 80) {
-          console.warn(`[PerformanceMonitor] High memory usage: ${usagePercent.toFixed(1)}%`);
+        if (usagePercent > 85) {
+          console.warn(`[PerformanceMonitor] High memory: ${memory.used}MB / ${memory.total}MB (${usagePercent.toFixed(1)}%)`);
         }
       }
-    }, 10000) // Log every 10 seconds
+    }, 15000) // Log every 15 seconds (reduced frequency)
   );
 
   useFrame(() => {

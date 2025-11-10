@@ -1,5 +1,5 @@
 /**
- * Panel View - Updated to consume content.json
+ * Panel View - Complete with all panels
  * Routes all panels dynamically based on morph type
  */
 
@@ -7,6 +7,11 @@ import { useEffect, useRef, useState } from 'react';
 import { useSceneStore, sceneAPI } from '../lib/sceneAPI';
 import { AboutPanel } from './panels/AboutPanel';
 import { ServicesPanel } from './panels/ServicesPanel';
+import { WorkPanel } from './panels/WorkPanel';
+import { CaseStudyDetail } from './panels/CaseStudyDetail';
+import { DemosPanel } from './panels/DemosPanel';
+import { ReviewsPanel } from './panels/ReviewsPanel';
+import { StrategyPanel } from './panels/StrategyPanel';
 import { ContactForm } from './ContactForm';
 import gsap from 'gsap';
 import './PanelView.css';
@@ -25,6 +30,7 @@ export function PanelView() {
   const panelRef = useRef<HTMLDivElement>(null);
   const [content, setContent] = useState<ContentData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedCase, setSelectedCase] = useState<string | null>(null);
 
   const isVisible = sceneState === 'panel' && panelOpen && panelContent;
 
@@ -77,12 +83,21 @@ export function PanelView() {
         ease: 'power2.in',
         onComplete: () => {
           sceneAPI.closePanel();
+          setSelectedCase(null);
         },
       });
     }
   };
 
   const handleAction = (action: string, data?: any) => {
+    // Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', action, {
+        panel: panelContent,
+        data: JSON.stringify(data),
+      });
+    }
+
     switch (action) {
       case 'openContact':
       case 'requestDemo':
@@ -95,13 +110,26 @@ export function PanelView() {
         sceneAPI.openPanel('strategy');
         break;
       case 'launchDemo':
-        if (data?.url) {
-          window.open(data.url, '_blank');
+        if (data?.demoUrl) {
+          window.open(data.demoUrl, '_blank');
         }
         break;
       default:
         console.log('Action:', action, data);
     }
+  };
+
+  const handleViewCase = (caseId: string) => {
+    setSelectedCase(caseId);
+
+    // Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'case_view', { slug: caseId });
+    }
+  };
+
+  const handleCloseCaseStudy = () => {
+    setSelectedCase(null);
   };
 
   const renderPanelContent = () => {
@@ -117,13 +145,57 @@ export function PanelView() {
     const morphData = content.morphs.find((m) => m.id === panelContent);
     if (!morphData) return null;
 
+    // Case Study Detail Modal
+    if (selectedCase) {
+      const caseStudy = content.caseStudies.find((c) => c.id === selectedCase);
+      if (caseStudy) {
+        return (
+          <CaseStudyDetail
+            caseStudy={caseStudy}
+            onClose={handleCloseCaseStudy}
+            onAction={handleAction}
+          />
+        );
+      }
+    }
+
+    // Route based on panel content
     switch (panelContent) {
       case 'origin':
         return <AboutPanel content={morphData.content} onAction={handleAction} />;
-      
+
+      case 'work':
+        return (
+          <WorkPanel
+            content={morphData.content}
+            caseStudies={content.caseStudies}
+            onViewCase={handleViewCase}
+          />
+        );
+
       case 'services':
         return <ServicesPanel services={content.services} onAction={handleAction} />;
-      
+
+      case 'demos':
+        return (
+          <DemosPanel
+            content={morphData.content}
+            demos={content.demos}
+            onAction={handleAction}
+          />
+        );
+
+      case 'reviews':
+        return (
+          <ReviewsPanel
+            content={morphData.content}
+            testimonials={content.testimonials}
+          />
+        );
+
+      case 'strategy':
+        return <StrategyPanel content={morphData.content} />;
+
       case 'portal':
         return (
           <div className="panel-section">
@@ -132,23 +204,32 @@ export function PanelView() {
             <ContactForm />
           </div>
         );
-      
+
       case 'network':
-      case 'work':
-      case 'demos':
-      case 'strategy':
-      case 'reviews':
-      default:
-        // Fallback for panels not yet implemented
+        // Fallback for Collaborate panel
         return (
           <div className="panel-section">
-            <h1 className="panel-headline">{morphData.content.headline || morphData.name}</h1>
-            <p className="panel-lead">{morphData.content.lead || morphData.content.intro || morphData.short}</p>
-            <div className="panel-placeholder">
-              <p>This panel is currently under development.</p>
-              <p>Content loaded from content.json:</p>
-              <pre>{JSON.stringify(morphData, null, 2)}</pre>
-            </div>
+            <h1 className="panel-headline">{morphData.content.headline}</h1>
+            <p className="panel-lead">{morphData.content.lead}</p>
+            {morphData.content.features && (
+              <ul className="panel-list">
+                {morphData.content.features.map((feature: string, i: number) => (
+                  <li key={i}>{feature}</li>
+                ))}
+              </ul>
+            )}
+            <button className="cta-button cta-primary" onClick={() => handleAction('openContact')}>
+              Get in Touch
+            </button>
+          </div>
+        );
+
+      default:
+        // Generic fallback
+        return (
+          <div className="panel-section">
+            <h1 className="panel-headline">{morphData.name}</h1>
+            <p className="panel-lead">{morphData.short}</p>
             <button className="cta-button cta-primary" onClick={() => handleAction('openContact')}>
               Get in Touch
             </button>

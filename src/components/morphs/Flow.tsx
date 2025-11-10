@@ -14,6 +14,7 @@ export interface MorphRef {
   hoverPulse: (strength: number) => void;
   enterZoom: () => void;
   idleLoop: () => void;
+  supernovaBurst: () => void;
 }
 
 interface FlowProps {
@@ -117,6 +118,41 @@ export const Flow = forwardRef<MorphRef, FlowProps>(({ onClick }, ref) => {
         duration: 1.4,
         ease: 'power3.inOut',
       });
+    },
+    supernovaBurst: () => {
+      console.log('[Flow] Supernova burst triggered');
+      if (!groupRef.current || !materialRef.current) return;
+
+      const tl = gsap.timeline();
+
+      // Burst animation: compress then explode
+      tl.to(groupRef.current.scale, {
+        x: 0.7,
+        y: 0.7,
+        z: 0.7,
+        duration: 0.15,
+        ease: 'power2.in',
+      })
+      .to([groupRef.current.scale, materialRef.current.uniforms.u_emissive], {
+        x: 2.8,
+        y: 2.8,
+        z: 2.8,
+        value: 2.0,
+        duration: 0.4,
+        ease: 'power4.out',
+      }, '>')
+      .to(groupRef.current.scale, {
+        x: 1.5,
+        y: 1.5,
+        z: 1.5,
+        duration: 0.3,
+        ease: 'power2.inOut',
+      }, '>-0.1')
+      .to(materialRef.current.uniforms.u_emissive, {
+        value: 0.5,
+        duration: 0.5,
+        ease: 'power2.out',
+      }, '<');
     },
     idleLoop: () => {
       // Already handled in useFrame

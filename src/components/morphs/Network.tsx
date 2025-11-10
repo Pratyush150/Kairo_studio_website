@@ -14,6 +14,7 @@ export interface MorphRef {
   hoverPulse: (strength: number) => void;
   enterZoom: () => void;
   idleLoop: () => void;
+  supernovaBurst: () => void;
 }
 
 interface NetworkProps {
@@ -116,6 +117,35 @@ export const Network = forwardRef<MorphRef, NetworkProps>(({ onClick }, ref) => 
         duration: 1.4,
         ease: 'power3.inOut',
       });
+    },
+    supernovaBurst: () => {
+      console.log('[Network] Supernova burst triggered');
+      if (!groupRef.current) return;
+
+      const tl = gsap.timeline();
+
+      // Burst animation: nodes explode outward
+      tl.to(groupRef.current.scale, {
+        x: 0.6,
+        y: 0.6,
+        z: 0.6,
+        duration: 0.15,
+        ease: 'power2.in',
+      })
+      .to(groupRef.current.scale, {
+        x: 3.0,
+        y: 3.0,
+        z: 3.0,
+        duration: 0.4,
+        ease: 'power4.out',
+      }, '>')
+      .to(groupRef.current.scale, {
+        x: 1.5,
+        y: 1.5,
+        z: 1.5,
+        duration: 0.3,
+        ease: 'power2.inOut',
+      }, '>-0.1');
     },
     idleLoop: () => {
       // Handled in useFrame

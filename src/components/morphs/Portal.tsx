@@ -14,6 +14,7 @@ export interface MorphRef {
   hoverPulse: (strength: number) => void;
   enterZoom: () => void;
   idleLoop: () => void;
+  supernovaBurst: () => void;
 }
 
 interface PortalProps {
@@ -88,6 +89,35 @@ export const Portal = forwardRef<MorphRef, PortalProps>(({ onClick }, ref) => {
         duration: 1.4,
         ease: 'power3.inOut',
       });
+    },
+    supernovaBurst: () => {
+      console.log('[Portal] Supernova burst triggered');
+      if (!groupRef.current) return;
+
+      const tl = gsap.timeline();
+
+      // Burst animation: portal vortex collapses then expands
+      tl.to(groupRef.current.scale, {
+        x: 0.5,
+        y: 0.5,
+        z: 0.5,
+        duration: 0.15,
+        ease: 'power2.in',
+      })
+      .to(groupRef.current.scale, {
+        x: 3.5,
+        y: 3.5,
+        z: 3.5,
+        duration: 0.4,
+        ease: 'power4.out',
+      }, '>')
+      .to(groupRef.current.scale, {
+        x: 3.0,
+        y: 3.0,
+        z: 3.0,
+        duration: 0.3,
+        ease: 'power2.inOut',
+      }, '>-0.1');
     },
     idleLoop: () => {
       // Handled in useFrame

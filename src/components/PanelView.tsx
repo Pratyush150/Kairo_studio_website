@@ -34,6 +34,11 @@ export function PanelView() {
 
   const isVisible = sceneState === 'panel' && panelOpen && panelContent;
 
+  // Debug logging
+  useEffect(() => {
+    console.log('[PanelView] State changed:', { sceneState, panelOpen, panelContent, isVisible });
+  }, [sceneState, panelOpen, panelContent, isVisible]);
+
   // Load content.json
   useEffect(() => {
     fetch('/content.json')

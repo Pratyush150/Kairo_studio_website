@@ -106,16 +106,31 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
   },
 
   openPanel: async (slug: string) => {
+    console.log('[sceneAPI] openPanel called with slug:', slug);
+
     const morphEntry = Object.entries(morphs).find(([_, data]) => data.slug === slug);
-    if (!morphEntry) return;
+    if (!morphEntry) {
+      console.error('[sceneAPI] No morph found for slug:', slug);
+      return;
+    }
 
     const morphType = morphEntry[0] as MorphType;
+    console.log('[sceneAPI] Found morphType:', morphType);
+
+    // Trigger supernova burst effect
+    if (typeof window !== 'undefined') {
+      console.log('[sceneAPI] Triggering supernova burst');
+      window.dispatchEvent(new CustomEvent('kairo:supernova-burst', {
+        detail: { morphType, slug }
+      }));
+    }
 
     set({
       sceneState: 'morphing',
       activeMorph: morphType,
       panelContent: morphType,
     });
+    console.log('[sceneAPI] State set to morphing, activeMorph:', morphType);
 
     // Analytics
     if (typeof window !== 'undefined' && (window as any).gtag) {
@@ -125,8 +140,9 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
       });
     }
 
-    // Wait for camera fly-in animation
-    await new Promise((resolve) => setTimeout(resolve, 1400));
+    // Wait for supernova burst + camera fly-in animation
+    await new Promise((resolve) => setTimeout(resolve, 1800));
+    console.log('[sceneAPI] Opening panel after burst animation');
     set({ sceneState: 'panel', panelOpen: true });
   },
 

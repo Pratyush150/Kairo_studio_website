@@ -98,6 +98,21 @@ export function MorphManager() {
     return () => window.removeEventListener('pointermove', handlePointerMove);
   }, [activeMorph, sceneState, size, setHoveredMorph]);
 
+  // Listen for supernova burst event
+  useEffect(() => {
+    const handleSupernovaBurst = () => {
+      console.log('[MorphManager] Supernova burst event received');
+      const ref = getRef(activeMorph);
+      if (ref.current) {
+        console.log('[MorphManager] Triggering burst on', activeMorph);
+        ref.current.supernovaBurst();
+      }
+    };
+
+    window.addEventListener('kairo:supernova-burst', handleSupernovaBurst);
+    return () => window.removeEventListener('kairo:supernova-burst', handleSupernovaBurst);
+  }, [activeMorph]);
+
   // Map morph types to their corresponding shapes
   // We have 8 panel types but only 4 physical shapes
   const getMorphShape = () => {

@@ -14,6 +14,7 @@ export interface MorphRef {
   hoverPulse: (strength: number) => void;
   enterZoom: () => void;
   idleLoop: () => void;
+  supernovaBurst: () => void;
 }
 
 interface OriginProps {
@@ -94,6 +95,42 @@ export const Origin = forwardRef<MorphRef, OriginProps>(({ onClick }, ref) => {
           repeat: 1,
         });
       }
+    },
+    supernovaBurst: () => {
+      console.log('[Origin] Supernova burst triggered');
+      if (!groupRef.current || !meshRef.current) return;
+
+      const tl = gsap.timeline();
+      const mat = meshRef.current.material as THREE.MeshPhysicalMaterial;
+
+      // Burst animation: compress then explode
+      tl.to(groupRef.current.scale, {
+        x: 0.8,
+        y: 0.8,
+        z: 0.8,
+        duration: 0.15,
+        ease: 'power2.in',
+      })
+      .to([groupRef.current.scale, mat], {
+        x: 2.5,
+        y: 2.5,
+        z: 2.5,
+        emissiveIntensity: 1.5,
+        duration: 0.4,
+        ease: 'power4.out',
+      }, '>')
+      .to(groupRef.current.scale, {
+        x: 1.5,
+        y: 1.5,
+        z: 1.5,
+        duration: 0.3,
+        ease: 'power2.inOut',
+      }, '>-0.1')
+      .to(mat, {
+        emissiveIntensity: 0.4,
+        duration: 0.5,
+        ease: 'power2.out',
+      }, '<');
     },
     enterZoom: () => {
       if (!groupRef.current) return;

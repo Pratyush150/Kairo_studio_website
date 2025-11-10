@@ -62,16 +62,16 @@ export const animation = {
 // Performance & LOD
 export const performance = {
   pixelRatio: {
-    desktop: 1.25,
-    mobile: 1,
+    desktop: 1,      // Reduced from 1.25 for better performance
+    mobile: 0.75,    // Reduced from 1 for mobile performance
   },
   lod: {
     high: 600,
     mid: 1400,
   },
   particles: {
-    desktop: 6000,
-    mobile: 800,
+    desktop: 1500,  // Reduced from 6000 (75% reduction)
+    mobile: 300,    // Reduced from 800 (62% reduction)
   },
   fpsThreshold: {
     degrade: 45,

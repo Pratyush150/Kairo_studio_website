@@ -113,22 +113,74 @@ function App() {
 
       {/* FPS debug info (remove in production) */}
       {process.env.NODE_ENV === 'development' && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 10,
-            right: 10,
-            background: 'rgba(0,0,0,0.7)',
-            color: '#fff',
-            padding: '8px 12px',
-            fontSize: '12px',
-            fontFamily: 'monospace',
-            borderRadius: '4px',
-            zIndex: 9999,
-          }}
-        >
-          FPS: {fpsData.current} | Avg: {fpsData.average}
-        </div>
+        <>
+          <div
+            style={{
+              position: 'fixed',
+              top: 10,
+              right: 10,
+              background: 'rgba(0,0,0,0.7)',
+              color: '#fff',
+              padding: '8px 12px',
+              fontSize: '12px',
+              fontFamily: 'monospace',
+              borderRadius: '4px',
+              zIndex: 9999,
+            }}
+          >
+            FPS: {fpsData.current} | Avg: {fpsData.average}
+          </div>
+
+          {/* TEST PANEL BUTTON */}
+          <div
+            style={{
+              position: 'fixed',
+              bottom: 20,
+              right: 20,
+              zIndex: 10000,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+            }}
+          >
+            <button
+              onClick={() => {
+                console.log('[TEST] Opening about panel');
+                useSceneStore.getState().openPanel('about');
+              }}
+              style={{
+                background: '#A854FF',
+                color: 'white',
+                padding: '12px 20px',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                fontFamily: 'system-ui',
+              }}
+            >
+              TEST: Open About Panel
+            </button>
+            <button
+              onClick={() => {
+                console.log('[TEST] Current state:', useSceneStore.getState());
+              }}
+              style={{
+                background: '#00E5FF',
+                color: 'black',
+                padding: '8px 16px',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '12px',
+                cursor: 'pointer',
+                fontFamily: 'system-ui',
+              }}
+            >
+              LOG STATE
+            </button>
+          </div>
+        </>
       )}
     </div>
   );

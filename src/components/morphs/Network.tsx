@@ -16,7 +16,11 @@ export interface MorphRef {
   idleLoop: () => void;
 }
 
-export const Network = forwardRef<MorphRef, {}>((props, ref) => {
+interface NetworkProps {
+  onClick?: () => void;
+}
+
+export const Network = forwardRef<MorphRef, NetworkProps>(({ onClick }, ref) => {
   const groupRef = useRef<THREE.Group>(null);
   const nodesRef = useRef<THREE.InstancedMesh>(null);
   const linesRef = useRef<THREE.LineSegments>(null);
@@ -119,7 +123,18 @@ export const Network = forwardRef<MorphRef, {}>((props, ref) => {
   }));
 
   return (
-    <group ref={groupRef}>
+    <group
+      ref={groupRef}
+      onClick={onClick}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        document.body.style.cursor = 'pointer';
+      }}
+      onPointerOut={(e) => {
+        e.stopPropagation();
+        document.body.style.cursor = 'default';
+      }}
+    >
       {/* Nodes */}
       <instancedMesh ref={nodesRef} args={[undefined, undefined, nodeData.length]}>
         <sphereGeometry args={[1.2, 16, 16]} />

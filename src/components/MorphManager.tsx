@@ -5,12 +5,12 @@
 
 import { useRef, useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
-import { useSceneStore } from '../lib/sceneAPI';
+import { useSceneStore, sceneAPI } from '../lib/sceneAPI';
 import { Origin } from './morphs/Origin';
 import { Flow } from './morphs/Flow';
 import { Network } from './morphs/Network';
 import { Portal } from './morphs/Portal';
-import { interaction } from '../lib/tokens';
+import { interaction, morphs } from '../lib/tokens';
 import type { MorphRef } from './morphs/Origin';
 
 export function MorphManager() {
@@ -26,17 +26,29 @@ export function MorphManager() {
 
   const { camera, size } = useThree();
 
-  // Map morph types to refs
-  const morphRefs = {
-    origin: originRef,
-    flow: flowRef,
-    network: networkRef,
-    portal: portalRef,
+  // Map morph types to their corresponding refs (many-to-one mapping)
+  const getRef = (morphType: typeof activeMorph) => {
+    switch (morphType) {
+      case 'origin':
+      case 'services':
+      case 'strategy':
+        return originRef;
+      case 'work':
+      case 'demos':
+        return flowRef;
+      case 'network':
+        return networkRef;
+      case 'portal':
+      case 'reviews':
+        return portalRef;
+      default:
+        return originRef;
+    }
   };
 
   // Trigger appear animation on morph change
   useEffect(() => {
-    const ref = morphRefs[activeMorph];
+    const ref = getRef(activeMorph);
     if (ref.current && sceneState === 'idle') {
       ref.current.appear();
     }
@@ -45,7 +57,7 @@ export function MorphManager() {
   // Trigger zoom animation when entering panel
   useEffect(() => {
     if (sceneState === 'panel') {
-      const ref = morphRefs[activeMorph];
+      const ref = getRef(activeMorph);
       if (ref.current) {
         ref.current.enterZoom();
       }
@@ -55,7 +67,7 @@ export function MorphManager() {
   // Hover pulse on hovered morph
   useEffect(() => {
     if (hoveredMorph) {
-      const ref = morphRefs[hoveredMorph];
+      const ref = getRef(hoveredMorph);
       if (ref.current) {
         ref.current.hoverPulse(interaction.hoverPulse);
       }
@@ -86,13 +98,31 @@ export function MorphManager() {
     return () => window.removeEventListener('pointermove', handlePointerMove);
   }, [activeMorph, sceneState, size, setHoveredMorph]);
 
+  // Map morph types to their corresponding shapes
+  // We have 8 panel types but only 4 physical shapes
+  const getMorphShape = () => {
+    switch (activeMorph) {
+      case 'origin':
+      case 'services':
+      case 'strategy':
+        return <Origin ref={originRef} onClick={() => sceneAPI.openPanel(morphs[activeMorph].slug)} />;
+
+      case 'work':
+      case 'demos':
+        return <Flow ref={flowRef} onClick={() => sceneAPI.openPanel(morphs[activeMorph].slug)} />;
+
+      case 'network':
+        return <Network ref={networkRef} onClick={() => sceneAPI.openPanel(morphs[activeMorph].slug)} />;
+
+      case 'portal':
+      case 'reviews':
+        return <Portal ref={portalRef} onClick={() => sceneAPI.openPanel(morphs[activeMorph].slug)} />;
+
+      default:
+        return <Origin ref={originRef} onClick={() => sceneAPI.openPanel(morphs.origin.slug)} />;
+    }
+  };
+
   // Only render active morph for performance
-  return (
-    <group>
-      {activeMorph === 'origin' && <Origin ref={originRef} />}
-      {activeMorph === 'flow' && <Flow ref={flowRef} />}
-      {activeMorph === 'network' && <Network ref={networkRef} />}
-      {activeMorph === 'portal' && <Portal ref={portalRef} />}
-    </group>
-  );
+  return <group>{getMorphShape()}</group>;
 }

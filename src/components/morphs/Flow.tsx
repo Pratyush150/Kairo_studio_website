@@ -16,7 +16,11 @@ export interface MorphRef {
   idleLoop: () => void;
 }
 
-export const Flow = forwardRef<MorphRef, {}>((props, ref) => {
+interface FlowProps {
+  onClick?: () => void;
+}
+
+export const Flow = forwardRef<MorphRef, FlowProps>(({ onClick }, ref) => {
   const groupRef = useRef<THREE.Group>(null);
   const meshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
@@ -121,7 +125,19 @@ export const Flow = forwardRef<MorphRef, {}>((props, ref) => {
 
   return (
     <group ref={groupRef}>
-      <mesh ref={meshRef} geometry={geometry}>
+      <mesh
+        ref={meshRef}
+        geometry={geometry}
+        onClick={onClick}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={(e) => {
+          e.stopPropagation();
+          document.body.style.cursor = 'default';
+        }}
+      >
         <primitive ref={materialRef} object={material} attach="material" />
       </mesh>
       <pointLight intensity={1.0} distance={60} color={colors.accentCyan} />

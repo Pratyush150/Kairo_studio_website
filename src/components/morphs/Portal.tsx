@@ -16,7 +16,11 @@ export interface MorphRef {
   idleLoop: () => void;
 }
 
-export const Portal = forwardRef<MorphRef, {}>((props, ref) => {
+interface PortalProps {
+  onClick?: () => void;
+}
+
+export const Portal = forwardRef<MorphRef, PortalProps>(({ onClick }, ref) => {
   const groupRef = useRef<THREE.Group>(null);
   const torusRef = useRef<THREE.Mesh>(null);
   const particlesRef = useRef<THREE.Points>(null);
@@ -91,7 +95,18 @@ export const Portal = forwardRef<MorphRef, {}>((props, ref) => {
   }));
 
   return (
-    <group ref={groupRef}>
+    <group
+      ref={groupRef}
+      onClick={onClick}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        document.body.style.cursor = 'pointer';
+      }}
+      onPointerOut={(e) => {
+        e.stopPropagation();
+        document.body.style.cursor = 'default';
+      }}
+    >
       {/* Torus ring */}
       <mesh ref={torusRef} geometry={torusGeometry}>
         <meshStandardMaterial

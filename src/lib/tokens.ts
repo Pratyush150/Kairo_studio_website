@@ -106,28 +106,52 @@ export const audio = {
 // Morph Definitions
 export const morphs = {
   origin: {
-    name: 'Origin',
+    name: 'About',
     slug: 'about',
     accent: colors.accentViolet,
     description: 'About',
   },
-  flow: {
-    name: 'Flow',
+  work: {
+    name: 'Work',
     slug: 'work',
     accent: colors.accentCyan,
     description: 'Work',
   },
+  demos: {
+    name: 'Demos',
+    slug: 'demos',
+    accent: colors.accentCyan,
+    description: 'Demos',
+  },
+  services: {
+    name: 'Services',
+    slug: 'services',
+    accent: colors.accentViolet,
+    description: 'Services',
+  },
   network: {
-    name: 'Network',
+    name: 'Collaborate',
     slug: 'collaborate',
     accent: colors.accentAmber,
     description: 'Collaborate',
   },
   portal: {
-    name: 'Portal',
+    name: 'Contact',
     slug: 'contact',
     accent: colors.softBeige,
     description: 'Contact',
+  },
+  strategy: {
+    name: 'Strategy',
+    slug: 'strategy',
+    accent: colors.accentAmber,
+    description: 'Strategy',
+  },
+  reviews: {
+    name: 'Reviews',
+    slug: 'reviews',
+    accent: colors.softBeige,
+    description: 'Reviews',
   },
 } as const;
 

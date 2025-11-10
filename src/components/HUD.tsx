@@ -16,7 +16,7 @@ export function HUD() {
   }
 
   const handleNavClick = (slug: string) => {
-    sceneAPI.goToMorph(slug);
+    sceneAPI.openPanel(slug);
   };
 
   return (

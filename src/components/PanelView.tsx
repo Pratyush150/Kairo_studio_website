@@ -1,62 +1,72 @@
 /**
- * Panel View
- * Content panel displayed when morph is clicked
+ * Panel View - Updated to consume content.json
+ * Routes all panels dynamically based on morph type
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSceneStore, sceneAPI } from '../lib/sceneAPI';
+import { AboutPanel } from './panels/AboutPanel';
+import { ServicesPanel } from './panels/ServicesPanel';
+import { ContactForm } from './ContactForm';
 import gsap from 'gsap';
 import './PanelView.css';
+
+interface ContentData {
+  site: any;
+  morphs: any[];
+  services: any[];
+  caseStudies: any[];
+  demos: any[];
+  testimonials: any[];
+}
 
 export function PanelView() {
   const { sceneState, panelOpen, panelContent } = useSceneStore();
   const panelRef = useRef<HTMLDivElement>(null);
+  const [content, setContent] = useState<ContentData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const isVisible = sceneState === 'panel' && panelOpen && panelContent;
-  const morphData = panelContent ? sceneAPI.getMorphData(panelContent) : null;
 
+  // Load content.json
+  useEffect(() => {
+    fetch('/content.json')
+      .then((res) => res.json())
+      .then((data) => {
+        setContent(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Failed to load content:', err);
+        setLoading(false);
+      });
+  }, []);
+
+  // Panel animations
   useEffect(() => {
     if (isVisible && panelRef.current) {
-      // Entrance animation
       gsap.fromTo(
         panelRef.current,
-        {
-          opacity: 0,
-          y: 50,
-        },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.42,
-          ease: 'power3.out',
-        }
+        { opacity: 0, y: 50 },
+        { opacity: 1, y: 0, duration: 0.42, ease: 'power3.out' }
       );
 
-      // Stagger children
       const children = panelRef.current.querySelectorAll('.panel-section');
       gsap.fromTo(
         children,
-        {
-          opacity: 0,
-          y: 20,
-        },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.5,
-          stagger: 0.1,
-          ease: 'power2.out',
-          delay: 0.2,
-        }
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: 'power2.out', delay: 0.2 }
       );
 
-      // Set aria-live announcement
       const announcer = document.getElementById('a11y-announcer');
-      if (announcer && morphData) {
-        announcer.textContent = `${morphData.name} panel opened`;
+      if (announcer) {
+        const morph = content?.morphs.find((m) => m.id === panelContent);
+        if (morph) {
+          announcer.textContent = `${morph.name} panel opened`;
+        }
       }
     }
-  }, [isVisible, morphData]);
+  }, [isVisible, panelContent, content]);
 
   const handleClose = () => {
     if (panelRef.current) {
@@ -72,12 +82,86 @@ export function PanelView() {
     }
   };
 
-  if (!isVisible || !morphData) return null;
+  const handleAction = (action: string, data?: any) => {
+    switch (action) {
+      case 'openContact':
+      case 'requestDemo':
+        sceneAPI.openPanel('contact');
+        break;
+      case 'openDemos':
+        sceneAPI.openPanel('demos');
+        break;
+      case 'openStrategy':
+        sceneAPI.openPanel('strategy');
+        break;
+      case 'launchDemo':
+        if (data?.url) {
+          window.open(data.url, '_blank');
+        }
+        break;
+      default:
+        console.log('Action:', action, data);
+    }
+  };
+
+  const renderPanelContent = () => {
+    if (loading || !content) {
+      return (
+        <div className="panel-loading">
+          <div className="loading-spinner" />
+          <p>Loading...</p>
+        </div>
+      );
+    }
+
+    const morphData = content.morphs.find((m) => m.id === panelContent);
+    if (!morphData) return null;
+
+    switch (panelContent) {
+      case 'origin':
+        return <AboutPanel content={morphData.content} onAction={handleAction} />;
+      
+      case 'services':
+        return <ServicesPanel services={content.services} onAction={handleAction} />;
+      
+      case 'portal':
+        return (
+          <div className="panel-section">
+            <h1 className="panel-headline">{morphData.content.headline}</h1>
+            <p className="panel-lead">{morphData.content.lead}</p>
+            <ContactForm />
+          </div>
+        );
+      
+      case 'network':
+      case 'work':
+      case 'demos':
+      case 'strategy':
+      case 'reviews':
+      default:
+        // Fallback for panels not yet implemented
+        return (
+          <div className="panel-section">
+            <h1 className="panel-headline">{morphData.content.headline || morphData.name}</h1>
+            <p className="panel-lead">{morphData.content.lead || morphData.content.intro || morphData.short}</p>
+            <div className="panel-placeholder">
+              <p>This panel is currently under development.</p>
+              <p>Content loaded from content.json:</p>
+              <pre>{JSON.stringify(morphData, null, 2)}</pre>
+            </div>
+            <button className="cta-button cta-primary" onClick={() => handleAction('openContact')}>
+              Get in Touch
+            </button>
+          </div>
+        );
+    }
+  };
+
+  if (!isVisible) return null;
 
   return (
     <div className="panel-overlay">
       <div ref={panelRef} className="panel">
-        {/* Close button */}
         <button className="panel-close" onClick={handleClose} aria-label="Close panel">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="18" y1="6" x2="6" y2="18" />
@@ -85,104 +169,10 @@ export function PanelView() {
           </svg>
         </button>
 
-        {/* Header */}
-        <div className="panel-section panel-header" style={{ borderColor: morphData.accent }}>
-          <h1 className="panel-title" style={{ color: morphData.accent }}>
-            {morphData.name}
-          </h1>
-          <p className="panel-subtitle">{morphData.description}</p>
-        </div>
-
-        {/* Content */}
-        <div className="panel-section panel-content">
-          <h2 className="panel-section-title">Overview</h2>
-          <p className="panel-text">
-            {getMorphContent(morphData.slug)}
-          </p>
-
-          <h2 className="panel-section-title">What We Offer</h2>
-          <ul className="panel-list">
-            {getMorphFeatures(morphData.slug).map((feature, index) => (
-              <li key={index} className="panel-list-item">
-                <span className="panel-list-bullet" style={{ backgroundColor: morphData.accent }} />
-                {feature}
-              </li>
-            ))}
-          </ul>
-
-          {/* CTA */}
-          <div className="panel-cta">
-            <button
-              className="panel-button"
-              style={{
-                borderColor: morphData.accent,
-                color: morphData.accent,
-                boxShadow: `0 0 20px ${morphData.accent}40`,
-              }}
-              onClick={() => {
-                // Track CTA click
-                if (typeof window !== 'undefined' && (window as any).gtag) {
-                  (window as any).gtag('event', 'cta_click', {
-                    morph_type: morphData.id,
-                    morph_slug: morphData.slug,
-                  });
-                }
-              }}
-            >
-              Talk to us
-            </button>
-            <button
-              className="panel-button panel-button-secondary"
-              onClick={handleClose}
-            >
-              Back to Canvas
-            </button>
-          </div>
+        <div className="panel-content-wrapper">
+          {renderPanelContent()}
         </div>
       </div>
     </div>
   );
-}
-
-// Helper functions for content
-function getMorphContent(slug: string): string {
-  const content: Record<string, string> = {
-    about: 'Kairo Studio is a performance-driven agency that builds systems that move. We combine strategic thinking, creative excellence, and technical expertise to deliver transformative results.',
-    work: 'We craft digital experiences that flow seamlessly across platforms. From SaaS products to marketing campaigns, we build solutions that perform.',
-    collaborate: 'Great work happens through great partnerships. We collaborate with forward-thinking brands to create systems that scale and adapt.',
-    contact: 'Ready to start? Let\'s talk about how we can help you build systems that work.',
-  };
-
-  return content[slug] || 'Discover how we can help you achieve your goals.';
-}
-
-function getMorphFeatures(slug: string): string[] {
-  const features: Record<string, string[]> = {
-    about: [
-      'Performance marketing & automation',
-      'SaaS product development',
-      'Brand strategy & positioning',
-      'End-to-end digital transformation',
-    ],
-    work: [
-      'High-converting web experiences',
-      'Marketing automation systems',
-      'SaaS platform development',
-      'Data-driven optimization',
-    ],
-    collaborate: [
-      'Strategic partnerships',
-      'Flexible engagement models',
-      'Dedicated team support',
-      'Results-focused approach',
-    ],
-    contact: [
-      'Free consultation call',
-      'Fast response time',
-      'Transparent pricing',
-      'No-obligation discussion',
-    ],
-  };
-
-  return features[slug] || ['Innovation', 'Excellence', 'Results', 'Partnership'];
 }

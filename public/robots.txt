@@ -1,0 +1,8 @@
+# robots.txt for Kairo Studio
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /private/
+
+# Sitemap
+Sitemap: https://kairostudio.in/sitemap.xml

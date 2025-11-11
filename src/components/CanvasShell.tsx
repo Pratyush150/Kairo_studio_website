@@ -29,11 +29,13 @@ export function CanvasShell() {
   // SSR guard
   if (typeof window === 'undefined') return null;
 
-  // Calculate pixel ratio based on device and performance mode
+  // Calculate pixel ratio based on device and performance mode - ULTRA LOW for performance
   const pixelRatio = isMobile || isTablet
-    ? perfSettings.pixelRatio.mobile
+    ? 0.5 // Ultra low for mobile (reduced from 0.75)
     : performanceMode === 'low'
-    ? 1
+    ? 0.6 // Ultra low for desktop low mode
+    : performanceMode === 'medium'
+    ? 0.75 // Reduced for medium
     : Math.min(window.devicePixelRatio, perfSettings.pixelRatio.desktop);
 
   // Disable antialiasing on low/medium performance modes

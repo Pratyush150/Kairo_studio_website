@@ -37,68 +37,53 @@ export function CameraRig({ children }: CameraRigProps) {
     return () => window.removeEventListener('pointermove', handlePointerMove);
   }, [reducedMotion]);
 
-  // Smooth camera rotation with lerp
+  // Smooth camera rotation with lerp (only in ELEMENT_ACTIVE state)
   useFrame(() => {
-    if (!groupRef.current || reducedMotion || sceneState !== 'idle') return;
+    if (!groupRef.current || reducedMotion || sceneState !== 'ELEMENT_ACTIVE') return;
 
     // Lerp target towards mouse position
     targetRef.current.x += (mouseRef.current.x - targetRef.current.x) * interaction.cameraLerp;
     targetRef.current.y += (mouseRef.current.y - targetRef.current.y) * interaction.cameraLerp;
 
-    // Apply rotation to group
-    groupRef.current.rotation.y = targetRef.current.x * 0.1;
-    groupRef.current.rotation.x = targetRef.current.y * 0.05;
+    // Apply subtle rotation to group for parallax effect
+    groupRef.current.rotation.y = targetRef.current.x * 0.05;
+    groupRef.current.rotation.x = targetRef.current.y * 0.03;
   });
 
-  // Camera fly-in transitions
+  // Camera transitions based on scene state
+  // NOTE: TRANSITING and STAR_BURST states are handled by timelines.ts, NOT here!
+  // Only handle ELEMENT_ACTIVE, CONTENT_OPEN, and CLOSING_CONTENT states
   useEffect(() => {
-    if (sceneState === 'morphing' || sceneState === 'transitioning') {
-      // Animate camera closer during morph transition
+    // ELEMENT_ACTIVE: Default viewing position
+    if (sceneState === 'ELEMENT_ACTIVE') {
       gsap.to(camera.position, {
         x: 0,
         y: 0,
-        z: 80,
-        duration: 1.4,
-        ease: 'power3.inOut',
-      });
-    } else if (sceneState === 'idle') {
-      // Return to wide view to see all balls
-      gsap.to(camera.position, {
-        x: 0,
-        y: 0,
-        z: 180, // Further back to see all balls in circle
-        duration: 1.2,
+        z: 180,
+        duration: 1.0,
         ease: 'power3.out',
       });
-    } else if (sceneState === 'panel') {
-      // Zoom in for panel view
-      gsap.to(camera.position, {
-        z: 50,
-        duration: 1.4,
-        ease: 'power3.inOut',
-      });
-    } else if (sceneState === 'ball-opening') {
-      // During ball opening: dramatic camera rush forward
-      gsap.to(camera.position, {
-        z: 60,
-        duration: 0.42, // During compression phase
-        ease: 'power3.in',
-      });
     }
+    // CONTENT_OPEN: Zoom in for panel view (handled by open timeline camera movement)
+    // CLOSING_CONTENT: Return to element view (handled by close timeline)
+    // TRANSITING: Handled by transit timeline (motion path through tunnel)
+    // STAR_BURST: Handled by star burst timeline
   }, [sceneState, camera]);
 
-  // Ball opening camera shake + burst dolly
+  // Element opening camera shake + burst dolly
   useEffect(() => {
-    const handleBallOpening = () => {
-      console.log('[CameraRig] Ball opening - triggering camera animations');
+    const handleElementOpening = () => {
+      if (reducedMotion) return;
 
-      // Timeline synced with ball animations
+      console.log('[CameraRig] Element opening - camera shake sequence');
+
+      // Timeline synced with element opening animations
       const tl = gsap.timeline();
 
       // Slap reaction: small shake (0-240ms)
       tl.to(camera.position, {
-        x: '+=2',
-        y: '+=1',
+        x: '+=1.5',
+        y: '+=0.8',
         duration: 0.08,
         ease: 'power2.inOut',
         yoyo: true,
@@ -107,30 +92,30 @@ export function CameraRig({ children }: CameraRigProps) {
 
       // Compression phase: dolly forward (240-420ms)
       tl.to(camera.position, {
-        z: 40,
+        z: 45,
         duration: 0.18,
         ease: 'power3.in',
       }, 0.24);
 
-      // Burst explosion: dramatic shake + recoil (420-920ms)
+      // Burst explosion: dramatic shake + recoil (420-700ms)
       tl.to(camera.position, {
-        x: '+=5',
-        y: '+=3',
+        x: '+=3',
+        y: '+=2',
         duration: 0.1,
         ease: 'power4.out',
       }, 0.42)
       .to(camera.position, {
-        x: '-=5',
-        y: '-=3',
-        z: 50, // Pull back slightly
-        duration: 0.4,
-        ease: 'elastic.out(1, 0.4)',
+        x: '-=3',
+        y: '-=2',
+        z: 60, // Pull back to panel viewing distance
+        duration: 0.28,
+        ease: 'power2.out',
       }, 0.52);
     };
 
-    window.addEventListener('kairo:ball-opening', handleBallOpening);
-    return () => window.removeEventListener('kairo:ball-opening', handleBallOpening);
-  }, [camera]);
+    window.addEventListener('kairo:element-opening', handleElementOpening);
+    return () => window.removeEventListener('kairo:element-opening', handleElementOpening);
+  }, [camera, reducedMotion]);
 
   return <group ref={groupRef}>{children}</group>;
 }

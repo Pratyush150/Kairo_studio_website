@@ -38,19 +38,19 @@ export function ParticleLayer() {
   const [burstRings, setBurstRings] = useState<BurstRing[]>([]);
   const burstIdCounter = useRef(0);
 
-  // Calculate particle count based on device and performance mode (REDUCED for memory)
+  // Calculate particle count - ULTRA MINIMAL for performance
   const count = useMemo(() => {
-    if (isMobile) return 150; // Reduced from 300
+    if (isMobile) return 20; // Ultra minimal for mobile
 
     switch (performanceMode) {
       case 'high':
-        return 800; // Reduced from 1500
+        return 50; // Drastically reduced from 200
       case 'medium':
-        return 480; // Reduced from 900
+        return 30; // Drastically reduced from 120
       case 'low':
-        return 150; // Reduced from 300
+        return 15; // Drastically reduced from 50
       default:
-        return 800;
+        return 50;
     }
   }, [isMobile, performanceMode]);
 
@@ -93,8 +93,8 @@ export function ParticleLayer() {
 
       console.log('[ParticleLayer] Burst triggered at:', position, 'intensity:', intensity);
 
-      // Calculate burst particle count based on performance mode
-      const burstCount = performanceMode === 'low' ? 30 : performanceMode === 'medium' ? 60 : 100;
+      // Calculate burst particle count based on performance mode - DRASTICALLY REDUCED
+      const burstCount = performanceMode === 'low' ? 10 : performanceMode === 'medium' ? 20 : 30;
 
       // Create burst particles
       const newParticles: BurstParticle[] = [];
@@ -146,9 +146,9 @@ export function ParticleLayer() {
   useFrame((state, delta) => {
     if (!pointsRef.current) return;
 
-    // Update every 2nd frame for better performance
+    // Update every 3rd frame for better performance (more aggressive throttling)
     frameCounter.current++;
-    if (frameCounter.current % 2 !== 0) return;
+    if (frameCounter.current % 3 !== 0) return;
 
     const positions = geometry.attributes.position.array as Float32Array;
 

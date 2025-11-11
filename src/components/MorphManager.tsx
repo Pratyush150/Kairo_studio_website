@@ -140,9 +140,12 @@ export function MorphManager() {
     return () => window.removeEventListener('kairo:element-animate', handleElementAnimate);
   }, [activeElement]);
 
-  // Only render active element
-  // Hide during panel open or during transitions
-  const showElement = sceneState === 'ELEMENT_ACTIVE' && !panelOpen;
+  // Show element during: ELEMENT_ACTIVE, STAR_BURST, OPENING_CONTENT
+  // Hide during: TRANSITING, CONTENT_OPEN, CLOSING_CONTENT
+  const showElement =
+    sceneState === 'ELEMENT_ACTIVE' ||
+    sceneState === 'STAR_BURST' ||
+    sceneState === 'OPENING_CONTENT';
 
   return (
     <group visible={showElement}>

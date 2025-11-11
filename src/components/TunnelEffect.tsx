@@ -31,9 +31,9 @@ export function TunnelEffect() {
     return new THREE.TorusGeometry(35, 2.5, 8, 32);
   }, []);
 
-  // Particle streaks
+  // Particle streaks - ULTRA MINIMAL for performance
   const particleGeometry = useMemo(() => {
-    const count = isMobile ? 50 : 200;
+    const count = isMobile ? 15 : performanceMode === 'low' ? 20 : performanceMode === 'medium' ? 30 : 50; // Drastically reduced from 50/200
     const positions = new Float32Array(count * 3);
     const velocities = new Float32Array(count);
 

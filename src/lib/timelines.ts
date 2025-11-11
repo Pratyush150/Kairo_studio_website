@@ -211,14 +211,19 @@ export function createStarBurstTimeline(ctx: TimelineContext): gsap.core.Timelin
     }
   }, undefined, 0.18);
 
-  // Emit shard particles (360ms)
+  // Emit shard particles (360ms) - ULTRA MINIMAL for performance
   tl.call(() => {
     console.log('[timelines] Emitting shard particles');
     if (typeof window !== 'undefined') {
+      // Ultra minimal particle count based on performance mode
+      let count = 20; // mobile default
+      if (!state.isMobile) {
+        count = state.performanceMode === 'low' ? 20 : state.performanceMode === 'medium' ? 30 : 40;
+      }
       window.dispatchEvent(new CustomEvent('kairo:emit-shards', {
         detail: {
           position: starPos,
-          count: state.isMobile ? 160 : 240,
+          count,
         }
       }));
     }
@@ -268,7 +273,7 @@ export function createOpenTimeline(ctx: TimelineContext): gsap.core.Timeline {
       console.log('[timelines] Open COMPLETE → Content open');
       state.setState('CONTENT_OPEN');
       state.setPanelOpen(true);
-      state.setInputLocked(false);
+      // Keep input locked while panel is open to prevent navigation
 
       // Update URL
       if (typeof window !== 'undefined' && window.history) {
@@ -387,14 +392,19 @@ export function createOpenTimeline(ctx: TimelineContext): gsap.core.Timeline {
     }
   }, undefined, 0.36);
 
-  // Emit panel shards (520ms)
+  // Emit panel shards (520ms) - ULTRA MINIMAL for performance
   tl.call(() => {
     console.log('[timelines] Emitting panel shards');
     if (typeof window !== 'undefined') {
+      // Ultra minimal particle count based on performance mode
+      let count = 15; // mobile default
+      if (!state.isMobile) {
+        count = state.performanceMode === 'low' ? 15 : state.performanceMode === 'medium' ? 25 : 35;
+      }
       window.dispatchEvent(new CustomEvent('kairo:emit-panel-shards', {
         detail: {
           position: [0, 0, 0],
-          count: state.isMobile ? 60 : 180,
+          count,
         }
       }));
     }
@@ -457,6 +467,11 @@ export function createCloseTimeline(ctx: TimelineContext): gsap.core.Timeline {
       state.setInputLocked(false);
       state.setPanelOpen(false);
       state.setPanelContent(null);
+
+      // Update URL
+      if (typeof window !== 'undefined' && window.history) {
+        window.history.pushState({}, '', '/');
+      }
     },
   });
 

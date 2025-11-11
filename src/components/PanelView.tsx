@@ -32,7 +32,7 @@ export function PanelView() {
   const [loading, setLoading] = useState(true);
   const [selectedCase, setSelectedCase] = useState<string | null>(null);
 
-  const isVisible = sceneState === 'panel' && panelOpen && panelContent;
+  const isVisible = sceneState === 'CONTENT_OPEN' && panelOpen && panelContent;
 
   // Debug logging
   useEffect(() => {
@@ -89,7 +89,7 @@ export function PanelView() {
         duration: 0.3,
         ease: 'power2.in',
         onComplete: () => {
-          sceneAPI.closeBall(); // Use new ball-driven close method
+          sceneAPI.closeContent();
           setSelectedCase(null);
         },
       });

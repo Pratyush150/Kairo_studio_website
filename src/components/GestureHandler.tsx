@@ -163,7 +163,7 @@ export function GestureHandler() {
       const { dx, direction } = customEvent.detail;
 
       // Show visual feedback (could animate arrows, glow, etc.)
-      console.log('[GestureHandler] Drag feedback:', direction, dx);
+      // Logging disabled to improve performance during dragging
     };
 
     window.addEventListener('kairo:drag-feedback', handleDragFeedback);

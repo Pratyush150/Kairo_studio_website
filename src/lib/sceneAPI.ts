@@ -324,6 +324,7 @@ export const sceneAPI = {
   /**
    * Direct navigation to index (fallback for header)
    * Does NOT open panel - only navigates to element
+   * Closes panel first if open
    */
   goToIndex: async (index: number): Promise<void> => {
     const state = useSceneStore.getState();
@@ -331,6 +332,15 @@ export const sceneAPI = {
     if (state.inputLocked || index < 0 || index >= ELEMENT_ORDER.length) {
       console.log('[sceneAPI] goToIndex blocked - invalid index or locked');
       return;
+    }
+
+    // Close panel first if open
+    if (state.sceneState === 'CONTENT_OPEN') {
+      console.log('[sceneAPI] goToIndex - closing panel first');
+      await sceneAPI.closeContent();
+
+      // Wait for close animation to complete
+      await new Promise(resolve => setTimeout(resolve, 900));
     }
 
     if (index === state.currentIndex) {
@@ -409,22 +419,10 @@ export const sceneAPI = {
     state.setInputLocked(true);
 
     // Trigger close timeline
+    // State transitions and input unlock handled by timeline callbacks
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('kairo:content-closing'));
     }
-
-    // After animation (handled by timeline)
-    setTimeout(() => {
-      state.setState('ELEMENT_ACTIVE');
-      state.setInputLocked(false);
-      state.setPanelOpen(false);
-      state.setPanelContent(null);
-
-      // Update URL
-      if (typeof window !== 'undefined' && window.history) {
-        window.history.pushState({}, '', '/');
-      }
-    }, 800);
   },
 
   /**
@@ -495,6 +493,49 @@ export const sceneAPI = {
    * Set reduced motion
    */
   setReducedMotion: (enabled: boolean) => useSceneStore.getState().setReducedMotion(enabled),
+
+  /**
+   * Open a specific panel by slug
+   * Navigates to the element if needed, then opens it
+   */
+  openPanel: async (slug: string): Promise<void> => {
+    const state = useSceneStore.getState();
+    const index = getSlugIndex(slug);
+
+    if (index < 0) {
+      console.warn('[sceneAPI] openPanel - slug not in navigation:', slug);
+      return;
+    }
+
+    // If we're not at the target element, navigate there first
+    if (state.currentIndex !== index) {
+      console.log('[sceneAPI] openPanel - navigating to', slug, 'at index', index);
+      await sceneAPI.goToIndex(index);
+
+      // Wait for navigation to complete before opening
+      // Listen for ELEMENT_ACTIVE state
+      return new Promise<void>((resolve) => {
+        const checkState = setInterval(() => {
+          const currentState = useSceneStore.getState();
+          if (currentState.sceneState === 'ELEMENT_ACTIVE' && currentState.currentIndex === index) {
+            clearInterval(checkState);
+            sceneAPI.openActiveElement();
+            resolve();
+          }
+        }, 100);
+
+        // Timeout after 5 seconds
+        setTimeout(() => {
+          clearInterval(checkState);
+          resolve();
+        }, 5000);
+      });
+    } else {
+      // Already at the target, just open it
+      console.log('[sceneAPI] openPanel - opening current element', slug);
+      return sceneAPI.openActiveElement();
+    }
+  },
 };
 
 // Export element order for external use

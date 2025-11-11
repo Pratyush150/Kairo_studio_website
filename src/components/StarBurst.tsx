@@ -61,10 +61,11 @@ export function StarBurst() {
     });
   }, []);
 
-  // Max shard count
+  // Max shard count (ULTRA MINIMAL for performance)
   const maxShards = useMemo(() => {
-    return isMobile ? 160 : 240;
-  }, [isMobile]);
+    if (isMobile) return 20; // Drastically reduced from 80
+    return performanceMode === 'low' ? 20 : performanceMode === 'medium' ? 30 : 40; // Drastically reduced from 60/100/150
+  }, [isMobile, performanceMode]);
 
   // ===== EVENT: Create Star =====
   useEffect(() => {
@@ -81,7 +82,6 @@ export function StarBurst() {
         starRef.current.scale.set(1, 1, 1);
         if (starRef.current.material instanceof THREE.MeshBasicMaterial) {
           starRef.current.material.opacity = 1;
-          starRef.current.material.emissiveIntensity = 0;
         }
       }
     };
@@ -94,7 +94,7 @@ export function StarBurst() {
   useEffect(() => {
     const handleStarCompress = (e: Event) => {
       const customEvent = e as CustomEvent;
-      const { scale, emissiveIntensity, duration } = customEvent.detail;
+      const { scale, duration } = customEvent.detail;
 
       console.log('[StarBurst] Compressing star');
 
@@ -107,9 +107,10 @@ export function StarBurst() {
           ease: 'cubic-bezier(.34,1.56,.64,1)',
         });
 
+        // Brighten during compression by increasing opacity
         if (starRef.current.material instanceof THREE.MeshBasicMaterial) {
           gsap.to(starRef.current.material, {
-            emissiveIntensity,
+            opacity: 1.2, // Slightly brighter during compression
             duration,
             ease: 'cubic-bezier(.34,1.56,.64,1)',
           });
@@ -138,9 +139,10 @@ export function StarBurst() {
           ease: 'cubic-bezier(.34,1.56,.64,1)',
         });
 
+        // Brighten the star by animating opacity to create flash effect
         if (starRef.current.material instanceof THREE.MeshBasicMaterial) {
           gsap.to(starRef.current.material, {
-            emissiveIntensity: 2.0,
+            opacity: 1.5, // Will be clamped to 1.0, but creates bright flash
             duration: duration * 0.3,
             ease: 'power4.out',
           });
@@ -227,6 +229,8 @@ export function StarBurst() {
     // Update shard particles
     if (shardsActive && shardInstanceRef.current) {
       const particles = shardParticles.current;
+      let activeCount = 0;
+      let allDead = true;
 
       for (let i = 0; i < particles.length; i++) {
         const particle = particles[i];
@@ -235,9 +239,16 @@ export function StarBurst() {
         particle.lifetime += delta * 1000; // Convert to ms
 
         if (particle.lifetime >= particle.maxLifetime) {
-          // Particle dead
+          // Particle dead - hide it
+          dummy.position.set(0, 0, -10000); // Move far away
+          dummy.scale.setScalar(0);
+          dummy.updateMatrix();
+          shardInstanceRef.current.setMatrixAt(i, dummy.matrix);
           continue;
         }
+
+        allDead = false;
+        activeCount++;
 
         // Update position
         particle.position.add(particle.velocity.clone().multiplyScalar(delta));
@@ -247,25 +258,30 @@ export function StarBurst() {
 
         // Fade based on lifetime
         const lifeProgress = particle.lifetime / particle.maxLifetime;
-        const opacity = 1 - lifeProgress;
 
         // Set instance matrix
         dummy.position.copy(particle.position);
         dummy.scale.setScalar(1 - lifeProgress * 0.5); // Shrink as fades
         dummy.updateMatrix();
         shardInstanceRef.current.setMatrixAt(i, dummy.matrix);
-
-        // Set color/opacity (would need custom shader for per-instance opacity)
-        // For now we'll use material opacity which affects all
       }
 
       shardInstanceRef.current.instanceMatrix.needsUpdate = true;
 
-      // Update material opacity based on oldest particle
-      if (particles.length > 0) {
-        const avgLifeProgress = particles.reduce((sum, p) => sum + p.lifetime / p.maxLifetime, 0) / particles.length;
+      // Update material opacity based on active particles
+      if (activeCount > 0) {
+        const avgLifeProgress = particles
+          .filter(p => p.lifetime < p.maxLifetime)
+          .reduce((sum, p) => sum + p.lifetime / p.maxLifetime, 0) / activeCount;
         const material = shardInstanceRef.current.material as THREE.MeshBasicMaterial;
         material.opacity = Math.max(0, 1 - avgLifeProgress);
+      }
+
+      // Clean up when all particles are dead
+      if (allDead && particles.length > 0) {
+        console.log('[StarBurst] All shards dead, cleaning up');
+        shardParticles.current = []; // Clear particle array
+        setShardsActive(false);
       }
     }
 

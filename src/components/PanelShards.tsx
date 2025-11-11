@@ -17,6 +17,7 @@ interface ShardParticle {
 
 export function PanelShards() {
   const isMobile = useSceneStore((s) => s.isMobile);
+  const performanceMode = useSceneStore((s) => s.performanceMode);
 
   const [isActive, setIsActive] = useState(false);
   const [centerPosition, setCenterPosition] = useState<[number, number, number]>([0, 0, 0]);
@@ -42,10 +43,11 @@ export function PanelShards() {
     });
   }, []);
 
-  // Max shard count
+  // Max shard count (ULTRA MINIMAL for performance)
   const maxShards = useMemo(() => {
-    return isMobile ? 60 : 180;
-  }, [isMobile]);
+    if (isMobile) return 15; // Drastically reduced from 40
+    return performanceMode === 'low' ? 15 : performanceMode === 'medium' ? 25 : 35; // Drastically reduced from 50/80/120
+  }, [isMobile, performanceMode]);
 
   // Listen for emit-panel-shards event
   useEffect(() => {

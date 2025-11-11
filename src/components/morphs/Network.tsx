@@ -191,7 +191,7 @@ export const Network = forwardRef<MorphRef, NetworkProps>(({ onClick }, ref) => 
         <lineBasicMaterial color={colors.accentAmber} opacity={0.6} transparent />
       </lineSegments>
 
-      <pointLight intensity={0.8} distance={50} color={colors.accentAmber} />
+      {/* PointLight disabled for performance */}
     </group>
   );
 });

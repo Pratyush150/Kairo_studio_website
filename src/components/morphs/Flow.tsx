@@ -196,7 +196,7 @@ export const Flow = forwardRef<MorphRef, FlowProps>(({ onClick }, ref) => {
       >
         <primitive ref={materialRef} object={material} attach="material" />
       </mesh>
-      <pointLight intensity={1.0} distance={60} color={colors.accentCyan} />
+      {/* PointLight disabled for performance */}
     </group>
   );
 });

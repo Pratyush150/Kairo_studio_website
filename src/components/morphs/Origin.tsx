@@ -27,35 +27,23 @@ export const Origin = forwardRef<MorphRef, OriginProps>(({ onClick }, ref) => {
   const groupRef = useRef<THREE.Group>(null);
   const meshRef = useRef<THREE.Mesh>(null);
 
-  // Crystalline geometry - Reduced subdivision for better performance
+  // Crystalline geometry - MINIMAL subdivision for performance
   const geometry = useMemo(() => {
-    const geo = new THREE.OctahedronGeometry(20, 1); // Reduced from 2 to 1 subdivision
-    // Add some randomness to vertices for crystalline look
-    const positions = geo.attributes.position;
-    for (let i = 0; i < positions.count; i++) {
-      const x = positions.getX(i);
-      const y = positions.getY(i);
-      const z = positions.getZ(i);
-      const noise = Math.random() * 0.3;
-      positions.setXYZ(i, x * (1 + noise), y * (1 + noise), z * (1 + noise));
-    }
+    const geo = new THREE.OctahedronGeometry(20, 0); // ZERO subdivision for max performance
+    // Skip vertex randomization for performance
     geo.computeVertexNormals();
     return geo;
   }, []);
 
-  // Plasma material
+  // Simplified material for performance (was MeshPhysicalMaterial - too expensive!)
   const material = useMemo(
     () =>
-      new THREE.MeshPhysicalMaterial({
+      new THREE.MeshStandardMaterial({
         color: colors.accentViolet,
         emissive: colors.accentViolet,
         emissiveIntensity: 0.4,
-        metalness: 0.9,
-        roughness: 0.1,
-        transmission: 0.2,
-        thickness: 0.5,
-        clearcoat: 1,
-        clearcoatRoughness: 0.1,
+        metalness: 0.7,
+        roughness: 0.3,
       }),
     []
   );
@@ -183,7 +171,7 @@ export const Origin = forwardRef<MorphRef, OriginProps>(({ onClick }, ref) => {
           document.body.style.cursor = 'default';
         }}
       />
-      <pointLight intensity={1.2} distance={60} color={colors.accentViolet} />
+      {/* PointLight disabled for performance */}
     </group>
   );
 });

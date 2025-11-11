@@ -171,7 +171,7 @@ export const Portal = forwardRef<MorphRef, PortalProps>(({ onClick }, ref) => {
         />
       </points>
 
-      <pointLight intensity={1.0} distance={60} color={colors.softBeige} />
+      {/* PointLight disabled for performance */}
     </group>
   );
 });

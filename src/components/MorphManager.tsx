@@ -148,7 +148,7 @@ export function MorphManager() {
     sceneState === 'OPENING_CONTENT';
 
   return (
-    <group visible={showElement}>
+    <group visible={showElement} scale={2}>
       {/* Origin - only visible when active */}
       {(activeElement === 'origin' || activeElement === 'services' || activeElement === 'strategy') && (
         <group position={[0, 0, 0]}>

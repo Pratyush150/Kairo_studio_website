@@ -51,34 +51,21 @@ export function CanvasShell() {
           far: 2000,
         }}
         gl={{
-          antialias,
+          antialias: false, // Disabled for performance
           alpha: true,
-          powerPreference: isMobile ? 'low-power' : 'high-performance',
+          powerPreference: 'low-power', // Always use low-power
         }}
         dpr={pixelRatio}
-        shadows={performanceMode === 'high'}
+        shadows={false} // Disabled completely for performance
         frameloop="always"
         style={{ background: 'transparent' }}
       >
         {/* Background color */}
         <color attach="background" args={['#06070A']} />
 
-        {/* Lighting - Simplified for low performance mode */}
-        <ambientLight intensity={performanceMode === 'low' ? 0.4 : 0.25} />
-        {performanceMode !== 'low' && (
-          <>
-            <directionalLight
-              position={[10, 10, 5]}
-              intensity={0.5}
-              color="#ffffff"
-            />
-            <pointLight
-              position={[-10, -10, -5]}
-              intensity={0.3}
-              color="#00E5FF"
-            />
-          </>
-        )}
+        {/* Lighting - ULTRA MINIMAL for performance */}
+        <ambientLight intensity={0.8} />
+        {/* All other lights disabled for performance */}
 
         {/* Main Scene */}
         <Suspense fallback={null}>

@@ -1,0 +1,23 @@
+{
+  "name": "KAIRO STUDIO - Automation Universe",
+  "short_name": "KAIRO",
+  "description": "Design marketing systems, AI products and automation stacks that scale revenue",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0724",
+  "theme_color": "#00E5FF",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

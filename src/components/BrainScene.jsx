@@ -1,33 +1,25 @@
-import React, { useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
+import React from 'react';
 import { OrbitControls } from '@react-three/drei';
+import BrainCore from './BrainCore';
 
 export default function BrainScene() {
-  const meshRef = useRef();
-
-  useFrame((state, delta) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.y += delta * 0.2;
-    }
-  });
-
   return (
     <>
-      {/* Lighting */}
-      <ambientLight intensity={0.5} />
-      <pointLight position={[10, 10, 10]} intensity={1} color="#00E5FF" />
-      <pointLight position={[-10, -10, -10]} intensity={0.5} color="#FF00E5" />
+      {/* Lighting Setup */}
+      <ambientLight intensity={0.3} />
+      <pointLight position={[10, 10, 10]} intensity={0.8} color="#00E5FF" />
+      <pointLight position={[-10, -10, -10]} intensity={0.4} color="#FF00E5" />
+      <pointLight position={[0, -10, 0]} intensity={0.3} color="#FFE500" />
 
-      {/* Temporary placeholder sphere - will be replaced with brain model */}
-      <mesh ref={meshRef}>
-        <icosahedronGeometry args={[1, 2]} />
-        <meshStandardMaterial
-          color="#00E5FF"
-          emissive="#00E5FF"
-          emissiveIntensity={0.3}
-          wireframe={true}
-        />
-      </mesh>
+      {/* Subtle directional light */}
+      <directionalLight
+        position={[5, 5, 5]}
+        intensity={0.4}
+        color="#ffffff"
+      />
+
+      {/* Brain Core Component */}
+      <BrainCore position={[0, 0, 0]} />
 
       {/* Camera Controls */}
       <OrbitControls
@@ -38,6 +30,8 @@ export default function BrainScene() {
         enablePan={false}
         minDistance={2}
         maxDistance={10}
+        maxPolarAngle={Math.PI * 0.9}
+        minPolarAngle={Math.PI * 0.1}
       />
     </>
   );

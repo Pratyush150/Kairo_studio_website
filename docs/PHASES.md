@@ -1,236 +1,328 @@
-# Implementation Phases - KAIRO STUDIO
+# Cerebral Machine - Implementation Phases
 
-Complete phased roadmap for building the Automation Universe platform.
-
----
-
-## Phase A — Foundations ✅ COMPLETED
-**Milestone**: Minimal static site + API skeleton
-
-### Tasks
-- [x] Remove old project files
-- [x] Create documentation structure
-- [x] Initialize Next.js 14 + TypeScript + Tailwind
-- [x] Implement static landing page fallback + SEO meta
-- [x] Configure project structure
-- [x] Setup all dependencies
-- [ ] Setup Express API skeleton + TypeScript (Deferred to Phase E)
-- [ ] Configure PostgreSQL DB (Prisma) (Deferred to Phase E)
-- [ ] CI: GitHub Actions basic pipeline (Deferred to Phase F)
-- [ ] Deploy to Vercel (frontend) + Render (API) (Deferred to Phase F)
-
-### Deliverables ✅
-- [x] Working Next.js site with SSR
-- [x] Complete documentation suite
-- [x] Basic landing page with brand styling
-- [x] Live URL: http://152.67.2.20:3000
+**Project**: 3D Brain Visualization with Interactive Micro-Scenes
+**Framework**: Vite + React + Three.js + react-three-fiber
 
 ---
 
-## Phase B — 3D Framework + Assets Pipeline ✅ COMPLETED
-**Milestone**: Interactive hero with orbital animation
+## Phase 1 - Foundation & Setup ⏳ IN PROGRESS
+
+**Milestone**: Clean project with basic canvas rendering
 
 ### Tasks
-- [x] Integrate React Three Fiber Canvas
-- [x] Build Scene component with Suspense
-- [x] Implement OrbitControls (camera controls)
-- [x] Create Planet component with hover effects
-- [x] Create Orb component (central element)
-- [x] Implement ParticleField for background
-- [x] Build HeroOrbit scene with all 5 planets
-- [x] Add device capability detection
-- [x] Implement performance monitoring
-- [x] Add loading states & fallbacks
-- [x] Integrate 3D scene into landing page
-
-### Deliverables ✅
-- [x] Interactive 3D hero scene with orbital planets
-- [x] Working camera controls (OrbitControls)
-- [x] Performance optimization (device-aware rendering)
-- [x] Particle field background (500/300/200 particles based on device)
-- [x] 5 orbiting planets with hover effects
-- [x] Central glowing orb
-- [x] Loading states with custom loader
-- [x] No errors, fully functional
-
----
-
-## Phase C — Services & Content ✅ COMPLETED
-**Milestone**: /services pages + case studies
-
-### Tasks
-- [x] Create service data structure with complete content
-- [x] Build /services page with service grid
-- [x] Create dynamic /services/:slug detail pages
-- [x] Add navigation from planets to services
-- [x] Build /work page for case studies
-- [x] Create dynamic /work/:slug detail pages
-- [x] Implement comprehensive service content (5 services)
-- [x] Add 3 featured case studies with metrics
-- [ ] Build admin CMS UI (Deferred to Phase E)
-- [ ] Asset upload system (Deferred to Phase E)
-
-### Deliverables ✅
-- [x] 5 complete service pages with detail views
-- [x] 3 case studies with results and testimonials
-- [x] Planet click navigation to services
-- [x] All routes tested (HTTP 200)
-- [x] Zero compilation errors
-
----
-
-## Phase D — Case Studies & Conversion ✅ COMPLETED
-**Milestone**: Case studies live + lead capture
-
-### Tasks
-- [x] Build /work and /work/:slug pages (completed in Phase C)
-- [x] Implement lead capture API (/api/leads)
-- [x] Build contact form with validation
-- [x] Add scheduling integration (Calendly modal)
-- [x] Setup CRM webhook infrastructure (configurable via env)
-- [x] Add contact section to landing page
-- [x] Success states and error handling
-- [ ] Implement Time Capsule room UI (deferred - case studies working well)
-- [ ] Create case study 3D rooms (deferred to Phase F)
-- [ ] A/B test CTA variations (deferred to Phase G)
-
-### Deliverables ✅
-- [x] Working lead capture flow with API
-- [x] Contact form with full validation
-- [x] Calendly scheduling integration
-- [x] CRM webhook infrastructure (env configurable)
-- [x] Email notification system (placeholder ready)
-- [x] Success/error states
-- [x] Privacy-first design
-
----
-
-## Phase E — Dashboard & SaaS ✅ COMPLETED
-**Milestone**: Initial client application with authentication
-
-### Tasks
-- [x] Set up Prisma ORM with SQLite database
-- [x] Create database models (User, Project, Automation, Lead, Session)
-- [x] Build authentication flows (JWT-based)
-- [x] Create signup/login API endpoints
-- [x] Build signup and login pages
-- [x] Create protected dashboard layout
-- [x] Implement dashboard homepage with stats
-- [x] Update Lead API to use Prisma database
-- [x] Add authentication middleware
-- [ ] Build automation editor (deferred to Phase F)
-- [ ] Setup WebSocket for real-time logs (deferred to Phase F)
-- [ ] Implement automation execution (deferred to Phase F)
-
-### Deliverables ✅
-- [x] SQLite database with Prisma ORM
-- [x] Complete authentication system (signup/login/session)
-- [x] Protected dashboard portal
-- [x] User management with JWT tokens
-- [x] Dashboard homepage with stats
-- [x] Database-backed lead storage
-- [x] All routes tested and working
-
----
-
-## Phase F — Polish & Deploy ✅ COMPLETED
-**Milestone**: Production-ready launch preparation
-
-### Tasks
-- [x] SEO meta tags & structured data
-- [x] Create sitemap.xml and robots.txt
-- [x] Add comprehensive OpenGraph and Twitter cards
-- [x] Create 404 Not Found page
-- [x] Add ErrorBoundary component
-- [x] Create manifest.json for PWA
-- [x] Production environment configuration (.env.production.example)
-- [x] Create comprehensive deployment documentation (DEPLOYMENT.md)
-- [x] Performance optimization review
-- [x] Test all routes and API endpoints
-- [ ] Accessibility audit (WCAG 2.1 AA) - Deferred to Phase G
-- [ ] Lighthouse optimization - Deferred to Phase G
-- [ ] Analytics integration (Posthog/Plausible) - Deferred to Phase G
-- [ ] Security audit - Deferred to Phase G
-- [ ] Load testing - Deferred to Phase G
-
-### Deliverables ✅
-- [x] Complete SEO setup (meta tags, sitemap, robots.txt, manifest)
-- [x] Error handling (ErrorBoundary, 404 page)
-- [x] Production configuration files
-- [x] Comprehensive 400+ line deployment guide
-- [x] All 14 routes tested (100% working)
-- [x] All API endpoints verified
-- [x] Database integration confirmed
-- [x] Production-ready codebase
-
----
-
-## Phase G — Iterate & Optimize
-**Milestone**: Measurable conversions & growth
-
-### Tasks
-- [ ] A/B test hero variations
-- [ ] Optimize asset sizes further
-- [ ] Add more case studies
-- [ ] Create industry-specific landing pages
-- [ ] Implement SEO improvements
-- [ ] Add blog section
-- [ ] Build email automation
-- [ ] Expand platform features
+- [x] Store implementation spec in documentation
+- [ ] Clean out old KAIRO STUDIO code
+- [ ] Initialize fresh Vite + React + TypeScript project
+- [ ] Install core dependencies (React, Three.js, r3f, drei)
+- [ ] Install build tools (GSAP, postprocessing)
+- [ ] Create project structure (components, lib, utils, assets)
+- [ ] Set up Vite configuration
+- [ ] Create basic canvas component that renders
 
 ### Deliverables
-- Conversion optimization
-- Content expansion
-- SEO improvements
-- Feature iterations
+- Clean Vite project
+- All dependencies installed
+- Project structure in place
+- Basic canvas rendering "Hello Three.js"
 
 ---
 
-## Timeline Estimates
+## Phase 2 - Loaders & Asset Pipeline
 
-- **Phase A**: 1 week
-- **Phase B**: 2 weeks
-- **Phase C**: 2 weeks
-- **Phase D**: 1.5 weeks
-- **Phase E**: 3 weeks
-- **Phase F**: 1 week
-- **Phase G**: Ongoing
+**Milestone**: Asset loading system operational
 
-**Total MVP**: ~10-11 weeks to production launch
+### Tasks
+- [ ] Implement central loaders (DRACO, KTX2, GLTF)
+- [ ] Create loader utilities in /lib/loaders.js
+- [ ] Set up asset manifest system
+- [ ] Configure loader paths (/draco/, /basis/)
+- [ ] Test GLTF loading with placeholder model
+- [ ] Implement Suspense + loading fallback
+- [ ] Create low-res placeholder component
+
+### Deliverables
+- Working loader system
+- Can load and display GLTF models
+- Suspense boundaries working
+- Loading states implemented
+
+---
+
+## Phase 3 - Brain Core & LOD System
+
+**Milestone**: Brain core model with progressive loading
+
+### Tasks
+- [ ] Create BrainCore component
+- [ ] Implement LOD switching logic
+- [ ] Load lod0 (low-res) on mount
+- [ ] Progressive upgrade to lod1, lod2
+- [ ] Basic orbit camera controls
+- [ ] Simple lighting setup
+- [ ] Performance monitoring integration
+
+### Deliverables
+- Brain core visible and rotatable
+- LOD system working
+- Smooth transitions between LOD levels
+- FPS monitoring active
+
+---
+
+## Phase 4 - Shaders & Materials
+
+**Milestone**: Emissive fiber shaders and particle systems
+
+### Tasks
+- [ ] Create fiber emissive shader (GLSL)
+- [ ] Implement shader material for brain fibers
+- [ ] Create particle stream shader
+- [ ] Set up InstancedBufferGeometry for particles
+- [ ] Animate particles along curves
+- [ ] Connect uniforms (uTime, uSpeed, uBaseColor)
+- [ ] Test shader performance on target devices
+
+### Deliverables
+- Fiber shader applied to brain
+- Particle streams visible and animated
+- Performance within budget
+- Adjustable via uniforms
+
+---
+
+## Phase 5 - Module Hotspots & Interaction
+
+**Milestone**: Clickable brain modules with interaction
+
+### Tasks
+- [ ] Create module components (SaaS, Automation, Integration)
+- [ ] Implement raycasting for hover/click detection
+- [ ] Add hotspot markers in 3D space
+- [ ] Create hover effects (glow, scale)
+- [ ] Implement click handlers
+- [ ] Load module GLTF on demand
+- [ ] Create HUD overlay for labels
+
+### Deliverables
+- 3 clickable module hotspots
+- Visual feedback on hover
+- On-demand module loading
+- HTML overlay with labels
+
+---
+
+## Phase 6 - Micro-Scenes
+
+**Milestone**: Module detail views with animations
+
+### Tasks
+- [ ] Create ModuleMicroScene component
+- [ ] Implement lazy loading for micro-scenes
+- [ ] Build GSAP timeline for open/close
+- [ ] Create camera transitions
+- [ ] Add module-specific content (models, text)
+- [ ] Implement dispose logic on close
+- [ ] Test memory management
+
+### Deliverables
+- 3 working micro-scenes
+- Smooth open/close animations
+- No memory leaks
+- Content for each module
+
+---
+
+## Phase 7 - GSAP & Scroll Integration
+
+**Milestone**: Scroll-driven animations
+
+### Tasks
+- [ ] Install GSAP + ScrollTrigger
+- [ ] Map scroll progress to uSpeed uniform
+- [ ] Create scroll-driven camera movements
+- [ ] Implement particle emission rate control
+- [ ] Add scroll-based reveal animations
+- [ ] Test on different viewport sizes
+
+### Deliverables
+- Scroll controls 3D scene state
+- Smooth scroll animations
+- Responsive to viewport changes
+- No jank on scroll
+
+---
+
+## Phase 8 - Postprocessing & Effects
+
+**Milestone**: Visual polish with postprocessing
+
+### Tasks
+- [ ] Install postprocessing library
+- [ ] Implement bloom pass (thresholded)
+- [ ] Add god-rays effect
+- [ ] Implement FXAA/Temporal AA
+- [ ] Create adaptive quality system
+- [ ] Test performance impact
+- [ ] Optimize pass parameters
+
+### Deliverables
+- Bloom on emissive elements
+- God-rays effect working
+- Anti-aliasing applied
+- Performance budget maintained
+
+---
+
+## Phase 9 - Performance & Optimization
+
+**Milestone**: Production-ready performance
+
+### Tasks
+- [ ] Implement QualityManager utility
+- [ ] Add device capability detection
+- [ ] Create quality presets (low, medium, high)
+- [ ] Optimize draw calls (instancing, merging)
+- [ ] Compress textures to KTX2
+- [ ] Implement asset manifest
+- [ ] Add service worker caching
+- [ ] Run Lighthouse audits
+
+### Deliverables
+- Adaptive quality working
+- All assets compressed
+- Service worker active
+- Lighthouse scores meet targets
+
+---
+
+## Phase 10 - Accessibility & Fallbacks
+
+**Milestone**: Accessible to all users
+
+### Tasks
+- [ ] Create FallbackHero component (SVG/CSS)
+- [ ] Implement "Skip 3D" toggle
+- [ ] Add keyboard navigation
+- [ ] Implement ARIA attributes
+- [ ] Test with screen readers
+- [ ] Handle prefers-reduced-motion
+- [ ] Create lightweight video demo
+- [ ] Test on low-end devices
+
+### Deliverables
+- Static fallback working
+- Full keyboard access
+- Screen reader compatible
+- Low-end device support
+
+---
+
+## Phase 11 - Analytics & Monitoring
+
+**Milestone**: Measurable engagement and performance
+
+### Tasks
+- [ ] Implement analytics tracking
+- [ ] Track module open events
+- [ ] Track 3D engagement time
+- [ ] Track conversion events
+- [ ] Monitor Core Web Vitals
+- [ ] Set up error tracking (Sentry)
+- [ ] Create performance dashboard
+- [ ] Add custom events
+
+### Deliverables
+- Analytics integrated
+- All key events tracked
+- Error monitoring active
+- Performance metrics visible
+
+---
+
+## Phase 12 - CI/CD & Deployment
+
+**Milestone**: Automated build and deploy
+
+### Tasks
+- [ ] Create optimize-assets.js script
+- [ ] Set up GitHub Actions workflow
+- [ ] Configure Lighthouse CI
+- [ ] Add asset compression to build
+- [ ] Generate assets-manifest.json
+- [ ] Deploy to CDN (S3/CloudFront or Cloudflare)
+- [ ] Configure cache headers
+- [ ] Test production build
+
+### Deliverables
+- CI pipeline working
+- Assets optimized automatically
+- Lighthouse thresholds enforced
+- Production deployment successful
+
+---
+
+## Phase 13 - Testing & QA
+
+**Milestone**: All acceptance criteria met
+
+### Tasks
+- [ ] Run full acceptance test checklist
+- [ ] Test on target devices (Android, iPhone)
+- [ ] Cross-browser testing
+- [ ] Performance profiling
+- [ ] Memory leak testing
+- [ ] Accessibility audit
+- [ ] SEO verification
+- [ ] Load testing
+
+### Deliverables
+- All tests passing
+- No critical bugs
+- Performance targets met
+- Accessibility verified
+
+---
+
+## Phase 14 - Polish & Launch
+
+**Milestone**: Production launch
+
+### Tasks
+- [ ] Final visual polish
+- [ ] Content review
+- [ ] Analytics verification
+- [ ] Monitoring setup
+- [ ] Backup plans
+- [ ] Documentation complete
+- [ ] Team training
+- [ ] Launch checklist
+
+### Deliverables
+- Production-ready application
+- Monitoring active
+- Team trained
+- Documentation complete
 
 ---
 
 ## Current Status
 
-**Completed Phases**:
-- ✅ Phase A - Foundations (100%)
-- ✅ Phase B - 3D Framework + Assets Pipeline (100%)
-- ✅ Phase C - Services & Content (100%)
-- ✅ Phase D - Case Studies & Conversion (100%)
-- ✅ Phase E - Dashboard & SaaS Components (100%)
-- ✅ Phase F - Polish & Deploy (100%)
+**Active Phase**: Phase 1 - Foundation & Setup
+**Progress**: 10% (1/14 phases)
+**Next Milestone**: Clean project with basic canvas rendering
 
-**Active Phase**: Phase G - Iterate & Optimize (Optional)
-**Overall Progress**: 86% (6/7 phases complete)
-**Next Action**: Optional - A/B testing, analytics integration, and ongoing optimization
+**Timeline Estimates**:
+- Phase 1-2: 1 week (Foundation + Loaders)
+- Phase 3-4: 2 weeks (Brain Core + Shaders)
+- Phase 5-6: 2 weeks (Modules + Micro-scenes)
+- Phase 7-8: 1 week (Scroll + Postprocessing)
+- Phase 9-10: 2 weeks (Performance + Accessibility)
+- Phase 11-12: 1 week (Analytics + CI/CD)
+- Phase 13-14: 1 week (Testing + Launch)
 
-**Live URL**: http://152.67.2.20:3000
+**Total MVP**: ~10 weeks to production launch
 
-**Available Routes** (14 total):
-- `/` - Landing page with 3D orbital + contact form
-- `/services` - Services overview
-- `/services/[slug]` - Service detail pages (5 services)
-- `/work` - Case studies overview
-- `/work/[slug]` - Case study detail pages (3 studies)
-- `/login` - User login page
-- `/signup` - User registration page
-- `/dashboard` - Protected client dashboard
-- `/sitemap.xml` - XML sitemap for SEO
-- `/robots.txt` - Robots directives
-- `/manifest.json` - PWA manifest
+---
 
-**API Endpoints**:
-- `POST /api/leads` - Lead capture endpoint (with database)
-- `POST /api/auth/signup` - User registration endpoint
-- `POST /api/auth/login` - User authentication endpoint
-- `GET /api/auth/me` - Get current user info (authenticated)
+**Last Updated**: November 2025
+**Status**: Phase 1 in progress

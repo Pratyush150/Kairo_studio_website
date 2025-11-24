@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { OrbitControls } from '@react-three/drei';
 import BrainCore from './BrainCore';
 import PerformanceStats from './PerformanceStats';
+import MicroSceneManager from './MicroSceneManager';
 
 /**
  * BrainScene Component
@@ -12,6 +13,8 @@ import PerformanceStats from './PerformanceStats';
  * @param {function} props.onModuleClick - Module click handler
  */
 export default function BrainScene({ activeModule, onModuleClick }) {
+  const controlsRef = useRef();
+
   return (
     <>
       {/* Lighting Setup */}
@@ -34,11 +37,18 @@ export default function BrainScene({ activeModule, onModuleClick }) {
         onModuleClick={onModuleClick}
       />
 
+      {/* Micro-Scenes for each module */}
+      <MicroSceneManager
+        activeModule={activeModule}
+        controls={controlsRef.current}
+      />
+
       {/* Performance Stats Overlay */}
       <PerformanceStats visible={true} />
 
       {/* Camera Controls */}
       <OrbitControls
+        ref={controlsRef}
         enableDamping
         dampingFactor={0.05}
         rotateSpeed={0.5}

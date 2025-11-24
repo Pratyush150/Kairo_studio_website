@@ -1,7 +1,8 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { OrbitControls } from '@react-three/drei';
 import BrainCore from './BrainCore';
 import PerformanceStats from './PerformanceStats';
+import PerformanceDebugPanel from './PerformanceDebugPanel';
 import MicroSceneManager from './MicroSceneManager';
 import ScrollController from './ScrollController';
 import PostProcessing from './PostProcessing';
@@ -17,11 +18,23 @@ import PostProcessing from './PostProcessing';
 export default function BrainScene({ activeModule, onModuleClick }) {
   const controlsRef = useRef();
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
 
   // Handle scroll progress updates
   const handleScrollProgress = (scrollData) => {
     setScrollProgress(scrollData.scrollProgress);
   };
+
+  // Keyboard toggle for debug panel (D key)
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.key === 'd' || e.key === 'D') {
+        setShowDebugPanel(prev => !prev);
+      }
+    };
+    window.addEventListener('keypress', handleKeyPress);
+    return () => window.removeEventListener('keypress', handleKeyPress);
+  }, []);
 
   return (
     <>
@@ -60,6 +73,9 @@ export default function BrainScene({ activeModule, onModuleClick }) {
 
       {/* Performance Stats Overlay */}
       <PerformanceStats visible={true} />
+
+      {/* Advanced Debug Panel (Toggle with 'D' key) */}
+      <PerformanceDebugPanel visible={showDebugPanel} compact={false} />
 
       {/* Camera Controls */}
       <OrbitControls

@@ -3,6 +3,8 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { createLoaders } from '../lib/loaders';
 import { getQualityManager } from '../utils/perf';
+import FiberMaterial, { FiberWireframeMaterial } from './FiberMaterial';
+import ParticleStreams from './ParticleStreams';
 
 /**
  * BrainCore Component
@@ -116,26 +118,26 @@ export default function BrainCore({ position = [0, 0, 0] }) {
 
   return (
     <group ref={groupRef} position={position}>
-      {/* Core sphere with LOD-based detail */}
+      {/* Core sphere with LOD-based detail and custom shader */}
       <mesh>
         <icosahedronGeometry args={[1, lodParams.coreDetail]} />
-        <meshStandardMaterial
-          color="#1a1a2e"
-          emissive="#00E5FF"
-          emissiveIntensity={0.2}
-          roughness={0.7}
-          metalness={0.3}
+        <FiberMaterial
+          baseColor="#1a1a2e"
+          emissiveColor="#00E5FF"
+          speed={1.0}
+          displacement={0.15}
+          emissiveIntensity={1.8}
+          pulseFrequency={2.0}
         />
       </mesh>
 
-      {/* Outer wireframe */}
+      {/* Outer wireframe with animated shader */}
       <mesh>
         <icosahedronGeometry args={[1.05, lodParams.outerDetail]} />
-        <meshBasicMaterial
+        <FiberWireframeMaterial
           color="#00E5FF"
-          wireframe
-          transparent
           opacity={0.3}
+          speed={0.8}
         />
       </mesh>
 
@@ -160,7 +162,7 @@ export default function BrainCore({ position = [0, 0, 0] }) {
         />
       </mesh>
 
-      {/* Brain folds - more at higher LOD */}
+      {/* Brain folds - more at higher LOD with custom shader */}
       {brainFolds.map((fold, i) => (
         <mesh
           key={i}
@@ -169,12 +171,13 @@ export default function BrainCore({ position = [0, 0, 0] }) {
           scale={0.5}
         >
           <torusKnotGeometry args={[0.2, 0.05, lodParams.moduleDetail, 4, 2, 3]} />
-          <meshStandardMaterial
-            color="#00E5FF"
-            emissive="#00E5FF"
-            emissiveIntensity={0.3}
-            roughness={0.6}
-            metalness={0.4}
+          <FiberMaterial
+            baseColor="#0a0a15"
+            emissiveColor="#00E5FF"
+            speed={0.8 + i * 0.1}
+            displacement={0.08}
+            emissiveIntensity={2.0}
+            pulseFrequency={1.5 + i * 0.3}
           />
         </mesh>
       ))}
@@ -204,6 +207,32 @@ export default function BrainCore({ position = [0, 0, 0] }) {
         color="#00E5FF"
         distance={3}
       />
+
+      {/* GPU Particle Streams - only show at LOD 1+ */}
+      {currentLOD >= 1 && (
+        <>
+          <ParticleStreams
+            count={currentLOD === 1 ? 1000 : 2000}
+            speed={0.3}
+            size={8.0}
+            randomness={0.05}
+          />
+          {/* Additional particle streams along module connections */}
+          {[0, 120, 240].map((angle, i) => {
+            const rad = (angle * Math.PI) / 180;
+            return (
+              <ParticleStreams
+                key={`particle-${i}`}
+                position={[Math.cos(rad) * 0.3, 0, Math.sin(rad) * 0.3]}
+                count={currentLOD === 1 ? 300 : 500}
+                speed={0.4 + i * 0.1}
+                size={6.0}
+                randomness={0.08}
+              />
+            );
+          })}
+        </>
+      )}
 
       {/* LOD indicator (temporary - for debugging) */}
       {currentLOD < targetLOD && (

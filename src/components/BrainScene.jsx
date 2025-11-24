@@ -3,7 +3,15 @@ import { OrbitControls } from '@react-three/drei';
 import BrainCore from './BrainCore';
 import PerformanceStats from './PerformanceStats';
 
-export default function BrainScene() {
+/**
+ * BrainScene Component
+ * Main 3D scene with brain, lighting, and controls
+ *
+ * @param {Object} props
+ * @param {string} props.activeModule - Currently active module ID
+ * @param {function} props.onModuleClick - Module click handler
+ */
+export default function BrainScene({ activeModule, onModuleClick }) {
   return (
     <>
       {/* Lighting Setup */}
@@ -19,8 +27,12 @@ export default function BrainScene() {
         color="#ffffff"
       />
 
-      {/* Brain Core Component with LOD */}
-      <BrainCore position={[0, 0, 0]} />
+      {/* Brain Core Component with LOD and Module Interaction */}
+      <BrainCore
+        position={[0, 0, 0]}
+        activeModule={activeModule}
+        onModuleClick={onModuleClick}
+      />
 
       {/* Performance Stats Overlay */}
       <PerformanceStats visible={true} />

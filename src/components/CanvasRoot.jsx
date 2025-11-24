@@ -3,9 +3,15 @@ import { Canvas } from '@react-three/fiber';
 import BrainScene from './BrainScene';
 import LowResPlaceholder from './LowResPlaceholder';
 import FallbackHero from './FallbackHero';
+import ModuleHUD, { ModuleHintOverlay } from './ModuleHUD';
+import { useModuleState } from '../hooks/useModuleState';
 
 export default function CanvasRoot() {
   const [useFallback, setUseFallback] = useState(false);
+  const [showHint, setShowHint] = useState(true);
+
+  // Module interaction state
+  const { activeModule, handleModuleClick, closeModule } = useModuleState();
 
   useEffect(() => {
     // Check for WebGL support
@@ -38,28 +44,46 @@ export default function CanvasRoot() {
     console.log('[CanvasRoot] WebGL supported, rendering 3D scene');
   }, []);
 
+  // Hide hint after first module interaction
+  useEffect(() => {
+    if (activeModule && showHint) {
+      setShowHint(false);
+    }
+  }, [activeModule, showHint]);
+
   // Show fallback hero if needed
   if (useFallback) {
     return <FallbackHero />;
   }
 
   return (
-    <Canvas
-      dpr={[1, 1.5]}
-      camera={{ position: [0, 0, 5], fov: 50 }}
-      gl={{
-        antialias: true,
-        alpha: false,
-        powerPreference: 'high-performance',
-      }}
-      onCreated={({ gl }) => {
-        console.log('[CanvasRoot] Canvas created successfully');
-        console.log('[CanvasRoot] Renderer:', gl.capabilities);
-      }}
-    >
-      <Suspense fallback={<LowResPlaceholder />}>
-        <BrainScene />
-      </Suspense>
-    </Canvas>
+    <>
+      <Canvas
+        dpr={[1, 1.5]}
+        camera={{ position: [0, 0, 5], fov: 50 }}
+        gl={{
+          antialias: true,
+          alpha: false,
+          powerPreference: 'high-performance',
+        }}
+        onCreated={({ gl }) => {
+          console.log('[CanvasRoot] Canvas created successfully');
+          console.log('[CanvasRoot] Renderer:', gl.capabilities);
+        }}
+      >
+        <Suspense fallback={<LowResPlaceholder />}>
+          <BrainScene
+            activeModule={activeModule}
+            onModuleClick={handleModuleClick}
+          />
+        </Suspense>
+      </Canvas>
+
+      {/* Module HUD Overlay */}
+      <ModuleHUD moduleId={activeModule} onClose={closeModule} />
+
+      {/* Hint Overlay - show until first interaction */}
+      <ModuleHintOverlay visible={showHint && !activeModule} />
+    </>
   );
 }

@@ -5,12 +5,23 @@ import { createLoaders } from '../lib/loaders';
 import { getQualityManager } from '../utils/perf';
 import FiberMaterial, { FiberWireframeMaterial } from './FiberMaterial';
 import ParticleStreams from './ParticleStreams';
+import ModuleHotspot from './ModuleHotspot';
+import { getAllModules } from '../lib/moduleData';
 
 /**
  * BrainCore Component
  * Manages the central brain model with progressive LOD loading
+ *
+ * @param {Object} props
+ * @param {[number, number, number]} props.position - Position in 3D space
+ * @param {string} props.activeModule - Currently active module ID
+ * @param {function} props.onModuleClick - Module click handler
  */
-export default function BrainCore({ position = [0, 0, 0] }) {
+export default function BrainCore({
+  position = [0, 0, 0],
+  activeModule = null,
+  onModuleClick = () => {},
+}) {
   const groupRef = useRef();
   const { gl } = useThree();
 
@@ -182,23 +193,20 @@ export default function BrainCore({ position = [0, 0, 0] }) {
         </mesh>
       ))}
 
-      {/* Module hotspot indicators */}
-      {[0, 120, 240].map((angle, i) => {
-        const rad = (angle * Math.PI) / 180;
-        const x = Math.cos(rad) * 1.3;
-        const z = Math.sin(rad) * 1.3;
-
-        return (
-          <mesh key={i} position={[x, 0, z]}>
-            <sphereGeometry args={[0.08, lodParams.moduleDetail, lodParams.moduleDetail]} />
-            <meshBasicMaterial
-              color={i === 0 ? '#00E5FF' : i === 1 ? '#FF00E5' : '#FFE500'}
-              transparent
-              opacity={0.8}
-            />
-          </mesh>
-        );
-      })}
+      {/* Interactive Module Hotspots */}
+      {getAllModules().map((module) => (
+        <ModuleHotspot
+          key={module.id}
+          moduleId={module.id}
+          name={module.name}
+          shortName={module.shortName}
+          position={module.position}
+          color={module.color}
+          onClick={onModuleClick}
+          active={activeModule === module.id}
+          lodLevel={currentLOD}
+        />
+      ))}
 
       {/* Point lights for glow effect */}
       <pointLight

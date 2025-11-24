@@ -1,0 +1,318 @@
+/**
+ * Global Accessibility Styles
+ * Provides consistent focus indicators, reduced motion support, and ARIA enhancements
+ */
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Focus Indicators
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+/* Global focus styles */
+*:focus {
+  outline: 3px solid #FFE500;
+  outline-offset: 2px;
+}
+
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 3px solid #FFE500;
+  outline-offset: 2px;
+}
+
+/* Button focus */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid #FFE500;
+  outline-offset: 2px;
+}
+
+/* Interactive elements */
+[role="button"]:focus-visible,
+[role="link"]:focus-visible,
+[role="switch"]:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+  outline: 3px solid #FFE500;
+  outline-offset: 2px;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Reduced Motion Support
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+@media (prefers-reduced-motion: reduce) {
+  /* Disable all animations and transitions */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Exception for opacity transitions (less disruptive) */
+  .fade-transition {
+    transition: opacity 0.2s ease !important;
+  }
+}
+
+/* Reduced motion class for manual control */
+.reduce-motion,
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Screen Reader Only
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.sr-only-focusable:active,
+.sr-only-focusable:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Skip Links
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #00E5FF;
+  color: #0a0a0a;
+  padding: 8px 16px;
+  text-decoration: none;
+  font-weight: bold;
+  z-index: 10000;
+  border-radius: 0 0 4px 0;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 3px solid #FFE500;
+  outline-offset: 2px;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Keyboard Navigation Indicators
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+/* Visible keyboard navigation state */
+body.keyboard-nav *:focus {
+  outline: 3px solid #FFE500;
+  outline-offset: 2px;
+}
+
+body:not(.keyboard-nav) *:focus {
+  outline: none;
+}
+
+/* Add keyboard navigation class on Tab press */
+body.keyboard-nav .keyboard-focus-indicator {
+  display: block;
+}
+
+.keyboard-focus-indicator {
+  display: none;
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 229, 0, 0.9);
+  color: #0a0a0a;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ARIA Live Regions
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+[aria-live="polite"],
+[aria-live="assertive"] {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   High Contrast Mode
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+@media (prefers-contrast: high) {
+  /* Increase border widths */
+  button,
+  input,
+  select,
+  textarea,
+  a {
+    border-width: 2px !important;
+  }
+
+  /* Increase outline widths */
+  *:focus-visible {
+    outline-width: 4px !important;
+  }
+
+  /* Remove subtle backgrounds */
+  .subtle-bg {
+    background: transparent !important;
+    border: 2px solid currentColor !important;
+  }
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Touch Target Sizing
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+/* Ensure minimum touch target size of 44x44px */
+button,
+a,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+[role="button"],
+[role="link"] {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* Exception for inline links in text */
+p a,
+li a,
+span a {
+  min-width: auto;
+  min-height: auto;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Text Sizing and Spacing
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+/* Respect user's font size preferences */
+html {
+  font-size: 100%;
+}
+
+/* Minimum font size for readability */
+body {
+  font-size: clamp(14px, 1rem, 18px);
+  line-height: 1.6;
+}
+
+/* Ensure sufficient line spacing */
+p,
+li,
+td,
+th {
+  line-height: 1.6;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Color Contrast
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+/* High contrast links */
+a {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+a:hover,
+a:focus {
+  text-decoration-thickness: 2px;
+}
+
+/* Ensure visible focus for form inputs */
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: #00E5FF;
+  box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.3);
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Print Styles (Accessibility Enhancement)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+@media print {
+  /* Ensure links are visible in print */
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+  }
+
+  /* Hide non-essential elements */
+  nav,
+  .skip-link,
+  .skip-3d-toggle-container,
+  .perf-debug-panel {
+    display: none !important;
+  }
+
+  /* Ensure readability */
+  body {
+    color: #000;
+    background: #fff;
+  }
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Dark Mode Support
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+@media (prefers-color-scheme: dark) {
+  /* Ensure sufficient contrast in dark mode */
+  :root {
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.8);
+    --bg-primary: #0a0a0a;
+    --bg-secondary: #1a1a2e;
+    --accent: #00E5FF;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --text-primary: #0a0a0a;
+    --text-secondary: rgba(0, 0, 0, 0.7);
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f5;
+    --accent: #0099cc;
+  }
+}

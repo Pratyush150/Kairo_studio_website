@@ -1,0 +1,402 @@
+/* FallbackHero Component Styles */
+/* Accessible static fallback for non-WebGL or reduced-motion users */
+
+.fallback-hero {
+  width: 100vw;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+  color: #ffffff;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Skip Link for Accessibility */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #00E5FF;
+  color: #0a0a0a;
+  padding: 8px 16px;
+  text-decoration: none;
+  font-weight: bold;
+  z-index: 10000;
+  border-radius: 0 0 4px 0;
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 3px solid #FFE500;
+  outline-offset: 2px;
+}
+
+/* Header */
+.fallback-header {
+  padding: 4rem 2rem 2rem;
+  text-align: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.fallback-title {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 700;
+  margin-bottom: 1rem;
+  background: linear-gradient(90deg, #00E5FF, #FF00E5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.fallback-subtitle {
+  display: block;
+  font-size: clamp(1rem, 2.5vw, 1.5rem);
+  font-weight: 400;
+  margin-top: 0.5rem;
+  color: rgba(255, 255, 255, 0.8);
+  background: none;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.8);
+}
+
+.fallback-notice {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: rgba(0, 229, 255, 0.1);
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  border-radius: 8px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.fallback-notice p {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.fallback-enable-btn {
+  background: transparent;
+  border: 2px solid #00E5FF;
+  color: #00E5FF;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.fallback-enable-btn:hover,
+.fallback-enable-btn:focus {
+  background: #00E5FF;
+  color: #0a0a0a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 229, 255, 0.4);
+  outline: none;
+}
+
+.fallback-enable-btn:focus {
+  outline: 3px solid #FFE500;
+  outline-offset: 2px;
+}
+
+/* Brain Visualization */
+.fallback-brain {
+  max-width: 600px;
+  margin: 3rem auto;
+  padding: 2rem;
+}
+
+.brain-svg {
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 0 20px rgba(0, 229, 255, 0.3));
+}
+
+.brain-shape {
+  fill: none;
+  stroke: #00E5FF;
+  stroke-width: 1.5;
+  opacity: 0.6;
+}
+
+.brain-fold {
+  fill: none;
+  stroke: #00E5FF;
+  stroke-width: 1;
+  opacity: 0.4;
+  stroke-dasharray: 5, 5;
+}
+
+.brain-connections {
+  stroke: rgba(255, 255, 255, 0.2);
+  stroke-width: 1;
+}
+
+.brain-nodes .node {
+  transition: all 0.3s ease;
+}
+
+.node-saas {
+  fill: #00E5FF;
+}
+
+.node-automation {
+  fill: #FF00E5;
+}
+
+.node-integration {
+  fill: #FFE500;
+}
+
+.node-label {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  fill: #ffffff;
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .brain-svg {
+    animation: none;
+  }
+
+  .fallback-enable-btn {
+    transition: none;
+  }
+}
+
+/* Modules Section */
+.fallback-modules {
+  max-width: 1200px;
+  margin: 4rem auto;
+  padding: 2rem;
+}
+
+.modules-title {
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 3rem;
+  color: #ffffff;
+}
+
+.modules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.module-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 2rem;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.module-card:hover,
+.module-card:focus {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(0, 229, 255, 0.5);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  outline: none;
+}
+
+.module-card:focus {
+  outline: 3px solid #FFE500;
+  outline-offset: 2px;
+}
+
+.module-icon {
+  width: 60px;
+  height: 60px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.module-saas .icon-circle {
+  background: radial-gradient(circle, #00E5FF, rgba(0, 229, 255, 0.2));
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
+}
+
+.module-automation .icon-circle {
+  background: radial-gradient(circle, #FF00E5, rgba(255, 0, 229, 0.2));
+  box-shadow: 0 0 20px rgba(255, 0, 229, 0.4);
+}
+
+.module-integration .icon-circle {
+  background: radial-gradient(circle, #FFE500, rgba(255, 229, 0, 0.2));
+  box-shadow: 0 0 20px rgba(255, 229, 0, 0.4);
+}
+
+.module-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #ffffff;
+}
+
+.module-description {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 1.5rem;
+}
+
+.module-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.module-features li {
+  padding: 0.5rem 0;
+  padding-left: 1.5rem;
+  position: relative;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.module-features li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: #00E5FF;
+  font-weight: bold;
+}
+
+.module-saas .module-features li::before {
+  color: #00E5FF;
+}
+
+.module-automation .module-features li::before {
+  color: #FF00E5;
+}
+
+.module-integration .module-features li::before {
+  color: #FFE500;
+}
+
+/* Accessibility Notice */
+.accessibility-notice {
+  max-width: 800px;
+  margin: 4rem auto;
+  padding: 2rem;
+  background: rgba(0, 229, 255, 0.05);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  border-radius: 12px;
+}
+
+.accessibility-notice h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #00E5FF;
+}
+
+.accessibility-notice ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.accessibility-notice li {
+  padding: 0.75rem 0;
+  padding-left: 2rem;
+  position: relative;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.accessibility-notice li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #00E5FF;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+/* Screen Reader Only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .fallback-header {
+    padding: 3rem 1.5rem 1.5rem;
+  }
+
+  .fallback-brain {
+    padding: 1rem;
+    margin: 2rem auto;
+  }
+
+  .fallback-modules {
+    padding: 1.5rem;
+    margin: 3rem auto;
+  }
+
+  .modules-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .module-card {
+    padding: 1.5rem;
+  }
+
+  .accessibility-notice {
+    margin: 3rem auto;
+    padding: 1.5rem;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .fallback-hero {
+    background: #000000;
+  }
+
+  .module-card {
+    border-width: 2px;
+  }
+
+  .fallback-enable-btn,
+  .module-card:focus,
+  .skip-link:focus {
+    outline-width: 4px;
+  }
+}
+
+/* Dark Mode Support (if user prefers dark) */
+@media (prefers-color-scheme: dark) {
+  .fallback-hero {
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+  }
+}

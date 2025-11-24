@@ -1,6 +1,7 @@
 import React from 'react';
 import { OrbitControls } from '@react-three/drei';
 import BrainCore from './BrainCore';
+import PerformanceStats from './PerformanceStats';
 
 export default function BrainScene() {
   return (
@@ -18,8 +19,11 @@ export default function BrainScene() {
         color="#ffffff"
       />
 
-      {/* Brain Core Component */}
+      {/* Brain Core Component with LOD */}
       <BrainCore position={[0, 0, 0]} />
+
+      {/* Performance Stats Overlay */}
+      <PerformanceStats visible={true} />
 
       {/* Camera Controls */}
       <OrbitControls

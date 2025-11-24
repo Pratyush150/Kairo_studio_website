@@ -4,6 +4,7 @@ import BrainCore from './BrainCore';
 import PerformanceStats from './PerformanceStats';
 import MicroSceneManager from './MicroSceneManager';
 import ScrollController from './ScrollController';
+import PostProcessing from './PostProcessing';
 
 /**
  * BrainScene Component
@@ -72,6 +73,13 @@ export default function BrainScene({ activeModule, onModuleClick }) {
         maxDistance={10}
         maxPolarAngle={Math.PI * 0.9}
         minPolarAngle={Math.PI * 0.1}
+      />
+
+      {/* Postprocessing Effects */}
+      <PostProcessing
+        enabled={true}
+        scrollProgress={scrollProgress}
+        quality="auto"
       />
     </>
   );

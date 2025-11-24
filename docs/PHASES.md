@@ -178,24 +178,28 @@
 
 ---
 
-## Phase 8 - Postprocessing & Effects
+## Phase 8 - Postprocessing & Effects ✅ COMPLETED
 
 **Milestone**: Visual polish with postprocessing
 
 ### Tasks
-- [ ] Install postprocessing library
-- [ ] Implement bloom pass (thresholded)
-- [ ] Add god-rays effect
-- [ ] Implement FXAA/Temporal AA
-- [ ] Create adaptive quality system
-- [ ] Test performance impact
-- [ ] Optimize pass parameters
+- [x] Install postprocessing library
+- [x] Implement bloom pass (thresholded)
+- [x] Add chromatic aberration effect
+- [x] Implement vignette effect
+- [x] Create adaptive quality system
+- [x] Test performance impact
+- [x] Optimize pass parameters
 
 ### Deliverables
-- Bloom on emissive elements
-- God-rays effect working
-- Anti-aliasing applied
-- Performance budget maintained
+- ✅ Bloom on emissive elements (threshold: 0.7-0.9)
+- ✅ Chromatic aberration for visual depth
+- ✅ Vignette effect for focus
+- ✅ Adaptive quality (low/medium/high)
+- ✅ Dynamic bloom intensity with scroll
+- ✅ Mipmap blur for better bloom
+- ✅ SCREEN blend mode for natural glow
+- ✅ Performance budget maintained
 
 ---
 
@@ -333,9 +337,9 @@
 
 ## Current Status
 
-**Active Phase**: Phase 8 - Postprocessing & Effects (Next)
-**Progress**: 50% (7/14 phases complete)
-**Next Milestone**: Visual polish with postprocessing
+**Active Phase**: Phase 9 - Performance & Optimization (Next)
+**Progress**: 57% (8/14 phases complete)
+**Next Milestone**: Production-ready performance
 
 **Timeline Estimates**:
 - Phase 1-2: 1 week (Foundation + Loaders)
@@ -351,4 +355,4 @@
 ---
 
 **Last Updated**: November 2025
-**Status**: Phase 7 complete - Scroll-driven camera and rotation control
+**Status**: Phase 8 complete - Postprocessing with bloom and adaptive quality

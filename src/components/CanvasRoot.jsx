@@ -5,11 +5,15 @@ import LowResPlaceholder from './LowResPlaceholder';
 import FallbackHero from './FallbackHero';
 import ModuleHUD, { ModuleHintOverlay } from './ModuleHUD';
 import Skip3DToggle from './Skip3DToggle';
+import ErrorBoundary from './ErrorBoundary';
+import AnalyticsDashboard from './AnalyticsDashboard';
 import { useModuleState } from '../hooks/useModuleState';
 import { useKeyboardNavigation, useReducedMotion } from '../hooks/useKeyboardNavigation';
+import { useEngagementTracking, useModuleTracking, useScrollTracking } from '../hooks/useAnalytics';
 import ScrollContainer from './ScrollContainer';
 import ScrollProgressIndicator from './ScrollProgressIndicator';
 import { useScrollProgress } from '../hooks/useScrollProgress';
+import { initWebVitals } from '../utils/webVitals';
 import '../styles/accessibility.css';
 
 export default function CanvasRoot() {
@@ -17,6 +21,7 @@ export default function CanvasRoot() {
   const [skip3D, setSkip3D] = useState(false);
   const [showHint, setShowHint] = useState(true);
   const [fallbackReason, setFallbackReason] = useState('no-webgl');
+  const [showAnalyticsDashboard, setShowAnalyticsDashboard] = useState(false);
 
   // Module interaction state
   const { activeModule, handleModuleClick, closeModule, setSelectedModule } = useModuleState();
@@ -49,6 +54,29 @@ export default function CanvasRoot() {
     },
     enabled: !activeModule,
   });
+
+  // Analytics tracking
+  useEngagementTracking(!useFallback);
+  useModuleTracking(activeModule, !!activeModule);
+  useScrollTracking(scroll.currentSection, scroll.scrollProgress);
+
+  // Initialize Web Vitals
+  useEffect(() => {
+    initWebVitals();
+  }, []);
+
+  // Analytics dashboard keyboard toggle (A key)
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.key === 'a' || e.key === 'A') {
+        if (!e.target.matches('input, textarea')) {
+          setShowAnalyticsDashboard(prev => !prev);
+        }
+      }
+    };
+    window.addEventListener('keypress', handleKeyPress);
+    return () => window.removeEventListener('keypress', handleKeyPress);
+  }, []);
 
   useEffect(() => {
     // Check for user preference to skip 3D
@@ -118,7 +146,7 @@ export default function CanvasRoot() {
   }
 
   return (
-    <>
+    <ErrorBoundary name="CanvasRoot">
       <ScrollContainer sections={4}>
         <Canvas
           dpr={[1, 1.5]}
@@ -136,10 +164,12 @@ export default function CanvasRoot() {
           role="img"
         >
           <Suspense fallback={<LowResPlaceholder />}>
-            <BrainScene
-              activeModule={activeModule}
-              onModuleClick={handleModuleClick}
-            />
+            <ErrorBoundary name="BrainScene">
+              <BrainScene
+                activeModule={activeModule}
+                onModuleClick={handleModuleClick}
+              />
+            </ErrorBoundary>
           </Suspense>
         </Canvas>
 
@@ -165,6 +195,9 @@ export default function CanvasRoot() {
         onToggle={setSkip3D}
         visible={!activeModule}
       />
-    </>
+
+      {/* Analytics Dashboard (Toggle with 'A' key) */}
+      <AnalyticsDashboard visible={showAnalyticsDashboard} />
+    </ErrorBoundary>
   );
 }

@@ -5,6 +5,9 @@ import LowResPlaceholder from './LowResPlaceholder';
 import FallbackHero from './FallbackHero';
 import ModuleHUD, { ModuleHintOverlay } from './ModuleHUD';
 import { useModuleState } from '../hooks/useModuleState';
+import ScrollContainer from './ScrollContainer';
+import ScrollProgressIndicator from './ScrollProgressIndicator';
+import { useScrollProgress } from '../hooks/useScrollProgress';
 
 export default function CanvasRoot() {
   const [useFallback, setUseFallback] = useState(false);
@@ -12,6 +15,9 @@ export default function CanvasRoot() {
 
   // Module interaction state
   const { activeModule, handleModuleClick, closeModule } = useModuleState();
+
+  // Scroll progress state (disabled when module is active)
+  const scroll = useScrollProgress({ sections: 4, enabled: !activeModule });
 
   useEffect(() => {
     // Check for WebGL support
@@ -57,7 +63,7 @@ export default function CanvasRoot() {
   }
 
   return (
-    <>
+    <ScrollContainer sections={4}>
       <Canvas
         dpr={[1, 1.5]}
         camera={{ position: [0, 0, 5], fov: 50 }}
@@ -79,11 +85,20 @@ export default function CanvasRoot() {
         </Suspense>
       </Canvas>
 
+      {/* Scroll Progress Indicator */}
+      <ScrollProgressIndicator
+        progress={scroll.scrollProgress}
+        currentSection={scroll.currentSection}
+        totalSections={scroll.sections}
+        onSectionClick={scroll.scrollToSection}
+        visible={!activeModule}
+      />
+
       {/* Module HUD Overlay */}
       <ModuleHUD moduleId={activeModule} onClose={closeModule} />
 
       {/* Hint Overlay - show until first interaction */}
       <ModuleHintOverlay visible={showHint && !activeModule} />
-    </>
+    </ScrollContainer>
   );
 }

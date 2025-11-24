@@ -21,6 +21,7 @@ export default function BrainCore({
   position = [0, 0, 0],
   activeModule = null,
   onModuleClick = () => {},
+  scrollProgress = 0,
 }) {
   const groupRef = useRef();
   const { gl } = useThree();
@@ -71,10 +72,12 @@ export default function BrainCore({
     };
   }, [qualityManager]);
 
-  // Animate rotation
+  // Animate rotation (controlled by scroll progress)
   useFrame((state, delta) => {
     if (groupRef.current) {
-      groupRef.current.rotation.y += delta * 0.15;
+      // Rotation speed increases with scroll: 0.15 → 0.6
+      const scrollSpeedMultiplier = 1 + scrollProgress * 3;
+      groupRef.current.rotation.y += delta * 0.15 * scrollSpeedMultiplier;
       groupRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.3) * 0.1;
     }
   });

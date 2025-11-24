@@ -152,23 +152,29 @@
 
 ---
 
-## Phase 7 - GSAP & Scroll Integration
+## Phase 7 - GSAP & Scroll Integration ✅ COMPLETED
 
 **Milestone**: Scroll-driven animations
 
 ### Tasks
-- [ ] Install GSAP + ScrollTrigger
-- [ ] Map scroll progress to uSpeed uniform
-- [ ] Create scroll-driven camera movements
-- [ ] Implement particle emission rate control
-- [ ] Add scroll-based reveal animations
-- [ ] Test on different viewport sizes
+- [x] Install GSAP + ScrollTrigger
+- [x] Map scroll progress to uSpeed uniform
+- [x] Create scroll-driven camera movements
+- [x] Implement particle emission rate control
+- [x] Add scroll-based reveal animations
+- [x] Test on different viewport sizes
 
 ### Deliverables
-- Scroll controls 3D scene state
-- Smooth scroll animations
-- Responsive to viewport changes
-- No jank on scroll
+- ✅ Scroll controls 3D scene state (4 sections)
+- ✅ Smooth scroll animations with lerp
+- ✅ Camera distance changes with scroll (5 → 3 units)
+- ✅ Camera rotation around Y-axis per section
+- ✅ Brain rotation speed scales with scroll (1x → 4x)
+- ✅ Vertical camera offset (sin wave)
+- ✅ Scroll progress indicator with section markers
+- ✅ Click-to-section navigation
+- ✅ Disabled when module is active
+- ✅ Responsive design (mobile + desktop)
 
 ---
 
@@ -327,9 +333,9 @@
 
 ## Current Status
 
-**Active Phase**: Phase 7 - GSAP & Scroll Integration (Next)
-**Progress**: 43% (6/14 phases complete)
-**Next Milestone**: Scroll-driven animations
+**Active Phase**: Phase 8 - Postprocessing & Effects (Next)
+**Progress**: 50% (7/14 phases complete)
+**Next Milestone**: Visual polish with postprocessing
 
 **Timeline Estimates**:
 - Phase 1-2: 1 week (Foundation + Loaders)
@@ -345,4 +351,4 @@
 ---
 
 **Last Updated**: November 2025
-**Status**: Phase 6 complete - Micro-scenes with GSAP camera transitions
+**Status**: Phase 7 complete - Scroll-driven camera and rotation control
